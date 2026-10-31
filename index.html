@@ -206,11 +206,11 @@ function iso(ms){return new Date(ms).toISOString()}
 var T={
  segment_requests:{table:'segment_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
  segments:{table:'segments',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {id:Number(r.id),name:r.name,zone:r.zone}}},
- reports:{table:'reports',to:function(d){return {segment_id:d.seg,level:d.lvl}},from:function(r){return {seg:Number(r.segment_id),lvl:r.level,t:Date.parse(r.created_at)}}},
+ reports:{table:'reports',to:function(d){return {segment_id:d.seg,level:d.lvl}},from:function(r){return {seg:Number(r.segment_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}},
  requests:{table:'requests',to:function(d){return {segment_id:d.seg}},from:function(r){return {seg:Number(r.segment_id),t:Date.parse(r.created_at)}}},
  stations:{table:'stations',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone}}},
  station_requests:{table:'station_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
- fuel:{table:'fuel',to:function(d){return {station_id:d.st,level:d.lvl}},from:function(r){return {st:Number(r.station_id),lvl:r.level,t:Date.parse(r.created_at)}}}
+ fuel:{table:'fuel',to:function(d){return {station_id:d.st,level:d.lvl}},from:function(r){return {st:Number(r.station_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}}
 };
 function user(){return sb.auth.getSession().then(function(r){return r.data&&r.data.session?r.data.session.user:null})}
 function Q(name,win){
@@ -320,7 +320,7 @@ function addSeg(){var n=document.getElementById('sn').value.trim(),z=document.ge
  if(n.length<4)return toast('Entrez le nom de la route ou du tronçon');
  if(SEG.some(function(s){return s[1].toLowerCase()===esc(n).toLowerCase()}))return toast('Ce tronçon existe déjà');
  n=n.slice(0,80);
- needLogin(function(){DB.collection('segment_requests').add({name:n,zone:z}).then(function(){document.getElementById('sn').value='';toast('Merci ! Tronçon envoyé : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer un tronçon':'Échec de l’envoi : réessayez plus tard')})},'proposer un tronçon')}
+ needLogin(function(){DB.collection('segment_requests').add({name:n,zone:z}).then(function(){document.getElementById('sn').value='';toast('Merci ! Tronçon envoyé : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer un tronçon':(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard'))})},'proposer un tronçon')}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;
  db.collection('segments').onSnapshot(function(snap){snap.docs.forEach(function(d){var x=d.data();
   if(typeof x.id==='number'&&typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!SEG.some(function(s){return s[0]===x.id}))SEG.push([x.id,esc(x.name.slice(0,80)),x.zone])});render()},function(){})}).catch(function(){})}catch(e){}})();
@@ -357,11 +357,16 @@ function toast(t){var el=document.getElementById('toast');el.textContent=t;el.cl
 function seg(id){return SEG.filter(function(s){return s[0]===id})[0]}
 /* aucune donnée inventée : les états viennent uniquement des signalements */
 var CTX='<div class="card"><b>Situation générale (sources publiques)</b><div class="al mute">Les axes nationaux RN1, RN2 et RN3 reliant Port-au-Prince aux provinces restent bloqués à différents endroits (Logistics Cluster, avril 2026). Le port de Port-au-Prince fonctionne, mais les vols commerciaux internationaux étaient suspendus (juin 2026).</div><div class="al mute">La PNH mène des opérations pour rouvrir la circulation entre Tabarre et Carrefour Marassa, dans des zones contrôlées par la coalition Viv Ansanm (Le Nouvelliste).</div><div class="al mute">La chaussée est très dégradée à plusieurs endroits, par exemple la route de Bourdon et la rue Grégoire (Le Nouvelliste, 2025).</div><div class="mute">Ce ne sont pas des états en temps réel : seuls les signalements colorent les tronçons.</div></div>';
-function status(id){var now=Date.now(),sw=0,sl=0;
-  S.reports.forEach(function(r){var a=(now-r.t)/MIN;if(r.seg===id&&a<45){var w=1/(1+a/10);sw+=w;sl+=w*r.lvl}});
-  if(!sw)return 3;var v=sl/sw;return v<0.5?0:v<1.4?1:2}
-function info(id){var rs=S.reports.filter(function(r){return r.seg===id&&(Date.now()-r.t)<45*MIN});
+/* fiabilité : un seul avis par personne (le plus récent) et au moins QUORUM personnes différentes avant d'afficher un état */
+var QUORUM=1;
+function recentRep(id){var now=Date.now(),m={};S.reports.forEach(function(r){if(r.seg===id&&(now-r.t)/MIN<45){var k=r.u||'local';if(!m[k]||r.t>m[k].t)m[k]=r}});return Object.keys(m).map(function(k){return m[k]})}
+function status(id){var now=Date.now(),sw=0,sl=0,rs=recentRep(id);
+  if(rs.length<QUORUM)return 3;
+  rs.forEach(function(r){var a=(now-r.t)/MIN,w=1/(1+a/10);sw+=w;sl+=w*r.lvl});
+  var v=sl/sw;return v<0.5?0:v<1.4?1:2}
+function info(id){var rs=recentRep(id);
   if(!rs.length)return 'Aucun signalement récent';
+  if(rs.length<QUORUM)return 'En attente de confirmation ('+rs.length+'/'+QUORUM+' personnes)';
   var last=Math.max.apply(null,rs.map(function(r){return r.t})),m=Math.max(0,Math.round((Date.now()-last)/MIN));
   var c=[0,0,0];rs.forEach(function(r){c[r.lvl]++});
   return (m<1?'à l’instant':'il y a '+m+' min')+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fluide, '+c[1]+' ralenti, '+c[2]+' bloqué)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
@@ -370,9 +375,15 @@ function change(id,before,after){
   var m=LV[after].n.toLowerCase(),txt=seg(id)[1]+' : '+m+(before<3?' (avant : '+LV[before].n.toLowerCase()+')':'');
   pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:after});
   toast('Alerte · '+txt);try{navigator.vibrate&&navigator.vibrate(after===2?[200,100,200]:100)}catch(e){}}
-function report(id,lvl){var b=status(id),r={seg:id,lvl:lvl,t:Date.now()};
+/* anti-spam : un même utilisateur ne peut signaler le même tronçon / la même station qu'une fois toutes les 20 min (mémorisé sur l'appareil, survit au rechargement) */
+var COOL=20,CKEY='trafik-cool';
+function coolLoad(){try{var o=JSON.parse(localStorage.getItem(CKEY))||{},n=Date.now();for(var k in o)if(n-o[k]>=COOL*MIN)delete o[k];return o}catch(e){return {}}}
+function coolLeft(k){var o=coolLoad();return o[k]?Math.max(1,Math.ceil((COOL*MIN-(Date.now()-o[k]))/MIN)):0}
+function coolMark(k){try{var o=coolLoad();o[k]=Date.now();localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}}
+function coolCheck(k,what){var m=coolLeft(k);if(m){toast('Vous avez déjà signalé '+what+'. Réessayez dans '+m+' min.');return false}coolMark(k);return true}
+function report(id,lvl){if(!coolCheck('seg:'+id,'ce tronçon'))return;var b=status(id),r={seg:id,lvl:lvl,t:Date.now()};
   function loc(){LOCAL.push(r);S.reports.push(r);change(id,b,status(id));render()}
-  if(DB){DB.collection('reports').add(r).then(function(){toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase())}).catch(function(){loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
+  if(DB){DB.collection('reports').add(r).then(function(){toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase())}).catch(function(e){if(e&&e.code==='P0001')return toast(e.message);loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
   else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
 function toggle(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toast('Vous recevrez les alertes pour ce tronçon')}else S.watch.splice(i,1);save();render();
  if(window.sbClient&&window.LOGGED){var q=window.sbClient.from('watched_segments');(on?q.upsert({segment_id:id},{onConflict:'user_id,segment_id',ignoreDuplicates:true}):q.delete().eq('segment_id',id)).then(function(){},function(){})}}
@@ -403,7 +414,7 @@ function openReq(id){var rs=REQ.concat(LREQ).filter(function(q){return q.seg===i
 function ask(id){if(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN)return toast('Demande déjà envoyée. Patientez quelques minutes.');
   lastAsk[id]=Date.now();var q={seg:id,t:Date.now()};
   function loc(){LREQ.push(q);toast('Demande enregistrée sur cet appareil seulement');render()}
-  if(DB){DB.collection('requests').add(q).then(function(){toast('Demande envoyée : les personnes qui suivent ce tronçon sont prévenues')}).catch(loc)}else loc()}
+  if(DB){DB.collection('requests').add(q).then(function(){toast('Demande envoyée : les personnes qui suivent ce tronçon sont prévenues')}).catch(function(e){if(e&&e.code==='P0001')return toast(e.message);loc()})}else loc()}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;var first=true;
  db.collection('requests').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
   if(!first)snap.docChanges().forEach(function(c){if(c.type==='added'){var q=c.doc.data();if(S.watch.indexOf(q.seg)>=0){pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:'Quelqu’un demande l’état de : '+seg(q.seg)[1]+'. Si vous y êtes, signalez-le.',l:3});toast('Demande : '+seg(q.seg)[1])}}});
@@ -502,12 +513,7 @@ function stateV(){
  return tog+(S.view==='map'?mapV():listV())}
 /* publicités : remplacez/ajoutez des entrées. img = lien https de la photo (optionnel), url = lien au toucher (optionnel) */
 var ADS=[
- {t:'NOVACC',
- s:'Nova Academy and Consulting Center',
- img:'https://novacademy-six.vercel.app/NOVACC.png',
- url:'https://novacademy-six.vercel.app/#formations',
- c:'linear-gradient(135deg,#1B2B3A,#2f5273)'},
- 
+ {t:'Votre publicité ici',s:'Photo, texte et lien cliquable',c:'linear-gradient(135deg,#1B2B3A,#2f5273)'},
  {t:'Faites connaître votre commerce',s:'Visible sur l’Accueil de tous',c:'linear-gradient(135deg,#2A8A5B,#1d6a45)'},
  {t:'Votre offre ici',s:'Station, garage, restaurant…',c:'linear-gradient(135deg,#C93C3C,#8f2727)'}
 ],AD_I=0,AD_PAUSE=0;
@@ -626,25 +632,28 @@ var FMIN=180,STN=[
 S.fz='Tous';S.fs='T';
 function ago(t){var m=Math.max(0,Math.round((Date.now()-t)/MIN));return m<1?'à l’instant':m<60?'il y a '+m+' min':'il y a '+Math.floor(m/60)+' h'}
 /* la majorité des signalements récents l'emporte (les plus récents comptent davantage) ; égalité ouverte/fermée = Limitée */
-function fstat(id){var now=Date.now(),w=[0,0,0];
-  FREP.forEach(function(r){var a=(now-r.t)/MIN;if(r.st===id&&a<FMIN)w[r.lvl]+=1/(1+a/45)});
+function frecent(id){var now=Date.now(),m={};FREP.forEach(function(r){if(r.st===id&&(now-r.t)/MIN<FMIN){var k=r.u||'local';if(!m[k]||r.t>m[k].t)m[k]=r}});return Object.keys(m).map(function(k){return m[k]})}
+function fstat(id){var now=Date.now(),w=[0,0,0],rs=frecent(id);
+  if(rs.length<QUORUM)return 3;
+  rs.forEach(function(r){var a=(now-r.t)/MIN;w[r.lvl]+=1/(1+a/45)});
   if(!w[0]&&!w[1]&&!w[2])return 3;
   var m=Math.max(w[0],w[1],w[2]),top=[0,1,2].filter(function(i){return Math.abs(w[i]-m)<1e-9});
   return top.length===1?top[0]:(top.indexOf(0)>=0&&top.indexOf(2)>=0?1:Math.max.apply(null,top))}
-function finfo(id){var rs=FREP.filter(function(r){return r.st===id&&(Date.now()-r.t)<FMIN*MIN});
+function finfo(id){var rs=frecent(id);
   if(!rs.length)return 'Aucun signalement récent (3 h)';
+  if(rs.length<QUORUM)return 'En attente de confirmation ('+rs.length+'/'+QUORUM+' personnes)';
   var last=Math.max.apply(null,rs.map(function(r){return r.t})),c=[0,0,0];rs.forEach(function(r){c[r.lvl]++});
   return ago(last)+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fonctionnelle, '+c[1]+' limitée, '+c[2]+' non fonctionnelle)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
 function fReport(id,lvl){
-  if(lastFuel[id]&&Date.now()-lastFuel[id]<5*MIN)return toast('Vous avez déjà signalé cette station. Patientez quelques minutes.');
+  if(!coolCheck('st:'+id,'cette station'))return;
   lastFuel[id]=Date.now();var r={st:id,lvl:lvl,t:Date.now()};
   function loc(){FLOC.push(r);FREP.push(r);render()}
-  if(DB){DB.collection('fuel').add(r).then(function(){toast('Merci ! Signalement partagé')}).catch(function(){loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
+  if(DB){DB.collection('fuel').add(r).then(function(){toast('Merci ! Signalement partagé')}).catch(function(e){if(e&&e.code==='P0001')return toast(e.message);loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
   else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
 function addStation(){var n=document.getElementById('fn').value.trim().slice(0,80),z=document.getElementById('fzone').value;
   if(n.length<3)return toast('Entrez le nom ou le repère de la station');
   if(STN.some(function(s){return s.name.toLowerCase()===n.toLowerCase()&&s.zone===z}))return toast('Cette station existe déjà dans cette zone');
-  needLogin(function(){DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){toast('Merci ! Station envoyée : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer une station':'Échec de l’envoi : réessayez plus tard')})},'proposer une station')}
+  needLogin(function(){DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){toast('Merci ! Station envoyée : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer une station':(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard'))})},'proposer une station')}
 function setFz(z){S.fz=z;render()}
 function setFs(t){S.fs=t;render()}
 function jid(v){return typeof v==='number'?v:"'"+String(v).replace(/'/g,'')+"'"}
