@@ -358,7 +358,7 @@ function seg(id){return SEG.filter(function(s){return s[0]===id})[0]}
 /* aucune donnée inventée : les états viennent uniquement des signalements */
 var CTX='<div class="card"><b>Situation générale (sources publiques)</b><div class="al mute">Les axes nationaux RN1, RN2 et RN3 reliant Port-au-Prince aux provinces restent bloqués à différents endroits (Logistics Cluster, avril 2026). Le port de Port-au-Prince fonctionne, mais les vols commerciaux internationaux étaient suspendus (juin 2026).</div><div class="al mute">La PNH mène des opérations pour rouvrir la circulation entre Tabarre et Carrefour Marassa, dans des zones contrôlées par la coalition Viv Ansanm (Le Nouvelliste).</div><div class="al mute">La chaussée est très dégradée à plusieurs endroits, par exemple la route de Bourdon et la rue Grégoire (Le Nouvelliste, 2025).</div><div class="mute">Ce ne sont pas des états en temps réel : seuls les signalements colorent les tronçons.</div></div>';
 /* fiabilité : un seul avis par personne (le plus récent) et au moins QUORUM personnes différentes avant d'afficher un état */
-var QUORUM=1;
+var QUORUM=2;
 function recentRep(id){var now=Date.now(),m={};S.reports.forEach(function(r){if(r.seg===id&&(now-r.t)/MIN<45){var k=r.u||'local';if(!m[k]||r.t>m[k].t)m[k]=r}});return Object.keys(m).map(function(k){return m[k]})}
 function status(id){var now=Date.now(),sw=0,sl=0,rs=recentRep(id);
   if(rs.length<QUORUM)return 3;
@@ -513,7 +513,12 @@ function stateV(){
  return tog+(S.view==='map'?mapV():listV())}
 /* publicités : remplacez/ajoutez des entrées. img = lien https de la photo (optionnel), url = lien au toucher (optionnel) */
 var ADS=[
- {t:'Votre publicité ici',s:'Photo, texte et lien cliquable',c:'linear-gradient(135deg,#1B2B3A,#2f5273)'},
+ {t:'NOVACC',
+ s:'Nova Academy and Consulting Center',
+ img:'https://novacademy-six.vercel.app/NOVACC.png',
+ url:'https://novacademy-six.vercel.app/#formations',
+ c:'linear-gradient(135deg,#1B2B3A,#2f5273)'},
+ 
  {t:'Faites connaître votre commerce',s:'Visible sur l’Accueil de tous',c:'linear-gradient(135deg,#2A8A5B,#1d6a45)'},
  {t:'Votre offre ici',s:'Station, garage, restaurant…',c:'linear-gradient(135deg,#C93C3C,#8f2727)'}
 ],AD_I=0,AD_PAUSE=0;
