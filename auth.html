@@ -2,12 +2,12 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1B2B3A">
+<meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Trafik PAP">
+<meta name="apple-mobile-web-app-title" content="Trafik">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -70,12 +70,42 @@ input[aria-invalid="true"]{border-color:var(--err);box-shadow:inset 0 0 0 1px va
 .switch a:focus-visible{outline:3px solid var(--y);outline-offset:2px}
 [hidden]{display:none!important}
 @media(max-width:440px){.top{padding:10px 12px}.top nav{gap:6px}.top button{padding:0 11px;font-size:14px}.logo{font-size:16px;gap:8px}.dots{width:34px;height:34px;padding:4px}.dots i{width:7px;height:7px}}
+
+/* ===== Design Trafik : écran mobile, extérieur blanc, fond néon bleu et rouge ===== */
+:root:root:root{color-scheme:dark;--bg:#0A0F1F;--card:#12171F;--ink:#E9EDEF;--mute:#9AA6AE;--line:#262E35;--main:#3A5B78;--g:#46B982;--y:#F2B91F;--r:#EE6A6A;--soft:#1E262C;--err:#EE6A6A;--ok:#46B982;--okbg:#14291F;--errbg:#2E1A1A;--w:430px}
+@media (min-width:721px){:root:root:root{--w:680px}}
+html{background:#fff}
+body{background:transparent;max-width:var(--w);margin:0 auto;position:relative}
+html::before{content:"";position:fixed;z-index:-1;top:0;bottom:0;left:50%;width:100%;max-width:var(--w);transform:translateX(-50%);pointer-events:none;
+ background:
+  linear-gradient(112deg,transparent 0 58%,rgba(255,45,63,.30) 58.2%,rgba(255,80,100,.95) 59.1%,rgba(255,45,63,.30) 60%,transparent 60.4%),
+  linear-gradient(112deg,transparent 0 55%,rgba(255,45,63,.20) 58.5%,transparent 63%),
+  linear-gradient(104deg,transparent 0 8%,rgba(40,110,255,.22) 12%,rgba(70,150,255,.90) 15.6%,rgba(40,110,255,.22) 19%,transparent 25%),
+  linear-gradient(120deg,transparent 0 80%,rgba(255,45,63,.75) 80.2%,transparent 80.8%),
+  radial-gradient(90% 50% at 100% 0%,rgba(30,100,255,.60),transparent 70%),
+  radial-gradient(95% 52% at 0% 100%,rgba(255,45,63,.50),transparent 70%),
+  radial-gradient(70% 35% at 100% 62%,rgba(255,45,63,.30),transparent 70%),
+  radial-gradient(60% 32% at 0% 30%,rgba(30,100,255,.28),transparent 70%),
+  #060A1C}
+.top{background:linear-gradient(90deg,#08143F 0%,#0B1E66 45%,#33091B 100%);border-bottom:1px solid rgba(70,130,255,.75);box-shadow:0 2px 20px rgba(30,100,255,.45),0 1px 0 rgba(255,45,63,.55)}
+.box{box-shadow:0 1px 2px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.4)}
+.hw{display:none}
+@media (min-width:521px){
+ body::after{content:"";position:fixed;z-index:100;top:0;bottom:0;left:50%;width:100%;max-width:var(--w);transform:translateX(-50%);border-radius:34px;box-shadow:0 0 0 200vmax #fff;pointer-events:none}
+ body::before{content:"";position:fixed;z-index:101;top:7px;bottom:7px;left:50%;width:calc(100% - 14px);max-width:calc(var(--w) - 14px);transform:translateX(-50%);border-radius:27px;border:1px solid rgba(255,255,255,.85);pointer-events:none}
+ .top{padding-top:16px}
+ .hw{display:block;position:fixed;z-index:102;left:50%;top:0;bottom:0;width:6px;margin-left:calc(var(--w)/2 - 1px);pointer-events:none}
+ .hw i{position:absolute;left:0;width:6px;background:#000;border-radius:0 4px 4px 0}
+ .hw i:nth-child(1){top:20%;height:46px}
+ .hw i:nth-child(2){top:calc(20% + 58px);height:46px}
+ .hw i:nth-child(3){top:calc(20% + 150px);height:78px}
+}
 </style>
 </head>
 <body>
 
 <header class="top">
-  <a class="logo" href="index.html"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>Trafik PAP</a>
+  <a class="logo" href="index.html"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>Trafik</a>
   <nav role="tablist" aria-label="Authentification">
     <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="panel-login">Connexion</button>
     <button type="button" role="tab" id="tab-signup" aria-selected="false" aria-controls="panel-signup">S’inscrire</button>
@@ -308,5 +338,6 @@ document.querySelectorAll('input').forEach(function(i){
   i.addEventListener('input', function(){ if (i.getAttribute('aria-invalid')) setErr(i.id, ''); });
 });
 </script>
+<div class="hw" aria-hidden="true"><i></i><i></i><i></i></div>
 </body>
 </html>
