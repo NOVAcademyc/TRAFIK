@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Trafik PAP</title>
+<title>Trafik</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Trafik PAP">
+<meta name="apple-mobile-web-app-title" content="Trafik">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -105,6 +105,18 @@ nav button[aria-current="page"]::before{content:"";position:absolute;top:0;left:
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--sh);margin-top:14px;overflow:hidden}
 .ph{display:flex;justify-content:space-between;align-items:center;padding:12px 8px 8px 16px}
 .ph b{font-size:17px;font-weight:800}
+.seg{scroll-margin-top:90px}
+.seg.pin{outline:3px solid var(--r);outline-offset:-3px;border-radius:var(--rad)}
+.lwrap{margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;isolation:isolate;background:var(--soft);min-height:360px}
+#lmap{height:62vh;min-height:360px;width:100%}
+.leaflet-container{font-family:inherit}
+.dd>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;min-height:48px;cursor:pointer;font-size:17px;font-weight:800}
+.dd>summary::-webkit-details-marker{display:none}
+.dd .cnt{display:inline-block;margin-left:8px;min-width:22px;padding:1px 8px;border-radius:999px;background:var(--soft);font-size:13px;font-weight:700;text-align:center}
+.dd .cv{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.dd[open]>summary .cv{transform:rotate(180deg)}
+.dd[open]>summary{border-bottom:1px solid var(--line)}
+.ddf{display:flex;justify-content:flex-end;padding:4px 8px 8px}
 .lnk{background:none;color:var(--ink);text-decoration:underline;text-underline-offset:3px;min-height:36px;padding:4px 10px;font-size:14px}
 .row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);cursor:pointer}
 .row.mute{cursor:default}
@@ -182,10 +194,67 @@ nav{left:50%;right:auto;width:100%;max-width:var(--w);transform:translateX(-50%)
  .qr svg{width:100%;height:100%;display:block}
  .side button{align-self:flex-start}
 }
+.bdg{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#C93C3C;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;line-height:1}
+
+/* en-tête : marque à gauche, cloche au milieu, menu à droite */
+.top-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;flex-wrap:nowrap}
+.top .brand{min-width:0}.top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.authbar{justify-self:end;position:relative}
+.ibtn{position:relative;width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28)}
+.ibtn.on{background:rgba(255,255,255,.3)}
+.ibtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ibtn .bdg{top:-4px;right:-4px;left:auto;min-width:19px;height:19px;border:2px solid var(--main);box-sizing:content-box;pointer-events:none}
+@keyframes ring{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
+.ibtn.ring svg{animation:ring .9s ease-in-out;transform-origin:50% 10%}
+@media (prefers-reduced-motion:reduce){.ibtn.ring svg{animation:none}}
+.menu{position:absolute;right:0;top:calc(100% + 10px);width:min(300px,calc(100vw - 24px));background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);padding:6px;z-index:70}
+.mhead{display:flex;align-items:center;gap:10px;padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.mhead b{display:block;font-size:15px}.mhead small,.mi small{display:block;color:var(--mute);font-size:12.5px;font-weight:500}
+.mrow{display:flex;gap:8px;padding:10px}.mrow .btn{flex:1;min-height:40px;font-size:14px}
+.mi{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;color:var(--ink);padding:10px;border-radius:10px;min-height:46px;font-weight:700;font-size:15px}
+.mi:hover,.mi:focus-visible{background:var(--soft)}
+.mi svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.9}
+.mi.out{color:#EE6A6A}.msep{height:1px;background:var(--line);margin:4px 6px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.sw{width:50px;min-height:30px;height:30px;padding:0;border-radius:15px;background:var(--soft);position:relative;flex:none}
+.sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#8a949b;transition:left .15s}
+.sw[aria-checked="true"]{background:var(--g)}.sw[aria-checked="true"] i{left:23px;background:#fff}
+
+#lbtns{display:none;align-items:center;gap:6px}
+.top-in.lo{display:flex;justify-content:space-between}
+.top-in.lo #lbtns{display:flex}
+.top-in.lo .brand{flex:0 1 auto}
+.authbar{display:flex;align-items:center;gap:6px}
+.top .btn.xs{min-height:34px;padding:0 10px;font-size:12.5px;border-width:1.5px;border-radius:10px}
+@media (max-width:420px){.top-in.lo h1{display:none}}
+button.dng{background:#C93C3C;color:#fff}
+button.dng:disabled{opacity:.45;cursor:not-allowed}
+
+/* arrière-plan néon : noir bleuté lumineux, lueurs bleue et rouge, traits nets en diagonale */
+body{background:transparent}
+html::before{content:"";position:fixed;z-index:-1;top:0;bottom:0;left:50%;width:100%;max-width:var(--w);transform:translateX(-50%);pointer-events:none;
+ background:
+  linear-gradient(112deg,transparent 0 58%,rgba(255,45,63,.30) 58.2%,rgba(255,80,100,.95) 59.1%,rgba(255,45,63,.30) 60%,transparent 60.4%),
+  linear-gradient(112deg,transparent 0 55%,rgba(255,45,63,.20) 58.5%,transparent 63%),
+  linear-gradient(104deg,transparent 0 8%,rgba(40,110,255,.22) 12%,rgba(70,150,255,.90) 15.6%,rgba(40,110,255,.22) 19%,transparent 25%),
+  linear-gradient(120deg,transparent 0 80%,rgba(255,45,63,.75) 80.2%,transparent 80.8%),
+  radial-gradient(90% 50% at 100% 0%,rgba(30,100,255,.60),transparent 70%),
+  radial-gradient(95% 52% at 0% 100%,rgba(255,45,63,.50),transparent 70%),
+  radial-gradient(70% 35% at 100% 62%,rgba(255,45,63,.30),transparent 70%),
+  radial-gradient(60% 32% at 0% 30%,rgba(30,100,255,.28),transparent 70%),
+  #060A1C}
+/* en-tête et menu du bas : mêmes couleurs néon */
+.top{background:linear-gradient(90deg,#08143F 0%,#0B1E66 45%,#33091B 100%);border-bottom:1px solid rgba(70,130,255,.75);box-shadow:0 2px 20px rgba(30,100,255,.45),0 1px 0 rgba(255,45,63,.55)}
+.ibtn .bdg{border-color:#0B1E66}
+nav{background:linear-gradient(0deg,#050716,#0A1236);border-top:1px solid rgba(70,130,255,.75);box-shadow:0 -4px 22px rgba(30,100,255,.40),0 -1px 0 rgba(255,45,63,.50)}
+nav button{color:#9FB2D9}
+nav button[aria-current="page"]{color:#fff}
+nav button[aria-current="page"]::before{background:linear-gradient(90deg,#2F6BFF,#FF2D3F);box-shadow:0 0 10px rgba(255,45,63,.7)}
+nav button[aria-current="page"] svg{filter:drop-shadow(0 0 5px rgba(80,140,255,.9))}
 </style>
 </head>
 <body>
-<header class="top"><div class="top-in"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik PAP</h1><div class="sub"><span id="lv"></span></div></div></div><div id="auth" class="authbar"><a class="btn ghost" href="auth.html">Connexion</a><a class="btn primary" href="auth.html#signup">S’inscrire</a></div></div></header>
+<header class="top"><div class="top-in" id="topin"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik</h1><div class="sub"><span id="lv"></span></div></div></div><button id="bell" class="ibtn" type="button" aria-label="Alertes" onclick="setTab('alerts')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg><b id="bellb" class="bdg" style="display:none"></b></button><div id="auth" class="authbar"><div id="lbtns"><a class="btn ghost xs" href="auth.html">Connexion</a><a class="btn primary xs" href="auth.html#signup">S’inscrire</a></div><button id="mbtn" class="ibtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu(event)"><span id="mav"></span></button><div id="menu" class="menu" role="menu" hidden></div></div></div></header>
 <div id="app">
   <main id="view"></main>
 </div>
@@ -207,7 +276,7 @@ var T={
  segment_requests:{table:'segment_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
  segments:{table:'segments',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {id:Number(r.id),name:r.name,zone:r.zone}}},
  reports:{table:'reports',to:function(d){return {segment_id:d.seg,level:d.lvl}},from:function(r){return {seg:Number(r.segment_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}},
- requests:{table:'requests',to:function(d){return {segment_id:d.seg}},from:function(r){return {seg:Number(r.segment_id),t:Date.parse(r.created_at)}}},
+ requests:{table:'requests',to:function(d){return {segment_id:d.seg}},from:function(r){return {seg:Number(r.segment_id),t:Date.parse(r.created_at),u:r.user_id}}},
  stations:{table:'stations',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone}}},
  station_requests:{table:'station_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
  fuel:{table:'fuel',to:function(d){return {station_id:d.st,level:d.lvl}},from:function(r){return {st:Number(r.station_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}}
@@ -264,18 +333,8 @@ window.claude={use:function(n){
 
 /* Bandeau connexion en haut de la page */
 function bar(){user().then(function(u){
- var was=window.LOGGED;window.LOGGED=!!u;if(u&&window.syncWatch)window.syncWatch();if(was!==window.LOGGED&&typeof render==='function')render();
- var el=document.getElementById('auth');if(!el)return;el.textContent='';
- if(!u){
-  var a=document.createElement('a');a.href='auth.html';a.className='btn ghost';a.textContent='Connexion';el.appendChild(a);
-  var c=document.createElement('a');c.href='auth.html#signup';c.className='btn primary';c.textContent='S’inscrire';el.appendChild(c);
- }else{
-  var m=u.user_metadata||{},nm=String(m.prenom||u.email||'?');
-  var w=document.createElement('div');w.className='who';
-  var av=document.createElement('span');av.className='av';av.textContent=nm.charAt(0).toUpperCase();w.appendChild(av);
-  var b=document.createElement('button');b.type='button';b.className='btn ghost sm';b.textContent='Quitter';
-  b.onclick=function(){try{localStorage.removeItem('trafik-v1');localStorage.removeItem('trafik-alerts')}catch(e){}(window.pushOff?window.pushOff():Promise.resolve()).then(function(){return sb.auth.signOut()}).then(function(){location.reload()})};w.appendChild(b);el.appendChild(w);
- }})}
+ var was=window.LOGGED;window.LOGGED=!!u;window.UID=u?u.id:null;if(u&&window.syncWatch)window.syncWatch();if(was!==window.LOGGED&&typeof render==='function')render();
+ window.CURU=u;if(window.menuBtn)window.menuBtn();})}
 bar();sb.auth.onAuthStateChange(function(){bar()});
 })();
 </script>
@@ -331,12 +390,143 @@ try{var pa=JSON.parse(localStorage.getItem('trafik-alerts'));if(Array.isArray(pa
 function saveAlerts(){try{localStorage.setItem('trafik-alerts',JSON.stringify(S.alerts))}catch(e){}}
 var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').then(function(r){SWR=r}).catch(function(){})}catch(e){}
+/* trois types, jamais mélangés : demande (quelqu’un demande), suivi (une route suivie change), reception (signalement reçu d’un autre) */
+var KN={demande:'Demande',suivi:'Suivi',reception:'Signalement'};
 function notify(a){try{
  if(!('Notification' in window)||Notification.permission!=='granted'||!document.hidden)return;
- var txt=String(a.txt).replace(/<[^>]*>/g,''),o={body:txt,tag:'trafik-alert',renotify:true};
- if(SWR&&SWR.showNotification)SWR.showNotification('Trafik PAP',o);else new Notification('Trafik PAP',o)}catch(e){}}
-function pushAlert(a){S.alerts.unshift(a);S.alerts=S.alerts.slice(0,30);saveAlerts();notify(a)}
-function clearAlerts(){S.alerts=[];saveAlerts();render()}
+ var k=a.k||'suivi',ti='Trafik · '+KN[k],txt=String(a.txt).replace(/<[^>]*>/g,''),o={body:txt,tag:'trafik-'+k,renotify:true};
+ if(SWR&&SWR.showNotification)SWR.showNotification(ti,o);else new Notification(ti,o)}catch(e){}}
+function pushAlert(a){S.alerts.unshift(a);S.alerts=S.alerts.slice(0,30);saveAlerts();notify(a);ringBell()}
+/* demandes des autres : affichées dans Alertes tant qu'elles sont ouvertes ; masquables une à une ou toutes ensemble */
+var DIS={};try{DIS=JSON.parse(localStorage.getItem('trafik-dis'))||{}}catch(e){}
+function saveDis(){try{var n=Date.now();for(var k in DIS)if(n-DIS[k]>2*3600000)delete DIS[k];localStorage.setItem('trafik-dis',JSON.stringify(DIS))}catch(e){}}
+function reqList(){var out=[];SEG.forEach(function(sg){var t=openReq(sg[0]);if(t&&!DIS[sg[0]+':'+t])out.push({seg:sg[0],t:t})});return out.sort(function(a,b){return b.t-a.t})}
+function alKind(k){return S.alerts.map(function(a,i){return {a:a,i:i}}).filter(function(o){return (o.a.k||'suivi')===k})}
+function alertN(){return S.alerts.length+reqList().length}
+function delAlert(i){S.alerts.splice(i,1);saveAlerts();render()}
+function delReq(k){DIS[k]=Date.now();saveDis();render()}
+function clearKind(k){if(k==='demande')reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});else S.alerts=S.alerts.filter(function(a){return (a.k||'suivi')!==k});saveAlerts();saveDis();render()}
+function clearAlerts(){S.alerts=[];saveAlerts();reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});saveDis();render()}
+/* ===== Préférences, sonnerie, cloche d'alertes, menu déroulant et fenêtres ===== */
+var PR={sound:true,tone:'cloche',vol:0.7,vib:true};
+try{var _p=JSON.parse(localStorage.getItem('trafik-prefs'));if(_p&&typeof _p==='object'){if(typeof _p.sound==='boolean')PR.sound=_p.sound;if(typeof _p.vib==='boolean')PR.vib=_p.vib;if(typeof _p.vol==='number')PR.vol=Math.max(0,Math.min(1,_p.vol));if(typeof _p.tone==='string')PR.tone=_p.tone}}catch(e){}
+function savePR(){try{localStorage.setItem('trafik-prefs',JSON.stringify(PR))}catch(e){}}
+var AC=null;
+function audio(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+['pointerdown','keydown'].forEach(function(ev){document.addEventListener(ev,function(){audio()},{once:true,passive:true})});
+var TONES={
+ cloche:{n:'Cloche',type:'sine',seq:[[880,0,.4],[1318,.2,.7]]},
+ bip:{n:'Bip',type:'square',seq:[[1000,0,.12],[1000,.22,.12]]},
+ alerte:{n:'Alerte',type:'triangle',seq:[[660,0,.2],[880,.24,.2],[660,.48,.2],[880,.72,.2]]},
+ klaxon:{n:'Klaxon',type:'sawtooth',seq:[[440,0,.3],[349,.38,.45]]}
+};
+if(!TONES[PR.tone])PR.tone='cloche';
+function playTone(name){var ac=audio();if(!ac)return;var t=TONES[name]||TONES[PR.tone]||TONES.cloche,now=ac.currentTime;
+ t.seq.forEach(function(s){var o=ac.createOscillator(),g=ac.createGain(),a=Math.max(.001,PR.vol*.5);o.type=t.type;o.frequency.value=s[0];
+  g.gain.setValueAtTime(.0001,now+s[1]);g.gain.exponentialRampToValueAtTime(a,now+s[1]+.02);g.gain.exponentialRampToValueAtTime(.0001,now+s[1]+s[2]);
+  o.connect(g);g.connect(ac.destination);o.start(now+s[1]);o.stop(now+s[1]+s[2]+.05)})}
+/* une alerte arrive : la cloche s'agite et sonne (si le son est activé) ; le compteur rouge est mis à jour par render() */
+function ringBell(){var b=document.getElementById('bell');if(b){b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring')}if(PR.sound&&!document.hidden)playTone()}
+function bellUpdate(){var n=alertN(),b=document.getElementById('bellb'),bell=document.getElementById('bell');
+ if(b){b.textContent=n>99?'99+':String(n);b.style.display=n?'grid':'none'}
+ if(bell){bell.classList.toggle('on',S.tab==='alerts');bell.setAttribute('aria-label',n?'Alertes : '+n+' non effacée'+(n>1?'s':''):'Alertes')}}
+
+/* menu déroulant (en haut à droite) */
+var MI={
+ user:'<path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="8" r="4"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+ ring:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+ route:'<path d="M6 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM9 16h6a3 3 0 0 0 0-6h-3"/>',
+ dl:'<path d="M12 3v12M7 10l5 5 5-5M5 20h14"/>',
+ share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+ out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
+};
+function mi(ic,txt,fn,sub,cls){return '<button type="button" class="mi'+(cls?' '+cls:'')+'" role="menuitem" onclick="closeMenu();'+fn+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+MI[ic]+'</svg><span>'+txt+(sub?'<small>'+sub+'</small>':'')+'</span></button>'}
+function userName(u){var md=(u&&u.user_metadata)||{};return ((md.prenom||'')+' '+(md.nom||'')).trim()||(u&&u.email)||''}
+function menuBtn(){var e=document.getElementById('mav');if(!e)return;var u=window.CURU,ti=document.getElementById('topin');if(ti)ti.classList.toggle('lo',u===null);
+ if(u){var md=u.user_metadata||{},nm=String(md.prenom||u.email||'?');e.innerHTML='<span class="av" style="width:36px;height:36px">'+esc(nm.charAt(0).toUpperCase())+'</span>'}
+ else e.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'}
+function buildMenu(){var u=window.CURU,m=document.getElementById('menu'),h='';
+ if(u)h+='<div class="mhead"><span class="av">'+esc(String(((u.user_metadata||{}).prenom||u.email||'?')).charAt(0).toUpperCase())+'</span><div><b>'+esc(userName(u))+'</b><small>'+esc(u.email||'')+'</small></div></div>';
+ else h+='<div class="mhead"><div><b>Bienvenue</b><small>Connectez-vous pour signaler et suivre des routes</small></div></div>';
+ h+=(u?mi('user','Profil','openProfile()','Nom, téléphone'):'')+
+  mi('gear','Paramètres','openSettings()','Notifications, vibration')+
+  mi('ring','Sonnerie','openRing()',PR.sound?TONES[PR.tone].n:'Désactivée')+
+  mi('route','Mes routes suivies','setTab(\'alerts\')',S.watch.length+' route'+(S.watch.length>1?'s':''))+
+  '<div class="msep"></div>'+
+  (isStandalone()?'':mi('dl','Installer l’app','installApp()'))+
+  mi('share','Partager l’app','shareApp()')+
+  mi('info','Aide et à propos','openAbout()')+
+  (u?'<div class="msep"></div>'+mi('out','Se déconnecter','doLogout()','','out'):'');
+ m.innerHTML=h}
+function toggleMenu(e){if(e)e.stopPropagation();var m=document.getElementById('menu');if(!m)return;if(!m.hidden)return closeMenu();buildMenu();m.hidden=false;document.getElementById('mbtn').setAttribute('aria-expanded','true')}
+function closeMenu(){var m=document.getElementById('menu');if(m&&!m.hidden){m.hidden=true;var b=document.getElementById('mbtn');if(b)b.setAttribute('aria-expanded','false')}}
+document.addEventListener('click',function(e){var m=document.getElementById('menu');if(m&&!m.hidden&&!m.contains(e.target))closeMenu()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMenu();closeSheet()}});
+
+/* fenêtres */
+function openSheet(title,body){closeSheet();var w=document.createElement('div');w.id='sheet';w.className='sheetbg';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label',title);
+ w.innerHTML='<div class="sheet" style="max-height:88vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3 style="margin:0">'+title+'</h3><button type="button" class="lnk" style="text-decoration:none;font-size:20px" aria-label="Fermer" onclick="closeSheet()">✕</button></div>'+body+'</div>';
+ w.addEventListener('click',function(e){if(e.target===w)closeSheet()});document.body.appendChild(w)}
+function srow(t,sub,ctl){return '<div class="srow"><div style="flex:1;min-width:0"><b>'+t+'</b>'+(sub?'<div class="mute">'+sub+'</div>':'')+'</div>'+ctl+'</div>'}
+function sw(on,fn,label){return '<button type="button" class="sw" role="switch" aria-checked="'+(!!on)+'" aria-label="'+label+'" onclick="'+fn+'"><i></i></button>'}
+function openSettings(){var perm=('Notification' in window)?Notification.permission:'none';
+ var pt=perm==='denied'?'Bloquées dans les réglages du navigateur':(PUSHON?'Actives, même app fermée':'Désactivées');
+ openSheet('Paramètres',
+  srow('Notifications',pt,sw(PUSHON,'togglePush()','Notifications'))+
+  srow('Vibration','Quand une alerte arrive',sw(PR.vib,'togglePR(\'vib\')','Vibration'))+
+  srow('Sonnerie',PR.sound?TONES[PR.tone].n:'Désactivée','<button type="button" class="alt" onclick="openRing()">Choisir</button>')+
+  srow('Alertes','Effacer toutes les alertes et demandes','<button type="button" class="alt" onclick="clearAlerts();toast(\'Alertes effacées\')">Effacer</button>')+
+  srow('Données de cet appareil','Routes suivies, préférences, délais','<button type="button" class="alt" onclick="wipeLocal()">Réinitialiser</button>')+
+  (window.CURU?srow('Supprimer mon compte','Efface définitivement votre compte et vos données','<button type="button" class="dng" onclick="openDelete()">Supprimer</button>'):'')+
+  '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p>')}
+function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
+function togglePush(){
+ if(PUSHON){window.pushOff().then(function(){PUSHON=false;openSettings();render()});return}
+ if(!window.LOGGED){toast('Connectez-vous pour activer les notifications');return}
+ if(!('Notification' in window)){toast('Notifications non disponibles sur cet appareil');return}
+ if(Notification.permission==='denied'){toast('Autorisez les notifications dans les réglages du navigateur');return}
+ Notification.requestPermission().then(function(p){if(p!=='granted'){toast('Notifications refusées');openSettings();return}
+  pushOn().then(function(){toast('Notifications activées, même app fermée');openSettings();render()}).catch(function(){toast('Activées seulement quand l’app est ouverte');openSettings()})})}
+function wipeLocal(){if(!confirm('Effacer les données de cet appareil (routes suivies, alertes, préférences) ?'))return;
+ ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});location.reload()}
+function openRing(){
+ var list=Object.keys(TONES).map(function(k){var on=PR.tone===k;return srow(TONES[k].n,'','<button type="button" class="alt" aria-label="Écouter '+TONES[k].n+'" onclick="playTone(\''+k+'\')">▶</button><button type="button" class="'+(on?'on':'alt')+'" aria-pressed="'+on+'" style="margin-left:6px" onclick="pickTone(\''+k+'\')">'+(on?'Choisie':'Choisir')+'</button>')}).join('');
+ openSheet('Sonnerie',srow('Son des alertes','Une cloche sonne quand une alerte arrive',sw(PR.sound,'setSound()','Son des alertes'))+
+  '<div class="srow" style="display:block"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(PR.vol*100)+'" oninput="PR.vol=this.value/100" onchange="savePR();playTone()" style="width:100%;padding:0"></div>'+list)}
+function pickTone(k){if(!TONES[k])return;PR.tone=k;PR.sound=true;savePR();playTone(k);openRing()}
+function setSound(){PR.sound=!PR.sound;savePR();if(PR.sound)playTone();openRing()}
+function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
+ var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
+ openSheet('Profil','<div class="mute" style="margin-bottom:6px">'+esc(u.email||'')+'</div>'+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
+ try{window.sbClient.from('profiles').select('prenom,nom,telephone').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]})})}catch(e){}}
+function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
+ var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30)};
+ window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}toast('Profil enregistré');closeSheet()}).catch(function(){toast('Échec de l’enregistrement : réessayez')})}
+
+function openDelete(){if(!window.CURU)return;
+ openSheet('Supprimer mon compte','<p style="margin:0 0 10px">Cette action est <b>définitive</b>. Seront effacés : votre compte, votre profil (nom, prénom, téléphone), vos signalements, vos demandes, vos routes suivies et vos notifications.</p><p class="mute" style="margin:0 0 6px">Pour confirmer, écrivez <b>SUPPRIMER</b> ci-dessous.</p><input id="delc" autocomplete="off" autocapitalize="characters" placeholder="SUPPRIMER" oninput="document.getElementById(\'delb\').disabled=this.value.trim().toUpperCase()!==\'SUPPRIMER\'"><button type="button" id="delb" class="dng" style="width:100%;margin-top:14px" disabled onclick="doDelete()">Supprimer définitivement</button><button type="button" class="alt" style="width:100%;margin-top:8px" onclick="closeSheet()">Annuler</button>')}
+function doDelete(){var b=document.getElementById('delb');if(b){b.disabled=true;b.textContent='Suppression…'}
+ (window.pushOff?window.pushOff():Promise.resolve()).then(function(){return window.sbRpc('delete_my_account')}).then(function(){
+  ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});
+  return window.sbClient.auth.signOut({scope:'local'}).catch(function(){})}).then(function(){toast('Compte supprimé');setTimeout(function(){location.reload()},900)}).catch(function(e){
+  toast(e&&e.code==='P0001'&&e.message?e.message:'Échec de la suppression : réessayez');if(b){b.disabled=false;b.textContent='Supprimer définitivement'}})}
+function openAbout(){openSheet('Aide et à propos',
+ '<p style="margin:0 0 10px">Trafik montre l’état de la circulation et des stations-service de Port-au-Prince, d’après les signalements de la communauté.</p>'+
+ '<div class="srow"><div><b>Comment ça marche</b><div class="mute">● Fluide, ▲ Ralenti, ■ Bloqué. Un état s’affiche quand au moins '+QUORUM+' personnes différentes ont signalé le même tronçon ou la même station.</div></div></div>'+
+ '<div class="srow"><div><b>Règles</b><div class="mute">Un signalement par tronçon ou station toutes les '+COOL+' minutes, 10 par heure au maximum. Un signalement compte 45 minutes (3 heures pour les stations).</div></div></div>'+
+ '<div class="srow"><div><b>Alertes</b><div class="mute">Suivez un tronçon pour être prévenu quand son état change. La cloche sépare les demandes des autres, les suivis (changements sur vos routes suivies) et les signalements reçus des autres.</div></div></div>'+
+ '<div class="srow"><div><b>Données enregistrées</b><div class="mute">Votre e-mail, nom, prénom et téléphone, vos signalements, vos routes suivies et, si vous les activez, vos abonnements aux notifications.</div></div></div>'+
+ '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p><p class="mute" style="margin:10px 0 0">🚫 Pas de téléphone en conduisant. En danger, suivez les consignes des autorités.</p>')}
+function shareApp(){var url=location.href.split('#')[0],d={title:'Trafik',text:'La circulation et les stations-service de Port-au-Prince en direct',url:url};
+ if(navigator.share){navigator.share(d).catch(function(){})}
+ else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){toast('Lien copié')},function(){toast(url)})}
+ else toast(url)}
+function doLogout(){try{localStorage.removeItem('trafik-v1');localStorage.removeItem('trafik-alerts')}catch(e){}
+ (window.pushOff?window.pushOff():Promise.resolve()).then(function(){return window.sbClient.auth.signOut()}).then(function(){location.reload()})}
+menuBtn();
+setTimeout(function(){if(typeof window.CURU==='undefined'){window.CURU=null;menuBtn()}},3000);
 var VAPID_PUB="BPkjxCUfOz8_pdiRMBZBLDzPA4SXKioPLb_1uDkjXwelqMeQjfVM47oZnfizy8UBc15HnuiNYa60e5qgBUicGZ0",PUSHON=false;
 function b64u(k){var p='='.repeat((4-k.length%4)%4),b=(k+p).replace(/-/g,'+').replace(/_/g,'/'),r=atob(b),o=new Uint8Array(r.length);for(var i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o}
 function pushReg(){return ('serviceWorker' in navigator&&location.protocol!=='file:')?navigator.serviceWorker.ready:Promise.reject(new Error('sw'))}
@@ -373,8 +563,8 @@ function info(id){var rs=recentRep(id);
 function change(id,before,after){
   if(before===after||S.watch.indexOf(id)<0)return;
   var m=LV[after].n.toLowerCase(),txt=seg(id)[1]+' : '+m+(before<3?' (avant : '+LV[before].n.toLowerCase()+')':'');
-  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:after});
-  toast('Alerte · '+txt);try{navigator.vibrate&&navigator.vibrate(after===2?[200,100,200]:100)}catch(e){}}
+  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:after,k:'suivi'});
+  toast('Suivi · '+txt);if(PR.vib)try{navigator.vibrate&&navigator.vibrate(after===2?[200,100,200]:100)}catch(e){}}
 /* anti-spam : un même utilisateur ne peut signaler le même tronçon / la même station qu'une fois toutes les 20 min (mémorisé sur l'appareil, survit au rechargement) */
 var COOL=20,CKEY='trafik-cool';
 function coolLoad(){try{var o=JSON.parse(localStorage.getItem(CKEY))||{},n=Date.now();for(var k in o)if(n-o[k]>=COOL*MIN)delete o[k];return o}catch(e){return {}}}
@@ -396,35 +586,49 @@ function syncWatch(){var c=window.sbClient;if(!c)return;
    if(add.length)return c.from('watched_segments').upsert(add.map(function(id){return {segment_id:id}}),{onConflict:'user_id,segment_id',ignoreDuplicates:true})
   })}).catch(function(){WSYNC=''})}
 window.syncWatch=syncWatch;syncWatch();
-function setTab(t){S.tab=t;window.scrollTo(0,0);render()}
-function setZone(z){S.zone=z;render()}
+function setTab(t){if(t!=='state')S.focus=null;S.tab=t;window.scrollTo(0,0);render()}
+/* ouvre l’onglet Trafic (liste) directement sur le tronçon : il est placé en tête de liste et mis en évidence */
+function goSeg(id){S.view='list';S.zone='Tous';S.focus=id;setTab('state')}
+function setZone(z){S.focus=null;S.zone=z;render()}
 function setLive(){S.live=!S.live;save();render()}
 /* signalements partagés entre utilisateurs (base de données de la page) */
 var DB=null,SHARED=false,LOCAL=[];
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;DB=db;
  db.collection('reports').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
   var bf={};SEG.forEach(function(s){bf[s[0]]=status(s[0])});
-  S.reports=snap.docs.map(function(d){return d.data()}).concat(LOCAL);SHARED=true;
+  var got=snap.docs.map(function(d){return d.data()});S.reports=got.concat(LOCAL);SHARED=true;recvCheck(got);
   SEG.forEach(function(s){change(s[0],bf[s[0]],status(s[0]))});render()},function(){})}).catch(function(){})}catch(e){}})();
 setInterval(function(){render()},60000);
 /* demandes d’état : quelqu’un demande, les autres répondent en signalant */
 var REQ=[],LREQ=[],lastAsk={},SEL=1;
-function openReq(id){var rs=REQ.concat(LREQ).filter(function(q){return q.seg===id&&Date.now()-q.t<45*MIN});if(!rs.length)return null;var t=Math.max.apply(null,rs.map(function(q){return q.t}));
+function mine(q){return !!(q.own||(q.u&&q.u===window.UID))}
+function openReq(id){var rs=REQ.concat(LREQ).filter(function(q){return q.seg===id&&Date.now()-q.t<45*MIN&&!mine(q)});if(!rs.length)return null;var t=Math.max.apply(null,rs.map(function(q){return q.t}));
   return S.reports.some(function(r){return r.seg===id&&r.t>t})?null:t}
+/* réception : tout signalement reçu d’une autre personne sur une route que je suis ou que j’ai demandée */
+var SEEN={},SEEN0=false;
+function recvCheck(docs){var n=Date.now(),fresh=[];
+ docs.forEach(function(r){var k=r.seg+':'+r.t+':'+r.lvl+':'+(r.u||'');if(!SEEN[k]){SEEN[k]=1;fresh.push(r)}});
+ if(!SEEN0){SEEN0=true;return}
+ fresh.forEach(function(r){if(mine(r)||!seg(r.seg))return;
+  var asked=REQ.concat(LREQ).some(function(q){return mine(q)&&q.seg===r.seg&&n-q.t<45*MIN&&r.t>q.t}),w=S.watch.indexOf(r.seg)>=0;
+  if(!asked&&!w)return;
+  var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':' (nouveau signalement)');
+  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception'});toast('Signalement · '+txt)})}
 function ask(id){if(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN)return toast('Demande déjà envoyée. Patientez quelques minutes.');
-  lastAsk[id]=Date.now();var q={seg:id,t:Date.now()};
+  lastAsk[id]=Date.now();var q={seg:id,t:Date.now(),own:1};
   function loc(){LREQ.push(q);toast('Demande enregistrée sur cet appareil seulement');render()}
   if(DB){DB.collection('requests').add(q).then(function(){toast('Demande envoyée : les personnes qui suivent ce tronçon sont prévenues')}).catch(function(e){if(e&&e.code==='P0001')return toast(e.message);loc()})}else loc()}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;var first=true;
  db.collection('requests').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
-  if(!first)snap.docChanges().forEach(function(c){if(c.type==='added'){var q=c.doc.data();if(S.watch.indexOf(q.seg)>=0){pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:'Quelqu’un demande l’état de : '+seg(q.seg)[1]+'. Si vous y êtes, signalez-le.',l:3});toast('Demande : '+seg(q.seg)[1])}}});
+  if(!first)snap.docChanges().forEach(function(c){if(c.type==='added'){var q=c.doc.data();if(!mine(q)&&S.watch.indexOf(q.seg)>=0){notify({k:'demande',txt:'Quelqu’un demande l’état de : '+seg(q.seg)[1]+'. Si vous y êtes, signalez-le.'});ringBell();toast('Demande : '+seg(q.seg)[1])}}});
   first=false;REQ=snap.docs.map(function(d){return d.data()});render()},function(){})}).catch(function(){})}catch(e){}})();
 
 var IC={"home": "<path d=\"M3 11 12 3l9 8v10h-6v-6H9v6H3z\"/>","state": "<path d=\"M4 6h16M4 12h16M4 18h10\"/>", "map": "<path d=\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14\"/>", "report": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v8M8 12h8\"/>", "fuel": "<path d=\"M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h14M15 9h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h6\"/>", "sec": "<path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z\"/>", "alerts": "<path d=\"M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0\"/>"};
 function render(){
   document.getElementById('lv').innerHTML=SHARED?'<span class="live"></span>signalements partagés':'signalements sur cet appareil';
-  var T=[['home','Accueil'],['state','Trafic'],['report','Signaler'],['fuel','Essence'],['sec','Sécurité'],['alerts','Alertes'+(S.watch.length?' '+S.watch.length:'')]];
+  var T=[['home','Accueil'],['state','Trafic'],['report','Signaler'],['fuel','Essence'],['sec','Sécurité']];
   document.getElementById('tabs').innerHTML=T.map(function(t){return '<button '+(S.tab===t[0]?'aria-current="page" ':'')+'onclick="setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+IC[t[0]]+'</svg>'+t[1]+'</button>'}).join('');
+  bellUpdate();
   var y=window.scrollY,v=document.getElementById('view'),kv={},ae=document.activeElement,af=ae&&ae.id?ae.id:'',ap=0;
   /* garde ce que la personne est en train de saisir quand la page se rafraîchit */
   ['sn','sz','fn','fzone'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
@@ -432,7 +636,7 @@ function render(){
   v.innerHTML=({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV})[S.tab]();
   Object.keys(kv).forEach(function(i){var e=document.getElementById(i);if(e)e.value=kv[i]});
   if(af&&kv[af]!==undefined){var f=document.getElementById(af);if(f){f.focus();try{f.setSelectionRange(ap,ap)}catch(e){}}}
-  if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='state'&&S.view==='map')bindMap();if(S.tab==='home')adInit()}
+  if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='state'&&S.view==='map'){bindMap();lMount()}if(S.tab==='home')adInit()}
 
 /* carte schématique : chaque tronçon est une ligne colorée selon son état */
 var GEO={1:[[100,215],[108,258],[100,300]],2:[[110,260],[135,268]],3:[[135,268],[170,278]],4:[[145,240],[195,215]],5:[[195,215],[235,195]],6:[[240,165],[285,145]],7:[[235,195],[240,165]],8:[[285,145],[300,120]],9:[[190,295],[245,318]],10:[[245,318],[262,328]],11:[[262,328],[295,345]],12:[[295,345],[320,405]],13:[[108,258],[128,238]],14:[[82,205],[90,250],[95,290]],15:[[128,238],[150,225]],16:[[108,258],[125,285]],17:[[125,285],[150,300]],18:[[128,238],[135,215]],19:[[170,278],[185,262]],20:[[170,278],[190,295]],21:[[150,225],[165,198]],22:[[135,215],[150,190]],23:[[235,195],[270,215]],24:[[195,215],[205,232]],25:[[300,120],[335,105]],26:[[285,145],[300,168]],27:[[285,145],[335,160]],28:[[335,160],[350,215]],29:[[245,318],[250,295]],30:[[262,328],[285,315]],31:[[262,328],[270,352]],32:[[245,318],[225,340]],33:[[295,345],[330,360]],34:[[250,295],[285,280]],35:[[320,405],[345,390]],36:[[320,405],[335,438]],37:[[88,330],[78,360]],38:[[88,330],[125,350]],39:[[100,300],[88,330]],40:[[78,360],[65,385]],41:[[65,385],[55,425]],42:[[55,425],[35,480]],43:[[100,215],[112,160],[130,115]],44:[[130,115],[118,70]],45:[[118,70],[100,40]],46:[[100,40],[92,12]]};
@@ -449,9 +653,9 @@ function setVB(){var m=document.getElementById('map');if(m)m.setAttribute('viewB
 function clampVB(){VB.w=Math.max(24,Math.min(750,VB.w));VB.h=VB.w*500/360;VB.x=VB.w>=750?(750-VB.w)/2:Math.max(0,Math.min(750-VB.w,VB.x));VB.y=VB.h>=580?(580-VB.h)/2:Math.max(0,Math.min(580-VB.h,VB.y))}
 function zoomAt(f,cx,cy){var nw=Math.max(24,Math.min(750,VB.w*f)),r=nw/VB.w;VB.x=cx-(cx-VB.x)*r;VB.y=cy-(cy-VB.y)*r;VB.w=nw;clampVB();setVB()}
 function toUnits(px,py){var b=document.getElementById('map').getBoundingClientRect();return [VB.x+(px-b.left)/b.width*VB.w,VB.y+(py-b.top)/b.height*VB.h]}
-function zoomBtn(f){zoomAt(f,VB.x+VB.w/2,VB.y+VB.h/2)}
-function resetMap(){VB={x:0,y:0,w:750,h:1041.7};clampVB();setVB()}
-function goPAP(){VB={x:PAPV.x,y:PAPV.y,w:PAPV.w,h:PAPV.h};clampVB();setVB()}
+function zoomBtn(f){if(lActive()){f<1?LMAP.zoomIn():LMAP.zoomOut();return}zoomAt(f,VB.x+VB.w/2,VB.y+VB.h/2)}
+function resetMap(){if(lActive()){LMAP.fitBounds([[17.95,-74.5],[20.1,-71.6]]);return}VB={x:0,y:0,w:750,h:1041.7};clampVB();setVB()}
+function goPAP(){if(lActive()){LMAP.setView(LPAP,12);return}VB={x:PAPV.x,y:PAPV.y,w:PAPV.w,h:PAPV.h};clampVB();setVB()}
 function pinchDist(){var k=Object.keys(PT);if(k.length<2)return 0;var a=PT[k[0]],b=PT[k[1]];return Math.hypot(a.x-b.x,a.y-b.y)}
 function bindMap(){var m=document.getElementById('map');if(!m)return;
  m.addEventListener('wheel',function(e){e.preventDefault();var c=toUnits(e.clientX,e.clientY);zoomAt(e.deltaY<0?0.8:1.25,c[0],c[1])},{passive:false});
@@ -463,7 +667,7 @@ window.addEventListener('pointermove',function(e){var p=PT[e.pointerId],m=docume
  else{p.x=e.clientX;p.y=e.clientY;var d=pinchDist();if(LASTD&&d){DRAGGED=true;var a=PT[k[0]],q=PT[k[1]],c=toUnits((a.x+q.x)/2,(a.y+q.y)/2);zoomAt(LASTD/d,c[0],c[1])}LASTD=d}});
 function endPt(e){delete PT[e.pointerId];LASTD=0;setTimeout(function(){DRAGGED=false},60)}
 window.addEventListener('pointerup',endPt);window.addEventListener('pointercancel',endPt);
-function mapV(){var sel=S.sel,u='',v='',h='';
+function mapSvg(){var sel=S.sel,u='',v='',h='';
  SEG.forEach(function(s){var g=GEO[s[0]];if(!g)return;var k=status(s[0]),p=g.map(function(q){return q.join(',')}).join(' ');
   if(sel===s[0])u='<polyline points="'+p+'" fill="none" stroke="var(--ink)" stroke-width="12" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>';
   v+='<polyline points="'+p+'" fill="none" stroke="'+COL[k]+'" stroke-width="7" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="'+(k===1?'12 6':k===3?'2 8':'none')+'"/>';
@@ -473,7 +677,64 @@ function mapV(){var sel=S.sel,u='',v='',h='';
  if(sel&&seg(sel)){var s=seg(sel),k=status(sel),w=S.watch.indexOf(sel)>=0;
   cap='<div class="card"><h3 style="margin:0;font-size:16px">'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(sel)+'</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button onclick="SEL='+sel+';setTab(\'report\')">Signaler</button><button class="alt" onclick="toggle('+sel+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+sel+')">Demander</button></div></div>'}
  var lg='<div class="mute" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">'+LV.map(function(l,i){return '<span><b style="color:'+COL[i]+'">'+l.i+'</b> '+l.n+'</span>'}).join('')+'</div>';
- return '<svg id="map" viewBox="'+VB.x+' '+VB.y+' '+VB.w+' '+VB.h+'" style="touch-action:none;width:100%;height:auto;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px" role="group" aria-label="Carte d’Haïti avec les tronçons de Port-au-Prince"><rect x="-2000" y="-2000" width="4750" height="4580" fill="var(--card)"/>'+BASE()+'<g transform="'+TF+'">'+u+v+t+h+'</g></svg><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="alt" onclick="zoomBtn(0.6)" aria-label="Zoom avant">Zoom +</button><button class="alt" onclick="zoomBtn(1.6)" aria-label="Zoom arrière">Zoom −</button><button class="alt" onclick="goPAP()">Port-au-Prince</button><button class="alt" onclick="resetMap()">Tout le pays</button></div>'+lg+cap+'<p class="mute">Carte schématique, pas à l’échelle.</p>'}
+ return '<svg id="map" viewBox="'+VB.x+' '+VB.y+' '+VB.w+' '+VB.h+'" style="touch-action:none;width:100%;height:auto;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px" role="group" aria-label="Carte d’Haïti avec les tronçons de Port-au-Prince"><rect x="-2000" y="-2000" width="4750" height="4580" fill="var(--card)"/>'+BASE()+'<g transform="'+TF+'">'+u+v+t+h+'</g></svg><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="alt" onclick="zoomBtn(0.6)" aria-label="Zoom avant">Zoom +</button><button class="alt" onclick="zoomBtn(1.6)" aria-label="Zoom arrière">Zoom −</button><button class="alt" onclick="goPAP()">Port-au-Prince</button><button class="alt" onclick="resetMap()">Tout le pays</button></div>'+lg+cap+'<p class="mute">Carte schématique, pas à l’échelle.</p>'+(LWHY?'<p class="mute"><b>Vraie carte indisponible :</b> '+esc(LWHY)+'</p>':'')}
+/* ===== Vraie carte d’Haïti : Leaflet + OpenStreetMap (la carte schématique ci-dessus reste le secours hors ligne) ===== */
+/* chaque tronçon = point de départ et d’arrivée [lat,lng] ; le tracé exact est calqué sur la vraie route par OSRM puis gardé sur l’appareil */
+var LLG={1:[[18.5497,-72.3412],[18.5268,-72.3440]],2:[[18.5452,-72.3398],[18.5408,-72.3366]],3:[[18.5400,-72.3300],[18.5360,-72.3245]],4:[[18.5530,-72.3285],[18.5605,-72.3085]],5:[[18.5605,-72.3085],[18.5655,-72.2965]],6:[[18.5690,-72.2930],[18.5790,-72.2700]],7:[[18.5690,-72.2935],[18.5720,-72.2900]],8:[[18.5760,-72.2720],[18.5860,-72.2560]],9:[[18.5330,-72.3215],[18.5150,-72.2870]],10:[[18.5128,-72.2872],[18.5105,-72.2838]],11:[[18.5105,-72.2838],[18.4960,-72.2780]],12:[[18.4960,-72.2790],[18.4520,-72.2860]],13:[[18.5495,-72.3365],[18.5435,-72.3390]],14:[[18.5550,-72.3445],[18.5345,-72.3475]],15:[[18.5455,-72.3340],[18.5410,-72.3265]],16:[[18.5390,-72.3395],[18.5270,-72.3410]],17:[[18.5380,-72.3315],[18.5320,-72.3270]],18:[[18.5435,-72.3420],[18.5425,-72.3340]],19:[[18.5470,-72.3350],[18.5520,-72.3250]],20:[[18.5415,-72.3335],[18.5360,-72.3290]],21:[[18.5440,-72.3340],[18.5380,-72.3320]],22:[[18.5445,-72.3375],[18.5395,-72.3350]],23:[[18.5655,-72.2965],[18.5710,-72.2870]],24:[[18.5600,-72.3090],[18.5620,-72.3070]],25:[[18.5860,-72.2560],[18.5900,-72.2400]],26:[[18.5870,-72.2450],[18.5900,-72.2380]],27:[[18.5840,-72.2350],[18.5775,-72.2230]],28:[[18.5775,-72.2230],[18.5520,-72.1450]],29:[[18.5100,-72.2850],[18.5160,-72.2800]],30:[[18.5120,-72.2880],[18.5135,-72.2960]],31:[[18.5100,-72.2850],[18.5050,-72.2900]],32:[[18.5100,-72.2840],[18.5080,-72.2730]],33:[[18.5080,-72.2870],[18.4880,-72.2980]],34:[[18.5130,-72.2930],[18.5050,-72.3080]],35:[[18.4800,-72.2790],[18.4850,-72.2650]],36:[[18.5100,-72.2820],[18.5030,-72.2700]],37:[[18.5262,-72.3450],[18.5230,-72.3600]],38:[[18.5300,-72.3400],[18.5185,-72.3480]],39:[[18.5230,-72.3600],[18.5180,-72.3800]],40:[[18.5180,-72.3800],[18.5250,-72.4400]],41:[[18.5250,-72.4400],[18.5420,-72.5200]],42:[[18.5420,-72.5200],[18.5110,-72.6330]],43:[[18.5870,-72.3390],[18.7000,-72.3900]],44:[[18.7000,-72.3900],[18.7340,-72.4170]],45:[[18.7340,-72.4170],[18.7700,-72.5050]],46:[[18.7700,-72.5050],[19.0750,-72.6700]]};
+var LK='trafik-geo-v1',LOK=null,LMAP=null,LEL=null,LPL={},LGEO={},LSELD=null,LTILE={ok:0,err:0},LQ=false,LP=null,LPAP=[18.5392,-72.335];
+function rc(c){var m=/var\((--[\w-]+)\)/.exec(c);if(!m)return c;var v=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();return v||'#888'}
+/* Leaflet : d’abord la copie locale (vendor/leaflet/), puis cdnjs en secours */
+var LWHY='';
+function loadLeaflet(){if(window.L&&window.L.map)return Promise.resolve();if(LP)return LP;
+ function css(h){var c=document.createElement('link');c.rel='stylesheet';c.href=h;document.head.appendChild(c)}
+ function js(h){return new Promise(function(ok,ko){var j=document.createElement('script'),t=setTimeout(function(){j.onload=j.onerror=null;ko(new Error('timeout'))},12000);
+  j.onload=function(){clearTimeout(t);window.L&&window.L.map?ok():ko(new Error('leaflet'))};j.onerror=function(){clearTimeout(t);ko(new Error('net'))};j.src=h;document.head.appendChild(j)})}
+ css('vendor/leaflet/leaflet.css');
+ LP=js('vendor/leaflet/leaflet.js').catch(function(){css('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css');return js('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js')});
+ LP.catch(function(){LP=null;LWHY='Leaflet (la bibliothèque de carte) n’a pas pu se charger : dossier vendor/leaflet absent, ou accès internet / cdnjs bloqué.'});return LP}
+function lActive(){return !!(LMAP&&LOK===true&&document.getElementById('lwrap'))}
+function lInit(){if(LMAP)return;
+ var cache={};try{cache=JSON.parse(localStorage.getItem(LK))||{}}catch(e){}
+ Object.keys(LLG).forEach(function(id){LGEO[id]=cache[id]||LLG[id]});
+ LEL=document.createElement('div');LEL.id='lmap';
+ LMAP=L.map(LEL,{zoomControl:false,attributionControl:true,minZoom:7,maxZoom:18,maxBounds:[[17.4,-75.2],[20.6,-71.0]]}).setView(LPAP,12);
+ LMAP.attributionControl.setPrefix(false);
+ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).on('tileload',function(){LTILE.ok++}).on('tileerror',function(){LTILE.err++;if(LTILE.err>=6&&!LTILE.ok){LWHY='Les fonds de carte OpenStreetMap n’ont pas pu se charger : pas d’internet, ou tile.openstreetmap.org bloqué (aperçu restreint, pare-feu).';LOK=false;render()}}).addTo(LMAP);
+ Object.keys(LLG).forEach(function(k){var id=Number(k),sg=seg(id),ll=LGEO[id],o={lineCap:'round',lineJoin:'round'};
+  var halo=L.polyline(ll,{color:'#111',weight:13,opacity:0,interactive:false,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
+  var main=L.polyline(ll,{color:'#888',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
+  var hit=L.polyline(ll,{color:'#000',weight:26,opacity:0,lineCap:'round'}).addTo(LMAP);
+  if(sg)hit.bindTooltip(sg[1],{sticky:true});
+  hit.on('click',function(){pick(id)});
+  LPL[id]={halo:halo,main:main,hit:hit}});
+ lRoutes()}
+/* tracé exact sur la vraie route (OSRM), une seule fois par tronçon ; ensuite gardé sur l’appareil */
+function hav(a,b){var R=6371000,r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)*Math.sin(dg/2);return 2*R*Math.asin(Math.sqrt(x))}
+function lRoutes(){if(LQ)return;LQ=true;var cache={};try{cache=JSON.parse(localStorage.getItem(LK))||{}}catch(e){}
+ var todo=Object.keys(LLG).filter(function(id){return !cache[id]});
+ (function next(){var id=todo.shift();if(!id||LOK===false)return;var a=LLG[id][0],b=LLG[id][1];
+  fetch('https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson').then(function(r){return r.json()}).then(function(d){
+   var rt=d&&d.routes&&d.routes[0];if(!rt)return;
+   if(rt.distance>2.2*hav(a,b)+400)return;/* détour trop long : on garde la ligne droite */
+   var ll=rt.geometry.coordinates.map(function(c){return [c[1],c[0]]});
+   LGEO[id]=ll;cache[id]=ll;LPL[id]&&['halo','main','hit'].forEach(function(n){LPL[id][n].setLatLngs(ll)});
+   try{localStorage.setItem(LK,JSON.stringify(cache))}catch(e){}}).catch(function(){}).then(function(){setTimeout(next,450)})})()}
+function lUpdate(){var sel=S.sel;Object.keys(LPL).forEach(function(k){var id=Number(k),st=status(id),p=LPL[k];
+ p.main.setStyle({color:rc(COL[st]),dashArray:st===1?'12 7':st===3?'2 9':null});
+ p.halo.setStyle({opacity:sel===id?.9:0});if(sel===id){p.halo.bringToFront();p.main.bringToFront();p.hit.bringToFront()}})}
+function lFocus(){if(S.sel===LSELD)return;LSELD=S.sel;var g=S.sel&&LGEO[S.sel];if(g)LMAP.fitBounds(L.latLngBounds(g),{maxZoom:16,padding:[50,50]})}
+function lAttach(){var w=document.getElementById('lwrap');if(!w||LOK===false)return;
+ lInit();LOK=true;if(LEL.parentNode!==w){w.innerHTML='';w.appendChild(LEL)}
+ LMAP.invalidateSize();lUpdate();lFocus()}
+function lMount(){if(!document.getElementById('lwrap')||LOK===false)return;
+ if(LMAP){lAttach();return}/* déjà chargée : rattachement immédiat, sans clignotement */
+ loadLeaflet().then(lAttach).catch(function(){LOK=false;render()})}
+function mapV(){if(LOK===false)return mapSvg();var sel=S.sel;
+ var lg='<div class="mute" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">'+LV.map(function(l,i){return '<span><b style="color:'+COL[i]+'">'+l.i+'</b> '+l.n+'</span>'}).join('')+'</div>';
+ var cap='<div class="card mute">Touchez un tronçon.</div>';
+ if(sel&&seg(sel)){var s=seg(sel),k=status(sel),w=S.watch.indexOf(sel)>=0;
+  cap='<div class="card"><h3 style="margin:0;font-size:16px">'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(sel)+'</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button onclick="SEL='+sel+';setTab(\'report\')">Signaler</button><button class="alt" onclick="toggle('+sel+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+sel+')">Demander</button></div></div>'}
+ return '<div id="lwrap" class="lwrap"><div class="mute" style="padding:40px 16px;text-align:center">Chargement de la carte…</div></div><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="alt" onclick="zoomBtn(0.6)" aria-label="Zoom avant">Zoom +</button><button class="alt" onclick="zoomBtn(1.6)" aria-label="Zoom arrière">Zoom −</button><button class="alt" onclick="goPAP()">Port-au-Prince</button><button class="alt" onclick="resetMap()">Tout le pays</button></div>'+lg+cap+'<p class="mute">Fond de carte © OpenStreetMap. Les tracés des tronçons sont approximatifs.</p>'}
 /* bulletin de sécurité : sources publiques, mis à jour par Claude (la page ne peut pas aller chercher les sources elle-même) */
 var BUL={u:'2026-10-26T00:00:00Z',ud:'26 oct. 2026',items:[
  {iso:'2026-10-25T12:00:00Z',d:'25 oct. 2026',z:'Tabarre, près du pont Tabarre / Marassa',l:2,t:'Opérations de sécurité en cours, avec des tirs signalés. L’ambassade recommande d’éviter la zone.',s:'Ambassade des États-Unis',url:'https://ht.usembassy.gov/security-alert-u-s-embassy-port-au-prince-haiti-october-25-2026/',segs:[8,25,26]},
@@ -487,14 +748,16 @@ var BUL={u:'2026-10-26T00:00:00Z',ud:'26 oct. 2026',items:[
 function secSegs(){var o=[],lim=Date.now()-48*3600000;(BUL.items||[]).forEach(function(i){if(i.l>=2&&Array.isArray(i.segs)&&new Date(i.iso).getTime()>lim)i.segs.forEach(function(x){if(typeof x==='number'&&o.indexOf(x)<0)o.push(x)})});return o}
 function ctx(){var b=BUL,age=Math.floor((Date.now()-new Date(b.u).getTime())/86400000);
  var h='<div class="card"><b>Situation sécuritaire</b><div class="mute">Dernière mise à jour : '+esc(b.ud)+(age>=1?' · <b>information vieille de '+age+' jour'+(age>1?'s':'')+'</b>':'')+'</div>';
- h+=(b.items||[]).map(function(i){var c=COL[i.l>=2?2:1];return '<div class="al" style="border-left:5px solid '+c+';padding-left:10px"><div class="mute">'+esc(i.d)+' · '+esc(i.z)+'</div><div>'+esc(i.t)+'</div><div class="mute">Source : '+(/^https:\/\//.test(String(i.url))?'<a href="'+esc(i.url)+'" target="_blank" rel="noopener" style="color:var(--ink)">'+esc(i.s)+'</a>':esc(i.s))+'</div></div>'}).join('');
+ h+=(b.items||[]).map(function(i){var c=COL[i.l>=2?2:1];return '<div class="al" style="border-left:5px solid '+c+';padding-left:10px"><div class="mute">'+esc(i.d)+' · '+esc(i.z)+'</div><div>'+esc(half(i.t))+'</div><div class="mute">Source : '+esc(i.s)+'</div></div>'}).join('');
  return h+'<div class="mute" style="margin-top:8px">Ce bulletin vient de sources publiques et n’est pas en temps réel. En cas de danger, suivez les consignes de la PNH et des autorités.</div></div>'}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;db.doc('situation/current').onSnapshot(function(s){if(s.exists){var d=s.data();if(d&&Array.isArray(d.items)&&typeof d.u==='string'){BUL=d;render()}}},function(){})}).catch(function(){})}catch(e){}})();
 /* onglet Sécurité : seulement les informations des 48 dernières heures */
 /* score de pertinence calculé par la base (gravité, mots-clés, zone connue, source officielle, fraîcheur) ; repli si absent */
 function relOf(i){if(typeof i.r==='number')return i.r;var a=Math.max(0,(Date.now()-new Date(i.iso).getTime())/3600000);return (i.l>=2?40:20)+(i.segs&&i.segs.length?15:0)+Math.round(15*Math.exp(-a/48))}
 function recent(){var lim=Date.now()-48*3600000;return (BUL.items||[]).filter(function(i){var t=new Date(i.iso).getTime();return t>lim&&t<=Date.now()+3600000}).sort(function(a,b){return relOf(b)-relOf(a)||new Date(b.iso)-new Date(a.iso)})}
-function secItem(i){var c=COL[i.l>=2?2:1];return '<div class="card" style="border-left:6px solid '+c+'"><div class="mute">'+esc(i.d)+' · '+esc(i.z)+'</div><div style="margin:4px 0">'+esc(i.t)+'</div><div class="mute">Source : '+(/^https:\/\//.test(String(i.url))?'<a href="'+esc(i.url)+'" target="_blank" rel="noopener" style="color:var(--ink)">'+esc(i.s)+'</a>':esc(i.s))+'</div></div>'}
+/* publication courte (200 caractères ou moins) : 100 % ; longue : 50 %, coupée à un mot */
+function half(t){t=String(t||'');if(t.length<=200)return t;var c=t.slice(0,Math.ceil(t.length/2)),sp=c.lastIndexOf(' ');if(sp>20)c=c.slice(0,sp);return c.replace(/[\s,;:.\-–]+$/,'')+'…'}
+function secItem(i){var c=COL[i.l>=2?2:1];return '<div class="card" style="border-left:6px solid '+c+'"><div class="mute">'+esc(i.d)+' · '+esc(i.z)+'</div><div style="margin:4px 0">'+esc(half(i.t))+'</div><div class="mute">Source : '+esc(i.s)+'</div></div>'}
 function secBanner(){var n=recent().length;if(!n)return '';return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Sécurité</b><div class="mute">'+(n?n+' alerte'+(n>1?'s':'')+' dans les dernières 48 h':'Aucune alerte vérifiée (48 h)')+'</div></div><button class="alt" onclick="setTab(\'sec\')">Voir</button></div>'}
 function secV(){var r=recent(),age=Math.floor((Date.now()-new Date(BUL.u).getTime())/3600000);
  return '<div class="mute" style="margin-top:12px">Dernières 48 h · mis à jour '+esc(BUL.ud)+(age>=3?' · <b>données anciennes</b>':'')+'</div>'+
@@ -502,9 +765,11 @@ function secV(){var r=recent(),age=Math.floor((Date.now()-new Date(BUL.u).getTim
  '<p class="mute">Sources publiques. En cas de danger, suivez les consignes des autorités.</p>'}
 function listV(){
   var list=SEG.filter(function(s){return S.zone==='Tous'||s[2]===S.zone}).sort(function(a,b){return status(b[0])-status(a[0])||0});
-  return '<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
+  var fs=S.focus&&seg(S.focus);if(fs)list=[fs].concat(list.filter(function(s){return s[0]!==S.focus}));
+  var fb=fs?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Alerte de sécurité</b><div class="mute">Tronçon concerné en tête de liste</div></div><button class="alt" onclick="S.focus=null;render()">Toute la liste</button></div>':'';
+  return fb+'<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
   '<div class="list">'+list.map(function(s){var k=status(s[0]),w=S.watch.indexOf(s[0])>=0;
-    return '<div class="seg"><div class="bar '+LV[k].c+'"></div><div class="b"><h3>'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(s[0])+'</div>'+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
+    return '<div class="seg'+(S.focus===s[0]?' pin':'')+'" id="seg'+s[0]+'"><div class="bar '+LV[k].c+'"></div><div class="b"><h3>'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(s[0])+'</div>'+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
     '<div class="a" style="flex-direction:column;gap:6px;justify-content:center"><button onclick="SEL='+s[0]+';setTab(\'report\')">Signaler</button><button class="'+(w?'on':'alt')+'" aria-pressed="'+w+'" onclick="toggle('+s[0]+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+s[0]+')">Demander</button></div></div>'}).join('')+'</div>'}
 
 function setView(v){S.view=v;render()}
@@ -513,12 +778,11 @@ function stateV(){
  return tog+(S.view==='map'?mapV():listV())}
 /* publicités : remplacez/ajoutez des entrées. img = lien https de la photo (optionnel), url = lien au toucher (optionnel) */
 var ADS=[
- {t:'NOVACC',
+{t:'NOVACC',
  s:'Nova Academy and Consulting Center',
  img:'https://novacademy-six.vercel.app/NOVACC.png',
  url:'https://novacademy-six.vercel.app/#formations',
  c:'linear-gradient(135deg,#1B2B3A,#2f5273)'},
- 
  {t:'Faites connaître votre commerce',s:'Visible sur l’Accueil de tous',c:'linear-gradient(135deg,#2A8A5B,#1d6a45)'},
  {t:'Votre offre ici',s:'Station, garage, restaurant…',c:'linear-gradient(135deg,#C93C3C,#8f2727)'}
 ],AD_I=0,AD_PAUSE=0;
@@ -548,20 +812,23 @@ function installApp(){
  w.addEventListener('click',function(e){if(e.target===w)closeSheet()});document.body.appendChild(w)}
 function instBtn(){return isStandalone()?'':'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="alt inst" onclick="installApp()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Installer l’app</button></div>'}
 function lastRep(id){var t=0;S.reports.forEach(function(r){if(r.seg===id&&r.t>t&&Date.now()-r.t<45*MIN)t=r.t});return t}
-function miniSeg(id){var sg=seg(id);if(!sg)return '';var k=status(id),t=lastRep(id);
- return '<div class="row" role="button" tabindex="0" onclick="S.sel='+id+';S.view=\'map\';setTab(\'state\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}"><span class="dot '+LV[k].c+'"></span><div class="nm">'+esc(sg[1])+'<div class="mute">'+(t?ago(t):'Aucun signalement récent')+'</div></div><span class="chip '+LV[k].c+'">'+LV[k].n+'</span></div>'}
+function miniSeg(id,red){var sg=seg(id);if(!sg)return '';var k=status(id),t=lastRep(id);
+ return '<div class="row" role="button" tabindex="0" onclick="S.sel='+id+';S.view=\'map\';setTab(\'state\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}"><span class="dot '+LV[k].c+'"></span><div class="nm">'+esc(sg[1])+'<div class="mute">'+(t?ago(t):'Aucun signalement récent')+'</div>'+'</div>'+(red?'<span class="chip r" role="button" tabindex="0" style="background:var(--r);color:#fff;cursor:pointer" onclick="event.stopPropagation();goSeg('+id+')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();event.preventDefault();goSeg('+id+')}">⚠ Alerte de sécurité</span>':'<span class="chip '+LV[k].c+'">'+LV[k].n+'</span>')+'</div>'}
+/* liste déroulante : l’état ouvert/fermé est gardé quand la page se rafraîchit */
+S.dd={};
+function dropPanel(key,t,n,body,act){return '<details class="panel dd"'+(S.dd[key]?' open':'')+' ontoggle="S.dd[\''+key+'\']=this.open"><summary><span>'+t+'<span class="cnt">'+n+'</span></span><svg class="cv" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'+body+(act?'<div class="ddf">'+act+'</div>':'')+'</details>'}
 function panel(t,body,act){return '<section class="panel"><div class="ph"><b>'+t+'</b>'+(act||'')+'</div>'+body+'</section>'}
 function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3)c[k]++});
  var T=[['state','Trafic','Liste des routes','S.view=\'list\''],['state','Carte','Vue d’ensemble','S.view=\'map\''],['fuel','Essence','Stations ouvertes',''],['sec','Sécurité','Alertes 48 h','']];
  var r=recent();
- var bad=SEG.filter(function(s){return status(s[0])>=1&&status(s[0])<3}).sort(function(a,b){return status(b[0])-status(a[0])||lastRep(b[0])-lastRep(a[0])}).slice(0,4);
+ var sgs=secSegs(),bad=SEG.filter(function(s){return sgs.indexOf(s[0])>=0}).sort(function(a,b){return status(b[0])-status(a[0])||lastRep(b[0])-lastRep(a[0])});
  var ic=function(n){return IC[n==='Carte'?'map':n==='Trafic'?'state':n==='Essence'?'fuel':'sec']};
  return instBtn()+'<div class="sum" style="margin-top:8px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
  '<div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
  '<div class="sep"><span>En direct</span></div>'+
  (r.length?secItem(r[0]).replace('class="card"','class="card" style="margin-top:0"'):'')+
- panel('Routes à éviter',bad.length?bad.map(function(s){return miniSeg(s[0])}).join(''):'<div class="row mute">Rien de signalé pour le moment</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Tout voir</button>')+
- panel('Mes routes',S.watch.length?S.watch.map(miniSeg).join(''):'<div class="row mute">Aucune route suivie</div>',S.alerts.length?'<button class="lnk" onclick="setTab(\'alerts\')">Alertes ('+S.alerts.length+')</button>':'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
+ dropPanel('bad','Routes à éviter',bad.length,bad.length?bad.map(function(s){return miniSeg(s[0],1)}).join(''):'<div class="row mute" style="cursor:default">Aucune route avec alerte de sécurité rouge</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Tout voir</button>')+
+ dropPanel('mine','Mes routes',S.watch.length,S.watch.length?S.watch.map(function(id){return miniSeg(id)}).join(''):'<div class="row mute" style="cursor:default">Aucune route suivie</div>',alertN()?'<button class="lnk" onclick="setTab(\'alerts\')">Alertes ('+alertN()+')</button>':'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
  '<button class="cta" onclick="setTab(\'report\')"><b>Vous êtes sur la route ?</b><span>Signalez en 1 touche</span></button>'+adsHtml()
 }
 function reportV(){var pend=SEG.filter(function(s){return openReq(s[0])});return ''+(pend.length?'<div class="card"><b>On attend votre réponse</b>'+pend.map(function(s){return '<div class="al">'+s[1]+'</div>'}).join('')+'</div>':'')+heroCta('Signalez en 1 touche')+
@@ -575,10 +842,17 @@ function reportV(){var pend=SEG.filter(function(s){return openReq(s[0])});return
 function alertsV(){
   var perm=('Notification' in window)?Notification.permission:'none';
   var nb=(perm==='default'||(perm==='granted'&&!PUSHON&&window.LOGGED))?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Notifications</b><div class="mute">Même quand l’app est fermée</div></div><button onclick="askNotif()">Activer</button></div>':(PUSHON?'<div class="card" style="display:flex;align-items:center;gap:10px"><span class="dot l0"></span><div><b>Notifications actives</b><div class="mute">Même quand l’app est fermée</div></div></div>':'');
-  var al=S.alerts.length?S.alerts.map(function(a){return '<div class="row" style="cursor:default"><span class="dot '+LV[a.l].c+'"></span><div class="nm">'+a.txt+'<div class="mute">'+esc(a.t)+'</div></div></div>'}).join(''):'<div class="row mute" style="cursor:default">Aucune alerte pour le moment</div>';
+  var X=function(f){return '<button class="lnk" style="text-decoration:none;font-size:18px;padding:4px 10px" aria-label="Effacer" onclick="'+f+'">✕</button>'};
+  var EMPTY=function(t){return '<div class="row mute" style="cursor:default">'+t+'</div>'};
+  var rq=reqList().map(function(q){var sg=seg(q.seg);return '<div class="row" style="cursor:default"><span class="dot l3"></span><div class="nm">Quelqu’un demande l’état de : '+esc(sg?sg[1]:'')+'<div class="mute">'+ago(q.t)+' · <a href="#" style="color:inherit" onclick="setTab(\'report\');return false">Signaler</a></div></div>'+X('delReq(\''+q.seg+':'+q.t+'\')')+'</div>'});
+  var item=function(o){var a=o.a;return '<div class="row" style="cursor:default"><span class="dot '+LV[a.l].c+'"></span><div class="nm">'+a.txt+'<div class="mute">'+esc(a.t)+'</div></div>'+X('delAlert('+o.i+')')+'</div>'};
+  var su=alKind('suivi').map(item),rc=alKind('reception').map(item);
+  var clr=function(k,n){return n?'<button class="lnk" onclick="clearKind(\''+k+'\')">Tout effacer</button>':''};
   return nb+
-   panel('Routes suivies',S.watch.length?S.watch.map(miniSeg).join(''):'<div class="row mute" style="cursor:default">Aucune route suivie</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
-   panel('Alertes',al,S.alerts.length?'<button class="lnk" onclick="clearAlerts()">Effacer</button>':'')+
+   panel('Routes suivies',S.watch.length?S.watch.map(miniSeg).join(''):EMPTY('Aucune route suivie'),'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
+   panel('Demandes'+(rq.length?' ('+rq.length+')':''),rq.length?rq.join(''):EMPTY('Personne ne demande l’état d’une route'),clr('demande',rq.length))+
+   panel('Suivis'+(su.length?' ('+su.length+')':''),su.length?su.join(''):EMPTY('Aucun changement sur vos routes suivies'),clr('suivi',su.length))+
+   panel('Signalements'+(rc.length?' ('+rc.length+')':''),rc.length?rc.join(''):EMPTY('Aucun signalement reçu'),clr('reception',rc.length))+
    (window.LOGGED?'':'<p class="mute" style="margin-top:12px">Connectez-vous pour retrouver vos routes suivies sur tous vos appareils.</p>')}
 
 /* stations-service : liste de base (sources publiques, Google Maps) ; l'état (ouverte/limitée/fermée) vient uniquement des signalements, jamais préétabli */
@@ -694,13 +968,13 @@ function fuelV(){var c=[0,0,0],all=STN.map(function(s){var k=fstat(s.id);if(k<3)
 render();
 </script>
 <aside class="side l" aria-hidden="true">
- <div class="sl"><div class="logo"><svg viewBox="0 0 24 24"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#fff"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><h2>Trafik PAP</h2></div>
+ <div class="sl"><div class="logo"><svg viewBox="0 0 24 24"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#fff"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><h2>Trafik</h2></div>
  <p>La circulation et les stations-service de Port-au-Prince, signalées en direct par la communauté.</p>
  <ul><li><i style="background:#2A8A5B"></i>Ouverte / fonctionnelle</li><li><i style="background:#E0A100"></i>Limitée</li><li><i style="background:#C93C3C"></i>Fermée / non fonctionnelle</li></ul>
 </aside>
 <aside class="side r">
  <h3>Ouvrir sur votre téléphone</h3>
- <div class="qr" id="qr" role="img" aria-label="QR code pour ouvrir Trafik PAP"></div>
+ <div class="qr" id="qr" role="img" aria-label="QR code pour ouvrir Trafik"></div>
  <p>Scannez le code avec l’appareil photo de votre téléphone.</p>
  <button class="alt inst" onclick="installApp()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Installer l’app</button>
 </aside>
