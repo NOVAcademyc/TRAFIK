@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trafik PAP</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trafik PAP">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F4F0;--card:#FFFFFF;--ink:#1B2024;--mute:#66707A;--line:#E3E5DF;--main:#1B2B3A;--on:#FFFFFF;--acc:#E0A100;--g:#2A8A5B;--y:#E0A100;--r:#C93C3C;--n:#8A939A;--soft:#EAECE6;--sh:0 1px 2px rgba(20,30,40,.06),0 6px 18px rgba(20,30,40,.06);--rad:18px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0F1418;--card:#192026;--ink:#E9EDEF;--mute:#9AA6AE;--line:#2A343C;--main:#3A5B78;--g:#46B982;--y:#F2B91F;--r:#EE6A6A;--soft:#222C33;--acc:#F2B91F;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25)}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0F1418;--card:#192026;--ink:#E9EDEF;--mute:#9AA6AE;--line:#2A343C;--main:#3A5B78;--g:#46B982;--y:#F2B91F;--r:#EE6A6A;--soft:#222C33;--acc:#F2B91F;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.45 "Bricolage Grotesque",system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+#app{max-width:760px;margin:0 auto}
+.top{position:sticky;top:0;z-index:20;background:var(--main);color:#fff;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+.top-in{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:40px;height:40px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none}
+.logo svg{width:28px;height:28px}
+h1{font-size:20px;font-weight:800;margin:0;letter-spacing:-.01em;line-height:1.1}
+.sub{color:rgba(255,255,255,.75);font-size:12.5px;line-height:1.2;margin-top:2px}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#5BE3A0;margin-right:5px;box-shadow:0 0 0 3px rgba(91,227,160,.25)}
+.authbar{display:flex;align-items:center;gap:8px;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;font-size:15px;border-radius:12px;padding:0 16px;min-height:44px;text-decoration:none;border:2px solid transparent;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.85)}
+.btn.primary{background:var(--acc);color:#2b2000}
+.btn.sm{min-height:36px;font-size:13px;padding:0 12px}
+.who{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.av{width:34px;height:34px;border-radius:50%;background:var(--acc);color:#2b2000;display:grid;place-items:center;font-weight:800}
+main{padding:6px 16px 24px}
+.hero{background:linear-gradient(135deg,var(--main),#2f5273);color:#fff;border-radius:var(--rad);padding:16px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:var(--sh)}
+.hero b{font-size:17px;display:block}
+.hero span{font-size:13.5px;opacity:.85}
+.hero .btns{display:flex;gap:8px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.sum div{border-radius:16px;padding:12px 6px;color:#fff;text-align:center;font-weight:800;font-size:28px;line-height:1.1;box-shadow:var(--sh)}
+.sum span{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.l0{background:var(--g)}.l1{background:var(--y);color:#2b2000!important}.l2{background:var(--r)}.l3{background:var(--n)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;background:var(--card);color:var(--ink);padding:8px 16px;min-height:40px;font-size:14px;border:1px solid var(--line);border-radius:999px}
+.chips button[aria-pressed="true"]{background:var(--main);color:var(--on);border-color:var(--main)}
+.list{display:grid;gap:10px;margin-top:10px}
+.seg{display:flex;gap:12px;align-items:stretch;background:var(--card);border:1px solid var(--line);border-radius:var(--rad);overflow:hidden;box-shadow:var(--sh)}
+.bar{width:8px;flex:none}
+.seg .b{flex:1;padding:12px 0;min-width:0}
+.seg h3{margin:0 0 2px;font-size:15.5px;font-weight:600;line-height:1.25}
+.st{font-weight:800}
+.s0{color:var(--g)}.s1{color:var(--y)}.s2{color:var(--r)}.s3{color:var(--n)}
+.mute{color:var(--mute);font-size:13.5px}
+.seg .a{padding:10px 10px 10px 0;display:flex;align-items:center}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--ink);margin-top:4px}
+.pill.r{background:var(--r);color:#fff}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 14px;background:var(--main);color:var(--on);cursor:pointer;min-height:44px;transition:transform .08s}
+button:active{transform:scale(.97)}
+button.alt{background:var(--soft);color:var(--ink)}
+button.on{background:var(--main);color:var(--on)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+select,input{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:48px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:14px;margin-top:12px;box-shadow:var(--sh)}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 6px;font-weight:600}
+.big{display:grid;gap:10px;margin-top:14px}
+.big button{display:flex;align-items:center;gap:12px;font-size:18px;padding:18px 16px;color:#fff;text-align:left;border-radius:16px;min-height:60px}
+.big .l1{color:#2b2000}
+h2{font-size:20px;font-weight:800;margin:18px 0 0;letter-spacing:-.01em}
+.al{padding:10px 0;border-bottom:1px solid var(--line)}
+.al:last-child{border:0}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+nav div{max-width:760px;margin:0 auto;display:flex}
+nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:8px 2px 6px;font-size:11.5px;min-height:60px;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-current="page"]{color:var(--ink)}
+nav button[aria-current="page"]::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;border-radius:0 0 4px 4px;background:var(--acc)}
+.fb{display:flex;gap:6px;margin-top:10px}
+.fb button{flex:1;padding:8px 4px;font-size:14px}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:92%;text-align:center;z-index:50;box-shadow:var(--sh)}
+#toast.show{opacity:1}
+@media (min-width:720px){.list{grid-template-columns:1fr 1fr}.big{grid-template-columns:repeat(3,1fr)}.big button{flex-direction:column;text-align:center;justify-content:center}main{padding:6px 24px 24px}}
+@media (max-width:520px){.top-in{flex-wrap:nowrap}.top .btn{min-height:40px;padding:0 12px;font-size:14px}.authbar{gap:6px}.brand .sub{display:none}h1{font-size:18px}.logo{width:36px;height:36px}.seg .a{padding:8px 8px 8px 0}.seg .a button{min-height:38px;padding:6px 12px;font-size:13px;width:100%}}
+@media (max-width:360px){.top .btn{padding:0 9px;font-size:13px}.brand{gap:8px}}
+@media (prefers-reduced-motion:reduce){#toast,button{transition:none}}
+.tog{display:flex;background:var(--soft);border-radius:14px;padding:4px;margin-top:12px;gap:4px}
+.tog button{flex:1;background:none;color:var(--mute);min-height:40px}
+.tog button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:var(--rad);padding:16px;text-align:left;box-shadow:var(--sh);min-height:112px}
+.tile svg{width:30px;height:30px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}
+.tile b{font-size:17px}.tile span{font-size:13px;color:var(--mute);font-weight:500}
+@media (min-width:720px){.grid2{grid-template-columns:repeat(4,1fr)}}
+.cta{width:100%;margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(135deg,var(--acc),#f0b92a);color:#2b2000;border-radius:var(--rad);padding:18px;min-height:76px;box-shadow:var(--sh)}
+.cta b{font-size:18px}.cta span{font-size:14px;font-weight:600;opacity:.8}
+.sep{display:flex;align-items:center;gap:12px;margin:26px 0 14px;color:var(--mute);font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.sep span{display:flex;align-items:center;gap:7px}.sep span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 0 3px rgba(42,138,91,.2)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--sh);margin-top:14px;overflow:hidden}
+.ph{display:flex;justify-content:space-between;align-items:center;padding:12px 8px 8px 16px}
+.ph b{font-size:17px;font-weight:800}
+.lnk{background:none;color:var(--ink);text-decoration:underline;text-underline-offset:3px;min-height:36px;padding:4px 10px;font-size:14px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);cursor:pointer}
+.row.mute{cursor:default}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.row .nm{flex:1;min-width:0;font-weight:600;font-size:15px;line-height:1.25}
+.row .nm .mute{font-weight:400;font-size:12.5px;margin-top:2px}
+.chip{font-size:12.5px;font-weight:800;padding:4px 11px;border-radius:999px;color:#fff;flex:none}
+.chip.l1{color:#2b2000}
+.adwrap{margin-top:22px}
+.adlab{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 4px 6px}
+.ads{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:var(--rad);box-shadow:var(--sh);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ads::-webkit-scrollbar{display:none}
+.ad{flex:0 0 100%;scroll-snap-align:center;position:relative;aspect-ratio:16/8;min-height:140px;color:#fff;text-decoration:none;display:flex;align-items:flex-end;overflow:hidden}
+.ad img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.adt{position:relative;width:100%;padding:36px 16px 14px;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent)}
+.adt b{display:block;font-size:19px;line-height:1.2}.adt span{font-size:13.5px;opacity:.9}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:all .2s}
+.dots i.on{width:20px;border-radius:4px;background:var(--acc)}
+.inst{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:6px 14px;font-size:14px;border-radius:999px}
+.inst svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sheetbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:520px;background:var(--card);border-radius:22px 22px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.sheet h3{margin:0 0 12px;font-size:19px;font-weight:800}
+.sheet ol{margin:0 0 16px;padding-left:22px}.sheet li{margin:8px 0}
+@media (min-width:720px){.sheetbg{align-items:center}.sheet{border-radius:22px}}
+
+/* ===== Design écran mobile : fond noir autour du contenu, extérieur blanc ===== */
+:root:root:root{color-scheme:dark;--bg:#000;--card:#14191E;--ink:#E9EDEF;--mute:#9AA6AE;--line:#262E35;--main:#3A5B78;--g:#46B982;--y:#F2B91F;--r:#EE6A6A;--soft:#1E262C;--acc:#F2B91F;--sh:0 1px 2px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.4)}
+html{background:#fff}
+:root{--w:430px}
+@media (min-width:721px){:root{--w:680px}}
+body{background:#000;max-width:var(--w);margin:0 auto;min-height:100vh;position:relative}
+nav{left:50%;right:auto;width:100%;max-width:var(--w);transform:translateX(-50%);background:#0B0E11;border-top:1px solid var(--line);box-shadow:none}
+.sheetbg{left:50%;right:auto;width:100%;max-width:var(--w);transform:translateX(-50%)}
+.top{box-shadow:0 2px 14px rgba(0,0,0,.6)}
+@media (min-width:521px){
+ body::after{content:"";position:fixed;z-index:100;top:0;bottom:0;left:50%;width:100%;max-width:var(--w);transform:translateX(-50%);border-radius:34px;box-shadow:0 0 0 200vmax #fff;pointer-events:none}
+ body::before{content:"";position:fixed;z-index:101;top:7px;bottom:7px;left:50%;width:calc(100% - 14px);max-width:calc(var(--w) - 14px);transform:translateX(-50%);border-radius:27px;border:1px solid rgba(255,255,255,.85);pointer-events:none}
+ .top{padding-top:calc(14px + env(safe-area-inset-top,0px))}
+ nav{padding-bottom:6px}
+ body{padding-bottom:82px}
+}
+@media (min-width:521px) and (max-width:720px){
+ .top-in{flex-wrap:nowrap}.top .btn{min-height:40px;padding:0 12px;font-size:14px}.authbar{gap:6px}.brand .sub{display:none}h1{font-size:18px}.logo{width:36px;height:36px}
+ .seg .a{padding:8px 8px 8px 0}.seg .a button{min-height:38px;padding:6px 12px;font-size:13px;width:100%}
+ .list{grid-template-columns:1fr}
+ .big{grid-template-columns:1fr}.big button{flex-direction:row;text-align:left;justify-content:flex-start}
+ .grid2{grid-template-columns:1fr 1fr}
+ main{padding:6px 16px 24px}
+ .sheetbg{align-items:flex-end}.sheet{border-radius:22px 22px 0 0}
+}
+.hw{display:none}
+@media (min-width:521px){
+ .hw{display:block;position:fixed;z-index:102;left:50%;top:0;bottom:0;width:6px;margin-left:calc(var(--w)/2 - 1px);pointer-events:none}
+ .hw i{position:absolute;left:0;width:6px;background:#000;border-radius:0 4px 4px 0}
+ .hw i:nth-child(1){top:20%;height:46px}
+ .hw i:nth-child(2){top:calc(20% + 58px);height:46px}
+ .hw i:nth-child(3){top:calc(20% + 150px);height:78px}
+}
+.side{display:none}
+@media (min-width:1280px){
+ .side{display:flex;flex-direction:column;gap:14px;position:fixed;z-index:103;top:50%;transform:translateY(-50%);width:220px;color:#1B2024}
+ .side.l{right:calc(50% + var(--w)/2 + 32px)}
+ .side.r{left:calc(50% + var(--w)/2 + 32px)}
+ .side h2{margin:0;font-size:26px;line-height:1.1}
+ .side h3{margin:0;font-size:16px;font-weight:800}
+ .side p{margin:0;font-size:14.5px;line-height:1.45;color:#4B555E}
+ .side .sl{display:flex;align-items:center;gap:10px}
+ .side .sl .logo{background:#1B2B3A}
+ .side ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px;font-weight:600}
+ .side li{display:flex;align-items:center;gap:8px}
+ .side li i{width:12px;height:12px;border-radius:50%;flex:none}
+ .qr{background:#fff;border:1px solid #E3E5DF;border-radius:16px;padding:12px;width:164px;height:164px;display:grid;place-items:center;box-shadow:0 6px 18px rgba(20,30,40,.08)}
+ .qr svg{width:100%;height:100%;display:block}
+ .side button{align-self:flex-start}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik PAP</h1><div class="sub"><span id="lv"></span></div></div></div><div id="auth" class="authbar"><a class="btn ghost" href="auth.html">Connexion</a><a class="btn primary" href="auth.html#signup">S’inscrire</a></div></div></header>
+<div id="app">
+  <main id="view"></main>
+</div>
+<nav><div id="tabs"></div></nav>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ===== Connexion à la base Supabase TRAFIK =====
+   Remplace l'ancien stockage de la page : même interface (window.claude),
+   mais les données sont dans les tables Supabase. */
+(function(){
+var SB_URL='https://oyrkbvwfsmdifpqyngea.supabase.co',SB_KEY='sb_publishable_OIZAPZdPhM6UA4Nfucyj7A_eWzGTFx3';
+var sb=null;try{sb=window.supabase.createClient(SB_URL,SB_KEY)}catch(e){}
+if(!sb)return;
+window.sbClient=sb;
+window.sbRpc=function(n,a){return sb.rpc(n,a).then(function(r){if(r.error)throw r.error;return r})};
+function iso(ms){return new Date(ms).toISOString()}
+var T={
+ segment_requests:{table:'segment_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
+ segments:{table:'segments',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {id:Number(r.id),name:r.name,zone:r.zone}}},
+ reports:{table:'reports',to:function(d){return {segment_id:d.seg,level:d.lvl}},from:function(r){return {seg:Number(r.segment_id),lvl:r.level,t:Date.parse(r.created_at)}}},
+ requests:{table:'requests',to:function(d){return {segment_id:d.seg}},from:function(r){return {seg:Number(r.segment_id),t:Date.parse(r.created_at)}}},
+ stations:{table:'stations',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone}}},
+ station_requests:{table:'station_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
+ fuel:{table:'fuel',to:function(d){return {station_id:d.st,level:d.lvl}},from:function(r){return {st:Number(r.station_id),lvl:r.level,t:Date.parse(r.created_at)}}}
+};
+function user(){return sb.auth.getSession().then(function(r){return r.data&&r.data.session?r.data.session.user:null})}
+function Q(name,win){
+ var c=T[name];
+ return {
+  where:function(f,op,v){return Q(name,Date.now()-v)},
+  add:function(d){return user().then(function(u){
+    if(!u)throw new Error('login');
+    return sb.from(c.table).insert(c.to(d)).then(function(r){if(r.error)throw r.error;return r})})},
+  doc:function(id){return {delete:function(){return user().then(function(u){
+    if(!u)throw new Error('login');
+    return sb.from(c.table).delete().eq('id',id).select().then(function(r){
+      if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error('refusé');return r})})}}},
+  onSnapshot:function(cb,eb){
+   var seen={},busy=false,again=false;
+   function pull(){
+    if(busy){again=true;return}busy=true;
+    var q=sb.from(c.table).select('*').order('id',{ascending:true}).limit(2000);
+    if(win)q=q.gt('created_at',iso(Date.now()-win));
+    q.then(function(r){
+      busy=false;
+      if(r.error){if(eb)eb(r.error);return}
+      var docs=r.data.map(function(row){var id=Number(row.id),data=c.from(row);return {id:id,data:function(){return data}}});
+      var ch=[];docs.forEach(function(d){if(!seen[d.id])ch.push({type:'added',doc:d})});
+      seen={};docs.forEach(function(d){seen[d.id]=1});
+      cb({docs:docs,docChanges:function(){return ch}});
+      if(again){again=false;pull()}
+    },function(e){busy=false;if(eb)eb(e)});
+   }
+   pull();
+   try{sb.channel('rt-'+name+'-'+Math.random().toString(36).slice(2)).on('postgres_changes',{event:'*',schema:'public',table:c.table},pull).subscribe()}catch(e){}
+   setInterval(pull,60000);
+  }
+ };
+}
+window.claude={use:function(n){
+ if(n==='db')return Promise.resolve({collection:function(name){return Q(name,0)},
+  doc:function(path){return {onSnapshot:function(cb,eb){
+   var id=String(path).split('/').pop();
+   function pull(){sb.from('situation').select('data').eq('id',id).maybeSingle().then(function(r){
+    if(r.error){if(eb)eb(r.error);return}
+    cb({exists:!!r.data,data:function(){return r.data?r.data.data:null}})},function(e){if(eb)eb(e)})}
+   pull();
+   try{sb.channel('rt-situation-'+Math.random().toString(36).slice(2)).on('postgres_changes',{event:'*',schema:'public',table:'situation'},pull).subscribe()}catch(e){}
+   setInterval(pull,300000);
+  }}}});
+ if(n==='user')return Promise.resolve({signedIn:function(){return user().then(function(u){return !!u})},canEdit:function(){return user().then(function(u){
+   if(!u)return false;
+   return sb.from('profiles').select('is_admin').eq('id',u.id).maybeSingle().then(function(r){return !!(r.data&&r.data.is_admin)})})}});
+ return Promise.resolve(null)}};
+
+/* Bandeau connexion en haut de la page */
+function bar(){user().then(function(u){
+ var was=window.LOGGED;window.LOGGED=!!u;if(u&&window.syncWatch)window.syncWatch();if(was!==window.LOGGED&&typeof render==='function')render();
+ var el=document.getElementById('auth');if(!el)return;el.textContent='';
+ if(!u){
+  var a=document.createElement('a');a.href='auth.html';a.className='btn ghost';a.textContent='Connexion';el.appendChild(a);
+  var c=document.createElement('a');c.href='auth.html#signup';c.className='btn primary';c.textContent='S’inscrire';el.appendChild(c);
+ }else{
+  var m=u.user_metadata||{},nm=String(m.prenom||u.email||'?');
+  var w=document.createElement('div');w.className='who';
+  var av=document.createElement('span');av.className='av';av.textContent=nm.charAt(0).toUpperCase();w.appendChild(av);
+  var b=document.createElement('button');b.type='button';b.className='btn ghost sm';b.textContent='Quitter';
+  b.onclick=function(){try{localStorage.removeItem('trafik-v1');localStorage.removeItem('trafik-alerts')}catch(e){}(window.pushOff?window.pushOff():Promise.resolve()).then(function(){return sb.auth.signOut()}).then(function(){location.reload()})};w.appendChild(b);el.appendChild(w);
+ }})}
+bar();sb.auth.onAuthStateChange(function(){bar()});
+})();
+</script>
+<script>
+var KEY='trafik-v1',MIN=60000;
+var SEG=[
+ [1,'Boulevard Jean-Jacques Dessalines (Grand-Rue)','Centre'],
+ [2,'Champ de Mars','Centre'],
+ [3,'Lalue','Centre'],
+ [4,'Delmas 2 à Delmas 33','Delmas'],
+ [5,'Delmas 33 à Delmas 75','Delmas'],
+ [6,'Boulevard Toussaint Louverture (Aéroport)','Tabarre'],
+ [7,'Carrefour de l’Aéroport','Tabarre'],
+ [8,'Route de Tabarre','Tabarre'],
+ [9,'Avenue Lamartinière (Bois-Verna → Pétion-Ville)','Pétion-Ville'],
+ [10,'Place Saint-Pierre','Pétion-Ville'],
+ [11,'Route de Frères','Pétion-Ville'],
+ [12,'Route de Kenscoff','Montagne']
+];
+[
+ [13,'Rue Pavée','Centre'],[14,'Boulevard Harry Truman (Bicentenaire)','Centre'],[15,'Avenue Martin Luther King','Centre'],[16,'Avenue Christophe','Centre'],[17,'Avenue Magloire Ambroise','Centre'],[18,'Rue Capois','Centre'],[19,'Route de Bourdon','Centre'],[20,'Turgeau','Centre'],[21,'Avenue Poupelard','Centre'],[22,'Rue Oswald Durand','Centre'],
+ [23,'Delmas 75 à Delmas 105 (vers Pétion-Ville)','Delmas'],[24,'Carrefour Delmas 33','Delmas'],
+ [25,'Boulevard du 15 Octobre (Tabarre)','Tabarre'],[26,'Carrefour Marassa','Tabarre'],
+ [27,'Croix-des-Bouquets (RN3)','Est'],[28,'Route de Malpasse (RN8, vers la frontière)','Est'],
+ [29,'Rue Grégoire','Pétion-Ville'],[30,'Rue Métellus','Pétion-Ville'],[31,'Rue Lamarre','Pétion-Ville'],[32,'Rue Panaméricaine','Pétion-Ville'],
+ [33,'Route de Thomassin','Montagne'],[34,'Route de Laboule','Montagne'],[35,'Route de Fermathe','Montagne'],[36,'Route de Boutilliers','Montagne'],
+ [37,'Route de Carrefour (RN2), Portail Léogâne','Sud'],[38,'Route des Rails','Sud'],[39,'Martissant (zone à risque)','Sud'],[40,'Mariani','Sud'],[41,'Gressier','Sud'],[42,'Léogâne (RN2)','Sud'],
+ [43,'Route Nationale 1 (Croix-des-Missions)','Nord'],[44,'Cabaret (RN1)','Nord'],[45,'Arcahaie (RN1)','Nord'],[46,'Pont-Sondé (RN1, vers le Nord)','Nord']
+].forEach(function(s){SEG.push(s)});
+var ZONES=['Tous','Centre','Delmas','Tabarre','Est','Pétion-Ville','Montagne','Sud','Nord'];
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+/* tronçons ajoutés par les utilisateurs */
+/* toute contribution durable (tronçon, station) exige une session ouverte ; pas de repli local */
+function needLogin(go,what){
+ if(!DB||!window.claude)return toast('Connexion indisponible : réessayez dans un instant');
+ window.claude.use('user').then(function(u){return u.signedIn()}).then(function(ok){
+  if(!ok)return toast('Connectez-vous pour '+what);
+  go()}).catch(function(){toast('Vérification de la connexion impossible : réessayez')})}
+function loginNote(){return window.LOGGED?'':'<p class="mute" style="margin:0 0 6px">🔒 Connexion requise (en haut de la page)</p>'}
+function heroCta(){return ''}
+function addSeg(){var n=document.getElementById('sn').value.trim(),z=document.getElementById('sz').value;
+ if(n.length<4)return toast('Entrez le nom de la route ou du tronçon');
+ if(SEG.some(function(s){return s[1].toLowerCase()===esc(n).toLowerCase()}))return toast('Ce tronçon existe déjà');
+ n=n.slice(0,80);
+ needLogin(function(){DB.collection('segment_requests').add({name:n,zone:z}).then(function(){document.getElementById('sn').value='';toast('Merci ! Tronçon envoyé : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer un tronçon':'Échec de l’envoi : réessayez plus tard')})},'proposer un tronçon')}
+(function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;
+ db.collection('segments').onSnapshot(function(snap){snap.docs.forEach(function(d){var x=d.data();
+  if(typeof x.id==='number'&&typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!SEG.some(function(s){return s[0]===x.id}))SEG.push([x.id,esc(x.name.slice(0,80)),x.zone])});render()},function(){})}).catch(function(){})}catch(e){}})();
+var LV=[{n:'Fluide',i:'●',c:'l0'},{n:'Ralenti',i:'▲',c:'l1'},{n:'Bloqué',i:'■',c:'l2'},{n:'Pas d’info',i:'–',c:'l3'}];
+var S={reports:[],watch:[],alerts:[],live:true,tab:'home',view:'list',zone:'Tous'};
+try{var p=JSON.parse(localStorage.getItem(KEY));if(p){S.watch=p.watch||[];S.live=p.live!==false}}catch(e){}
+try{var pa=JSON.parse(localStorage.getItem('trafik-alerts'));if(Array.isArray(pa))S.alerts=pa.slice(0,30)}catch(e){}
+function saveAlerts(){try{localStorage.setItem('trafik-alerts',JSON.stringify(S.alerts))}catch(e){}}
+var SWR=null;
+try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').then(function(r){SWR=r}).catch(function(){})}catch(e){}
+function notify(a){try{
+ if(!('Notification' in window)||Notification.permission!=='granted'||!document.hidden)return;
+ var txt=String(a.txt).replace(/<[^>]*>/g,''),o={body:txt,tag:'trafik-alert',renotify:true};
+ if(SWR&&SWR.showNotification)SWR.showNotification('Trafik PAP',o);else new Notification('Trafik PAP',o)}catch(e){}}
+function pushAlert(a){S.alerts.unshift(a);S.alerts=S.alerts.slice(0,30);saveAlerts();notify(a)}
+function clearAlerts(){S.alerts=[];saveAlerts();render()}
+var VAPID_PUB="BPkjxCUfOz8_pdiRMBZBLDzPA4SXKioPLb_1uDkjXwelqMeQjfVM47oZnfizy8UBc15HnuiNYa60e5qgBUicGZ0",PUSHON=false;
+function b64u(k){var p='='.repeat((4-k.length%4)%4),b=(k+p).replace(/-/g,'+').replace(/_/g,'/'),r=atob(b),o=new Uint8Array(r.length);for(var i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o}
+function pushReg(){return ('serviceWorker' in navigator&&location.protocol!=='file:')?navigator.serviceWorker.ready:Promise.reject(new Error('sw'))}
+function pushSave(sub){var j=sub.toJSON();return window.sbClient.from('push_subscriptions').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'}).then(function(r){if(r.error)throw r.error})}
+function pushOn(){return pushReg().then(function(reg){if(!reg.pushManager)throw new Error('push');
+ return reg.pushManager.getSubscription().then(function(sub){return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)})})}).then(function(sub){return pushSave(sub)}).then(function(){PUSHON=true})}
+function pushCheck(){if(!('Notification' in window)||Notification.permission!=='granted')return;
+ pushReg().then(function(reg){return reg.pushManager&&reg.pushManager.getSubscription()}).then(function(sub){PUSHON=!!sub;if(sub&&window.LOGGED&&window.sbClient)pushSave(sub).catch(function(){});render()}).catch(function(){})}
+window.pushOff=function(){return pushReg().then(function(reg){return reg.pushManager.getSubscription()}).then(function(sub){if(!sub)return;
+ var ep=sub.endpoint;return window.sbClient.from('push_subscriptions').delete().eq('endpoint',ep).then(function(){return sub.unsubscribe()})}).catch(function(){})};
+function askNotif(){if(!('Notification' in window))return toast('Notifications non disponibles sur cet appareil');
+ if(!window.LOGGED)return toast('Connectez-vous pour activer les notifications');
+ Notification.requestPermission().then(function(p){if(p!=='granted'){toast('Notifications refusées');render();return}
+  pushOn().then(function(){toast('Notifications activées, même app fermée');render()}).catch(function(){toast('Activées seulement quand l’app est ouverte');render()})})}
+setTimeout(pushCheck,1500);
+function save(){try{localStorage.setItem(KEY,JSON.stringify({watch:S.watch,live:S.live}))}catch(e){}}
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.className='show';clearTimeout(toast.t);toast.t=setTimeout(function(){el.className=''},3500)}
+function seg(id){return SEG.filter(function(s){return s[0]===id})[0]}
+/* aucune donnée inventée : les états viennent uniquement des signalements */
+var CTX='<div class="card"><b>Situation générale (sources publiques)</b><div class="al mute">Les axes nationaux RN1, RN2 et RN3 reliant Port-au-Prince aux provinces restent bloqués à différents endroits (Logistics Cluster, avril 2026). Le port de Port-au-Prince fonctionne, mais les vols commerciaux internationaux étaient suspendus (juin 2026).</div><div class="al mute">La PNH mène des opérations pour rouvrir la circulation entre Tabarre et Carrefour Marassa, dans des zones contrôlées par la coalition Viv Ansanm (Le Nouvelliste).</div><div class="al mute">La chaussée est très dégradée à plusieurs endroits, par exemple la route de Bourdon et la rue Grégoire (Le Nouvelliste, 2025).</div><div class="mute">Ce ne sont pas des états en temps réel : seuls les signalements colorent les tronçons.</div></div>';
+function status(id){var now=Date.now(),sw=0,sl=0;
+  S.reports.forEach(function(r){var a=(now-r.t)/MIN;if(r.seg===id&&a<45){var w=1/(1+a/10);sw+=w;sl+=w*r.lvl}});
+  if(!sw)return 3;var v=sl/sw;return v<0.5?0:v<1.4?1:2}
+function info(id){var rs=S.reports.filter(function(r){return r.seg===id&&(Date.now()-r.t)<45*MIN});
+  if(!rs.length)return 'Aucun signalement récent';
+  var last=Math.max.apply(null,rs.map(function(r){return r.t})),m=Math.max(0,Math.round((Date.now()-last)/MIN));
+  var c=[0,0,0];rs.forEach(function(r){c[r.lvl]++});
+  return (m<1?'à l’instant':'il y a '+m+' min')+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fluide, '+c[1]+' ralenti, '+c[2]+' bloqué)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
+function change(id,before,after){
+  if(before===after||S.watch.indexOf(id)<0)return;
+  var m=LV[after].n.toLowerCase(),txt=seg(id)[1]+' : '+m+(before<3?' (avant : '+LV[before].n.toLowerCase()+')':'');
+  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:after});
+  toast('Alerte · '+txt);try{navigator.vibrate&&navigator.vibrate(after===2?[200,100,200]:100)}catch(e){}}
+function report(id,lvl){var b=status(id),r={seg:id,lvl:lvl,t:Date.now()};
+  function loc(){LOCAL.push(r);S.reports.push(r);change(id,b,status(id));render()}
+  if(DB){DB.collection('reports').add(r).then(function(){toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase())}).catch(function(){loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
+  else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
+function toggle(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toast('Vous recevrez les alertes pour ce tronçon')}else S.watch.splice(i,1);save();render();
+ if(window.sbClient&&window.LOGGED){var q=window.sbClient.from('watched_segments');(on?q.upsert({segment_id:id},{onConflict:'user_id,segment_id',ignoreDuplicates:true}):q.delete().eq('segment_id',id)).then(function(){},function(){})}}
+var WSYNC='';
+function syncWatch(){var c=window.sbClient;if(!c)return;
+ c.auth.getSession().then(function(r){var u=r.data&&r.data.session&&r.data.session.user;if(!u||WSYNC===u.id)return;WSYNC=u.id;
+  return c.from('watched_segments').select('segment_id').then(function(r2){if(r2.error)throw r2.error;
+   var srv=r2.data.map(function(x){return Number(x.segment_id)}),add=S.watch.filter(function(id){return srv.indexOf(id)<0});
+   srv.forEach(function(id){if(S.watch.indexOf(id)<0)S.watch.push(id)});save();render();
+   if(add.length)return c.from('watched_segments').upsert(add.map(function(id){return {segment_id:id}}),{onConflict:'user_id,segment_id',ignoreDuplicates:true})
+  })}).catch(function(){WSYNC=''})}
+window.syncWatch=syncWatch;syncWatch();
+function setTab(t){S.tab=t;window.scrollTo(0,0);render()}
+function setZone(z){S.zone=z;render()}
+function setLive(){S.live=!S.live;save();render()}
+/* signalements partagés entre utilisateurs (base de données de la page) */
+var DB=null,SHARED=false,LOCAL=[];
+(function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;DB=db;
+ db.collection('reports').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
+  var bf={};SEG.forEach(function(s){bf[s[0]]=status(s[0])});
+  S.reports=snap.docs.map(function(d){return d.data()}).concat(LOCAL);SHARED=true;
+  SEG.forEach(function(s){change(s[0],bf[s[0]],status(s[0]))});render()},function(){})}).catch(function(){})}catch(e){}})();
+setInterval(function(){render()},60000);
+/* demandes d’état : quelqu’un demande, les autres répondent en signalant */
+var REQ=[],LREQ=[],lastAsk={},SEL=1;
+function openReq(id){var rs=REQ.concat(LREQ).filter(function(q){return q.seg===id&&Date.now()-q.t<45*MIN});if(!rs.length)return null;var t=Math.max.apply(null,rs.map(function(q){return q.t}));
+  return S.reports.some(function(r){return r.seg===id&&r.t>t})?null:t}
+function ask(id){if(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN)return toast('Demande déjà envoyée. Patientez quelques minutes.');
+  lastAsk[id]=Date.now();var q={seg:id,t:Date.now()};
+  function loc(){LREQ.push(q);toast('Demande enregistrée sur cet appareil seulement');render()}
+  if(DB){DB.collection('requests').add(q).then(function(){toast('Demande envoyée : les personnes qui suivent ce tronçon sont prévenues')}).catch(loc)}else loc()}
+(function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;var first=true;
+ db.collection('requests').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
+  if(!first)snap.docChanges().forEach(function(c){if(c.type==='added'){var q=c.doc.data();if(S.watch.indexOf(q.seg)>=0){pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:'Quelqu’un demande l’état de : '+seg(q.seg)[1]+'. Si vous y êtes, signalez-le.',l:3});toast('Demande : '+seg(q.seg)[1])}}});
+  first=false;REQ=snap.docs.map(function(d){return d.data()});render()},function(){})}).catch(function(){})}catch(e){}})();
+
+var IC={"home": "<path d=\"M3 11 12 3l9 8v10h-6v-6H9v6H3z\"/>","state": "<path d=\"M4 6h16M4 12h16M4 18h10\"/>", "map": "<path d=\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14\"/>", "report": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v8M8 12h8\"/>", "fuel": "<path d=\"M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h14M15 9h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h6\"/>", "sec": "<path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z\"/>", "alerts": "<path d=\"M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0\"/>"};
+function render(){
+  document.getElementById('lv').innerHTML=SHARED?'<span class="live"></span>signalements partagés':'signalements sur cet appareil';
+  var T=[['home','Accueil'],['state','Trafic'],['report','Signaler'],['fuel','Essence'],['sec','Sécurité'],['alerts','Alertes'+(S.watch.length?' '+S.watch.length:'')]];
+  document.getElementById('tabs').innerHTML=T.map(function(t){return '<button '+(S.tab===t[0]?'aria-current="page" ':'')+'onclick="setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+IC[t[0]]+'</svg>'+t[1]+'</button>'}).join('');
+  var y=window.scrollY,v=document.getElementById('view'),kv={},ae=document.activeElement,af=ae&&ae.id?ae.id:'',ap=0;
+  /* garde ce que la personne est en train de saisir quand la page se rafraîchit */
+  ['sn','sz','fn','fzone'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
+  try{ap=ae.selectionStart||0}catch(e){}
+  v.innerHTML=({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV})[S.tab]();
+  Object.keys(kv).forEach(function(i){var e=document.getElementById(i);if(e)e.value=kv[i]});
+  if(af&&kv[af]!==undefined){var f=document.getElementById(af);if(f){f.focus();try{f.setSelectionRange(ap,ap)}catch(e){}}}
+  if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='state'&&S.view==='map')bindMap();if(S.tab==='home')adInit()}
+
+/* carte schématique : chaque tronçon est une ligne colorée selon son état */
+var GEO={1:[[100,215],[108,258],[100,300]],2:[[110,260],[135,268]],3:[[135,268],[170,278]],4:[[145,240],[195,215]],5:[[195,215],[235,195]],6:[[240,165],[285,145]],7:[[235,195],[240,165]],8:[[285,145],[300,120]],9:[[190,295],[245,318]],10:[[245,318],[262,328]],11:[[262,328],[295,345]],12:[[295,345],[320,405]],13:[[108,258],[128,238]],14:[[82,205],[90,250],[95,290]],15:[[128,238],[150,225]],16:[[108,258],[125,285]],17:[[125,285],[150,300]],18:[[128,238],[135,215]],19:[[170,278],[185,262]],20:[[170,278],[190,295]],21:[[150,225],[165,198]],22:[[135,215],[150,190]],23:[[235,195],[270,215]],24:[[195,215],[205,232]],25:[[300,120],[335,105]],26:[[285,145],[300,168]],27:[[285,145],[335,160]],28:[[335,160],[350,215]],29:[[245,318],[250,295]],30:[[262,328],[285,315]],31:[[262,328],[270,352]],32:[[245,318],[225,340]],33:[[295,345],[330,360]],34:[[250,295],[285,280]],35:[[320,405],[345,390]],36:[[320,405],[335,438]],37:[[88,330],[78,360]],38:[[88,330],[125,350]],39:[[100,300],[88,330]],40:[[78,360],[65,385]],41:[[65,385],[55,425]],42:[[55,425],[35,480]],43:[[100,215],[112,160],[130,115]],44:[[130,115],[118,70]],45:[[118,70],[100,40]],46:[[100,40],[92,12]]};
+var LBL=[['Mer',20,250],['Centre-ville',108,322],['Delmas',215,182],['Aéroport',248,160],['Tabarre',300,100],['Pétion-Ville',205,360],['Kenscoff',280,418],['Carrefour',92,372],['Nord (RN1)',140,100]];
+var COL=['var(--g)','var(--y)','var(--r)','var(--n)'];
+/* fond de carte : départements d’Haïti (copié de index) */
+var HAITI=[["Nord-Ouest", "M424.39,45.31 L431.07,45.00 L435.53,45.63 L439.52,47.39 L444.78,50.49 L466.67,59.07 L475.97,64.95 L473.35,70.68 L469.59,69.07 L450.00,66.38 L440.91,62.81 L429.67,60.28 L425.84,58.53 L423.19,59.04 L420.44,60.06 L417.94,60.50 L413.10,59.53 L407.43,57.63 L402.30,55.04 L399.00,51.99 L400.02,52.00 L400.66,51.68 L402.00,50.49 L412.70,46.90 L424.39,45.31 Z M361.90,157.73 L361.59,157.70 L360.42,158.25 L359.35,159.45 L357.82,160.65 L355.36,161.19 L351.92,160.35 L346.81,158.21 L341.82,155.45 L338.70,152.70 L334.03,157.25 L324.09,158.55 L302.05,157.44 L297.69,156.29 L295.13,156.04 L293.49,154.98 L289.41,150.39 L287.16,149.35 L283.95,147.18 L282.67,142.30 L282.23,137.18 L281.57,134.31 L289.82,121.06 L291.04,118.29 L293.31,118.23 L305.39,112.59 L305.39,110.77 L292.62,110.77 L296.36,107.95 L300.76,107.49 L305.48,107.87 L310.14,107.58 L338.31,94.63 L346.56,88.64 L351.19,82.22 L353.95,85.57 L356.60,86.47 L363.17,85.71 L366.54,86.21 L372.64,88.42 L375.87,88.91 L378.63,88.85 L380.16,88.62 L384.78,87.38 L388.20,86.94 L391.74,87.24 L394.95,88.43 L397.40,90.73 L399.06,86.94 L403.42,84.58 L408.72,84.06 L413.19,85.71 L419.37,83.17 L426.74,81.25 L434.44,80.28 L441.63,80.69 L465.23,86.21 L471.05,89.81 L475.86,92.10 L489.58,96.37 L490.40,97.38 L488.53,98.72 L486.24,102.16 L484.76,105.11 L482.84,106.61 L480.26,109.03 L477.23,111.69 L474.78,111.39 L472.50,109.93 L468.80,108.97 L465.57,109.84 L464.80,112.78 L464.86,114.26 L457.83,113.27 L452.15,117.35 L448.30,119.58 L443.45,120.84 L429.08,133.14 L411.63,136.21 L402.18,134.45 L392.63,133.67 L383.31,131.36 L374.39,132.24 L363.51,143.71 L361.66,157.07 L361.90,157.73 Z"], ["Nord", "M610.03,137.43 L608.92,139.74 L608.04,141.58 L607.00,151.01 L602.07,158.27 L598.36,159.06 L595.55,160.90 L595.72,164.27 L594.81,167.38 L595.50,173.13 L598.61,178.91 L600.98,186.14 L604.92,192.51 L604.21,199.00 L601.91,202.60 L606.17,203.77 L610.48,205.03 L622.15,216.88 L626.00,229.50 L609.33,238.04 L593.34,248.02 L588.86,248.45 L586.73,245.26 L581.67,240.18 L574.84,237.78 L572.42,231.19 L568.56,224.24 L567.46,217.27 L568.66,210.50 L564.77,201.76 L555.47,197.19 L546.55,188.91 L545.44,173.37 L540.98,171.09 L537.61,169.37 L533.65,169.73 L529.38,173.81 L524.78,173.66 L524.75,180.00 L517.81,182.22 L509.54,178.78 L502.55,173.14 L496.14,166.82 L492.33,156.86 L489.14,147.12 L483.55,144.72 L480.66,140.52 L482.84,132.25 L478.02,128.68 L473.03,129.37 L472.36,123.90 L467.61,120.17 L464.86,114.26 L464.80,112.78 L465.57,109.84 L468.80,108.97 L472.50,109.93 L474.78,111.39 L477.23,111.69 L480.26,109.03 L482.84,106.61 L484.76,105.11 L486.24,102.16 L488.53,98.72 L490.40,97.38 L495.22,103.36 L501.41,107.56 L507.85,109.88 L511.38,107.58 L515.60,109.83 L522.60,112.53 L529.16,114.21 L532.05,113.35 L533.52,117.21 L544.69,127.63 L544.69,129.16 L543.59,128.66 L539.96,127.63 L542.88,134.76 L543.90,135.83 L547.99,136.75 L548.86,136.43 L547.99,134.31 L551.01,130.81 L550.25,130.77 L548.75,130.89 L547.99,130.81 L548.05,130.52 L548.53,129.48 L549.09,128.68 L549.43,129.16 L549.43,127.63 L548.90,126.87 L547.99,124.30 L549.43,124.30 L552.87,126.17 L557.59,126.61 L561.81,125.24 L563.65,121.63 L565.98,119.23 L570.54,119.11 L573.65,121.73 L571.68,127.63 L575.60,129.98 L579.39,130.38 L588.53,128.76 L589.32,128.82 L590.62,129.16 L592.22,130.24 L595.55,133.60 L597.79,134.31 L605.77,134.31 L607.65,134.84 L608.67,135.98 L609.41,137.13 L610.03,137.43 Z"], ["Nord-Est", "M679.04,243.22 L678.93,243.23 L671.09,244.26 L662.91,243.55 L658.66,243.85 L653.39,242.84 L647.10,241.96 L642.80,238.31 L634.23,234.39 L626.00,229.50 L622.15,216.88 L610.48,205.03 L606.17,203.77 L601.91,202.60 L604.21,199.00 L604.92,192.51 L600.98,186.14 L598.61,178.91 L595.50,173.13 L594.81,167.38 L595.72,164.27 L595.55,160.90 L598.36,159.06 L602.07,158.27 L607.00,151.01 L608.04,141.58 L608.92,139.74 L610.03,137.43 L611.57,138.18 L614.71,140.47 L616.82,141.00 L618.61,140.16 L619.79,138.34 L621.26,136.57 L623.92,135.83 L628.31,132.47 L634.87,132.52 L646.18,135.83 L652.39,136.69 L654.05,137.92 L652.65,141.00 L650.64,142.30 L647.90,142.76 L641.44,142.67 L643.87,147.15 L647.88,147.62 L652.23,146.41 L655.65,145.85 L659.83,149.36 L662.41,150.98 L663.55,150.20 L664.79,146.84 L664.29,145.09 L659.19,143.76 L657.55,142.25 L656.72,140.10 L657.10,137.65 L658.87,136.13 L661.51,136.31 L667.50,137.65 L677.21,137.90 L679.25,144.64 L680.08,148.97 L679.85,152.85 L679.47,159.27 L680.53,164.83 L687.00,180.15 L689.76,199.28 L689.60,210.20 L686.96,215.82 L685.68,217.22 L682.75,224.68 L680.55,226.41 L674.32,229.98 L672.80,231.52 L673.94,236.40 L678.07,242.22 L679.04,243.22 Z"], ["Artibonite", "M574.84,237.78 L564.25,252.72 L562.93,270.43 L569.14,276.65 L566.98,281.86 L567.48,287.80 L569.05,295.05 L565.86,307.48 L567.27,319.72 L567.93,326.21 L564.76,334.16 L563.88,341.72 L558.44,344.83 L547.47,343.54 L536.65,344.20 L531.23,338.59 L525.00,334.01 L518.90,331.53 L513.12,329.03 L510.81,325.26 L508.31,321.72 L502.58,321.98 L497.15,321.35 L479.68,318.86 L464.94,318.30 L461.06,321.16 L457.82,325.30 L457.20,324.98 L432.96,298.71 L431.85,292.44 L441.63,288.46 L450.51,287.87 L455.41,286.22 L457.56,282.63 L456.18,278.03 L452.81,275.64 L448.62,274.03 L444.78,271.76 L442.33,268.65 L436.78,258.80 L435.31,254.91 L436.89,253.78 L437.07,253.34 L436.81,252.86 L437.02,251.57 L439.28,249.44 L441.82,243.80 L443.35,241.54 L445.88,240.29 L449.55,239.56 L453.27,239.40 L455.98,239.87 L452.66,233.27 L450.27,231.92 L445.64,231.50 L442.89,229.40 L441.99,224.62 L442.35,219.55 L443.35,216.48 L444.80,218.00 L446.73,219.33 L448.95,220.03 L451.24,219.68 L453.79,217.82 L453.92,216.03 L453.10,214.01 L452.72,208.38 L452.14,207.32 L452.66,207.52 L455.98,208.12 L457.14,208.85 L458.76,210.24 L460.98,211.40 L463.88,211.46 L459.42,202.56 L457.09,201.25 L445.13,200.49 L442.10,198.28 L440.07,195.01 L437.02,191.27 L432.67,188.13 L417.94,181.39 L405.67,173.79 L401.28,172.73 L397.49,170.96 L389.33,164.00 L387.78,163.63 L385.47,164.67 L371.15,159.37 L368.78,159.10 L364.22,157.97 L361.90,157.73 L361.66,157.07 L363.51,143.71 L374.39,132.24 L383.31,131.36 L392.63,133.67 L402.18,134.45 L411.63,136.21 L429.08,133.14 L443.45,120.84 L448.30,119.58 L452.15,117.35 L457.83,113.27 L464.86,114.26 L467.61,120.17 L472.36,123.90 L473.03,129.37 L478.02,128.68 L482.84,132.25 L480.66,140.52 L483.55,144.72 L489.14,147.12 L492.33,156.86 L496.14,166.82 L502.55,173.14 L509.54,178.78 L517.81,182.22 L524.75,180.00 L524.78,173.66 L529.38,173.81 L533.65,169.73 L537.61,169.37 L540.98,171.09 L545.44,173.37 L546.55,188.91 L555.47,197.19 L564.77,201.76 L568.66,210.50 L567.46,217.27 L568.56,224.24 L572.42,231.19 L574.84,237.78 Z"], ["Centre", "M626.00,229.50 L634.23,234.39 L642.80,238.31 L647.10,241.96 L653.39,242.84 L658.66,243.85 L662.91,243.55 L671.09,244.26 L678.93,243.23 L679.04,243.22 L686.67,251.03 L701.66,258.34 L704.58,259.76 L703.53,274.35 L702.34,278.55 L699.43,282.89 L691.59,288.53 L688.08,291.68 L681.16,301.41 L671.14,312.56 L668.10,314.45 L656.23,317.66 L652.24,320.36 L652.92,324.61 L657.07,323.96 L662.82,321.98 L668.23,322.17 L670.35,323.89 L673.62,330.82 L675.74,333.31 L681.03,338.18 L682.75,340.39 L684.03,344.92 L684.27,354.84 L686.14,364.46 L685.79,369.05 L684.65,373.57 L683.08,377.71 L680.30,382.27 L677.06,384.94 L670.86,388.80 L669.27,389.79 L669.19,389.70 L667.63,387.79 L658.89,382.55 L649.21,380.01 L641.44,377.18 L633.55,374.42 L614.94,377.83 L596.62,383.83 L578.99,377.72 L565.07,363.90 L558.17,359.12 L550.28,357.12 L542.69,352.32 L536.65,344.20 L547.47,343.54 L558.44,344.83 L563.88,341.72 L564.76,334.16 L567.93,326.21 L567.27,319.72 L565.86,307.48 L569.05,295.05 L567.48,287.80 L566.98,281.86 L569.14,276.65 L562.93,270.43 L564.25,252.72 L574.84,237.78 L581.67,240.18 L586.73,245.26 L588.86,248.45 L593.34,248.02 L609.33,238.04 L626.00,229.50 Z"], ["Ouest", "M536.65,344.20 L542.69,352.32 L550.28,357.12 L558.17,359.12 L565.07,363.90 L578.99,377.72 L596.62,383.83 L614.94,377.83 L633.55,374.42 L641.44,377.18 L649.21,380.01 L658.89,382.55 L667.63,387.79 L669.19,389.70 L669.27,389.79 L668.67,390.16 L665.52,393.72 L660.76,401.88 L657.75,405.13 L648.80,408.21 L631.41,404.98 L622.82,406.81 L618.84,409.83 L620.89,413.83 L641.81,435.41 L643.30,437.73 L643.87,441.40 L642.64,442.74 L640.91,443.74 L640.04,446.43 L641.42,450.95 L644.89,452.87 L653.91,455.16 L655.86,456.90 L659.38,462.12 L661.25,464.30 L669.98,470.17 L682.41,474.88 L685.71,477.08 L687.83,478.99 L688.33,479.70 L685.61,484.42 L685.39,484.45 L665.16,487.98 L653.20,480.48 L637.61,479.27 L618.17,479.52 L598.17,474.96 L578.08,470.80 L558.37,472.04 L539.23,470.87 L536.04,467.27 L533.22,463.39 L526.53,463.91 L522.12,461.66 L516.05,458.63 L507.72,458.10 L500.05,461.72 L494.34,468.62 L492.01,470.42 L489.21,470.51 L483.53,472.96 L478.18,473.63 L475.11,474.01 L472.48,476.26 L468.06,476.84 L463.57,477.03 L460.87,479.36 L458.34,481.77 L454.32,481.19 L450.69,479.19 L450.07,482.71 L448.80,485.76 L445.98,487.99 L444.18,491.43 L436.53,489.49 L428.67,486.81 L424.77,489.17 L422.15,492.00 L417.17,489.46 L414.56,485.62 L411.14,485.42 L407.53,485.16 L401.38,486.53 L396.47,487.20 L393.69,481.82 L390.36,477.37 L386.74,472.78 L385.03,466.84 L381.04,462.78 L375.26,462.54 L374.74,455.97 L378.33,449.86 L378.21,446.90 L376.89,444.17 L393.17,441.25 L413.19,446.11 L412.00,450.12 L416.41,449.25 L422.60,447.05 L426.69,447.03 L430.07,448.48 L446.50,451.28 L455.41,449.24 L461.69,443.87 L466.31,436.34 L470.18,427.75 L475.80,420.76 L483.14,419.11 L521.72,422.58 L523.12,422.06 L523.71,420.90 L524.09,419.75 L524.88,419.23 L526.33,419.53 L527.01,420.15 L527.46,420.77 L528.19,421.05 L533.00,426.49 L535.21,427.75 L539.28,426.64 L541.16,422.54 L541.69,416.84 L541.30,401.95 L541.69,399.19 L543.31,395.87 L545.09,393.90 L545.93,392.07 L544.69,389.15 L542.61,387.65 L532.05,382.47 L529.21,381.98 L523.58,381.80 L520.86,380.96 L516.17,376.91 L512.01,371.83 L507.54,368.31 L501.92,368.96 L494.01,364.11 L492.04,361.91 L490.09,357.26 L478.23,338.73 L474.96,335.38 L470.33,331.58 L465.46,328.47 L461.51,327.20 L457.82,325.30 L461.06,321.16 L464.94,318.30 L479.68,318.86 L497.15,321.35 L502.58,321.98 L508.31,321.72 L510.81,325.26 L513.12,329.03 L518.90,331.53 L525.00,334.01 L531.23,338.59 L536.65,344.20 Z M330.01,341.39 L325.69,338.31 L324.48,337.23 L322.78,335.10 L321.25,332.58 L320.54,329.88 L321.33,327.20 L324.19,323.97 L328.23,321.24 L332.95,319.39 L337.92,318.69 L343.39,319.32 L375.51,332.87 L391.36,338.08 L408.98,347.03 L425.43,353.97 L432.15,362.28 L433.90,367.58 L434.73,373.89 L434.07,380.07 L431.36,384.90 L428.89,385.94 L427.25,384.43 L425.18,380.04 L423.21,378.29 L421.44,377.81 L416.22,377.47 L395.61,372.86 L388.58,372.31 L381.18,370.49 L360.79,357.26 L340.20,351.64 L334.67,347.99 L330.01,341.39 Z"], ["Sud-Est", "M390.36,477.37 L393.69,481.82 L396.47,487.20 L401.38,486.53 L407.53,485.16 L411.14,485.42 L414.56,485.62 L417.17,489.46 L422.15,492.00 L424.77,489.17 L428.67,486.81 L436.53,489.49 L444.18,491.43 L445.98,487.99 L448.80,485.76 L450.07,482.71 L450.69,479.19 L454.32,481.19 L458.34,481.77 L460.87,479.36 L463.57,477.03 L468.06,476.84 L472.48,476.26 L475.11,474.01 L478.18,473.63 L483.53,472.96 L489.21,470.51 L492.01,470.42 L494.34,468.62 L500.05,461.72 L507.72,458.10 L516.05,458.63 L522.12,461.66 L526.53,463.91 L533.22,463.39 L536.04,467.27 L539.23,470.87 L558.37,472.04 L578.08,470.80 L598.17,474.96 L618.17,479.52 L637.61,479.27 L653.20,480.48 L665.16,487.98 L685.39,484.45 L685.61,484.42 L685.47,484.66 L675.20,502.45 L673.37,507.05 L672.73,511.87 L673.07,514.18 L675.56,521.19 L676.11,523.93 L675.95,528.00 L676.47,535.11 L675.63,539.34 L672.86,546.74 L669.08,544.15 L652.92,522.94 L645.86,516.52 L637.74,511.38 L619.55,505.10 L612.02,501.13 L604.51,498.23 L595.51,498.21 L577.04,501.33 L552.99,501.10 L519.28,501.55 L501.13,504.88 L496.48,502.41 L493.69,501.35 L492.45,502.31 L494.01,511.73 L491.83,514.13 L489.13,514.19 L482.81,511.73 L479.28,511.08 L452.08,513.60 L446.50,513.24 L446.96,514.37 L447.63,517.12 L448.08,518.25 L444.64,518.00 L443.27,517.62 L441.63,516.43 L435.23,520.59 L422.47,519.32 L416.22,521.74 L410.14,518.20 L401.98,514.97 L393.22,512.63 L387.97,512.04 L388.23,510.84 L387.51,506.58 L386.95,502.30 L386.50,496.92 L386.48,491.55 L389.44,484.63 L390.36,477.37 Z"], ["Nippes", "M376.89,444.17 L378.21,446.90 L378.33,449.86 L374.74,455.97 L375.26,462.54 L381.04,462.78 L385.03,466.84 L386.74,472.78 L390.36,477.37 L389.44,484.63 L386.48,491.55 L386.50,496.92 L386.95,502.30 L381.06,494.19 L379.19,483.56 L371.81,476.64 L363.04,469.46 L357.44,467.89 L352.17,469.48 L346.33,468.81 L340.26,468.08 L328.02,468.32 L315.98,466.64 L308.75,469.61 L300.45,471.78 L293.14,471.53 L285.85,472.24 L271.10,474.62 L259.38,471.62 L261.69,466.35 L263.76,462.12 L258.60,459.49 L255.26,455.35 L251.21,451.86 L244.90,451.30 L237.48,452.34 L232.23,456.76 L228.32,455.47 L223.67,453.12 L216.01,453.47 L208.50,452.43 L212.67,442.98 L217.83,437.14 L214.02,435.34 L212.89,431.93 L216.90,427.33 L218.83,423.30 L218.84,423.28 L221.18,421.54 L222.14,421.05 L222.42,420.47 L225.36,416.81 L226.91,416.03 L228.74,415.95 L230.64,416.11 L232.47,416.04 L242.95,412.98 L245.97,412.56 L254.21,414.63 L254.34,418.83 L249.65,422.01 L243.52,421.05 L243.52,422.58 L238.53,420.89 L234.08,420.28 L229.61,420.79 L224.57,422.58 L226.09,423.62 L229.93,425.68 L233.74,426.62 L233.99,428.05 L233.90,429.93 L234.92,431.84 L238.99,433.67 L246.34,432.59 L249.97,434.43 L258.09,429.51 L268.02,428.25 L304.60,431.08 L309.28,432.14 L318.49,436.86 L323.63,437.91 L342.16,437.23 L351.21,438.03 L359.37,441.10 L363.67,443.61 L367.17,444.95 L371.06,445.22 L376.89,444.17 Z"], ["Sud", "M386.95,502.30 L387.51,506.58 L388.23,510.84 L387.97,512.04 L368.83,509.90 L362.71,510.19 L360.79,509.90 L354.07,505.57 L352.04,504.88 L321.33,499.88 L307.53,501.31 L305.39,500.72 L306.61,497.53 L309.68,496.31 L318.03,496.38 L318.03,494.86 L302.58,493.19 L283.85,493.34 L278.40,494.86 L270.96,499.30 L268.14,499.88 L266.29,498.90 L264.30,494.41 L262.60,493.04 L259.52,494.92 L257.84,499.70 L256.13,503.28 L253.00,501.55 L251.56,501.55 L248.83,503.30 L246.53,502.05 L245.51,498.88 L246.67,494.86 L243.39,495.85 L240.52,502.25 L237.19,504.88 L237.35,501.58 L238.12,498.64 L240.36,493.04 L238.54,494.52 L235.93,497.99 L234.05,499.88 L233.86,499.28 L232.51,498.74 L230.02,498.21 L229.20,498.62 L229.29,499.60 L229.56,500.70 L229.31,501.55 L219.20,509.68 L202.66,517.40 L198.46,521.59 L194.43,528.29 L204.16,538.75 L205.62,542.56 L206.80,547.37 L206.24,549.25 L203.18,550.00 L187.86,549.94 L185.62,549.56 L183.37,548.48 L181.69,546.77 L180.81,543.17 L166.01,521.74 L165.28,521.19 L163.53,520.41 L162.71,519.92 L161.89,519.00 L161.70,518.25 L161.59,517.47 L160.97,516.43 L156.66,512.36 L134.26,495.76 L130.24,493.79 L123.18,492.59 L120.22,491.36 L117.70,489.50 L116.62,487.19 L116.14,484.59 L114.83,483.79 L112.86,483.66 L110.45,483.01 L104.48,480.67 L102.55,479.53 L100.98,481.34 L96.62,479.77 L91.99,481.74 L87.10,484.79 L82.02,486.36 L77.76,485.46 L72.48,483.31 L67.99,480.79 L66.10,478.76 L64.12,476.02 L55.43,471.59 L53.87,468.02 L54.76,467.61 L60.30,467.02 L66.72,468.23 L79.53,466.95 L92.18,464.25 L115.39,459.47 L138.82,457.58 L148.58,460.00 L158.21,463.26 L169.24,466.42 L180.22,467.32 L179.83,461.52 L183.03,456.69 L188.38,456.56 L193.72,456.55 L201.12,454.52 L208.50,452.43 L216.01,453.47 L223.67,453.12 L228.32,455.47 L232.23,456.76 L237.48,452.34 L244.90,451.30 L251.21,451.86 L255.26,455.35 L258.60,459.49 L263.76,462.12 L261.69,466.35 L259.38,471.62 L271.10,474.62 L285.85,472.24 L293.14,471.53 L300.45,471.78 L308.75,469.61 L315.98,466.64 L328.02,468.32 L340.26,468.08 L346.33,468.81 L352.17,469.48 L357.44,467.89 L363.04,469.46 L371.81,476.64 L379.19,483.56 L381.06,494.19 L386.95,502.30 Z M244.38,533.29 L248.28,533.53 L252.85,534.49 L256.16,536.50 L256.16,539.96 L253.28,541.82 L248.56,542.26 L239.57,541.80 L235.52,540.90 L231.98,538.73 L226.17,533.29 L226.91,530.85 L227.95,529.85 L229.27,530.20 L230.75,531.76 L233.40,529.90 L234.67,530.57 L235.59,532.23 L237.19,533.29 L244.38,533.29 Z"], ["Grand'Anse", "M208.50,452.43 L201.12,454.52 L193.72,456.55 L188.38,456.56 L183.03,456.69 L179.83,461.52 L180.22,467.32 L169.24,466.42 L158.21,463.26 L148.58,460.00 L138.82,457.58 L115.39,459.47 L92.18,464.25 L79.53,466.95 L66.72,468.23 L60.30,467.02 L54.76,467.61 L53.87,468.02 L53.46,467.08 L52.94,462.30 L51.43,458.92 L45.42,451.28 L53.46,439.44 L52.76,438.47 L51.75,436.10 L55.98,433.07 L58.70,421.74 L62.15,419.23 L62.78,417.96 L62.38,415.09 L61.47,412.02 L60.56,410.12 L59.97,407.52 L61.76,405.25 L69.60,400.65 L79.88,396.47 L84.25,395.70 L89.59,397.01 L91.95,396.93 L92.93,394.94 L94.08,393.25 L96.65,392.50 L99.37,392.33 L112.35,393.07 L121.56,395.06 L151.82,408.62 L165.14,409.22 L165.62,409.58 L167.12,411.29 L167.44,411.79 L167.97,413.70 L169.26,413.56 L170.87,412.72 L172.32,412.56 L179.04,416.10 L182.02,417.17 L192.42,417.56 L194.88,418.04 L197.59,419.23 L202.57,423.53 L204.04,424.40 L206.42,424.58 L207.57,423.89 L208.34,423.03 L209.57,422.58 L211.88,422.96 L214.74,424.37 L216.81,424.40 L218.22,423.74 L218.84,423.28 L218.83,423.30 L216.90,427.33 L212.89,431.93 L214.02,435.34 L217.83,437.14 L212.67,442.98 L208.50,452.43 Z M205.62,402.53 L211.13,399.91 L218.69,400.51 L224.48,403.79 L224.57,409.22 L219.24,412.42 L211.86,412.38 L206.10,409.08 L205.62,402.53 Z"]],HLBL=[["Nord-Ouest", 386, 121], ["Nord", 545, 173], ["Nord-Est", 642, 188], ["Artibonite", 468, 229], ["Centre", 621, 310], ["Ouest", 600, 432], ["Sud-Est", 536, 497], ["Nippes", 299, 457], ["Sud", 221, 501], ["Grand'Anse", 132, 430]],_base="";
+var TF="translate(530.6 375.4) scale(0.16)";/* tronçons schématiques placés autour de Port-au-Prince */
+function BASE(){if(!_base)_base=HAITI.map(function(d){return '<path d="'+d[1]+'" fill="var(--soft)" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>'}).join('');
+ return '<g aria-hidden="true">'+_base+'</g><g id="dl" aria-hidden="true" style="display:'+(VB.w>200?'':'none')+'">'+HLBL.map(function(l){return '<text x="'+l[1]+'" y="'+l[2]+'" font-size="13" text-anchor="middle" fill="var(--mute)">'+esc(l[0])+'</text>'}).join('')+'</g>'}
+var PAPV={x:529.4,y:370.4,w:64,h:88.9},VB={x:529.4,y:370.4,w:64,h:88.9},DRAGGED=false,PT={},LASTD=0,MOVED=0;
+function pick(id){if(DRAGGED)return;S.sel=id;render()}
+function setVB(){var m=document.getElementById('map');if(m)m.setAttribute('viewBox',VB.x+' '+VB.y+' '+VB.w+' '+VB.h);var d=document.getElementById('dl');if(d)d.style.display=VB.w>200?'':'none'}
+function clampVB(){VB.w=Math.max(24,Math.min(750,VB.w));VB.h=VB.w*500/360;VB.x=VB.w>=750?(750-VB.w)/2:Math.max(0,Math.min(750-VB.w,VB.x));VB.y=VB.h>=580?(580-VB.h)/2:Math.max(0,Math.min(580-VB.h,VB.y))}
+function zoomAt(f,cx,cy){var nw=Math.max(24,Math.min(750,VB.w*f)),r=nw/VB.w;VB.x=cx-(cx-VB.x)*r;VB.y=cy-(cy-VB.y)*r;VB.w=nw;clampVB();setVB()}
+function toUnits(px,py){var b=document.getElementById('map').getBoundingClientRect();return [VB.x+(px-b.left)/b.width*VB.w,VB.y+(py-b.top)/b.height*VB.h]}
+function zoomBtn(f){zoomAt(f,VB.x+VB.w/2,VB.y+VB.h/2)}
+function resetMap(){VB={x:0,y:0,w:750,h:1041.7};clampVB();setVB()}
+function goPAP(){VB={x:PAPV.x,y:PAPV.y,w:PAPV.w,h:PAPV.h};clampVB();setVB()}
+function pinchDist(){var k=Object.keys(PT);if(k.length<2)return 0;var a=PT[k[0]],b=PT[k[1]];return Math.hypot(a.x-b.x,a.y-b.y)}
+function bindMap(){var m=document.getElementById('map');if(!m)return;
+ m.addEventListener('wheel',function(e){e.preventDefault();var c=toUnits(e.clientX,e.clientY);zoomAt(e.deltaY<0?0.8:1.25,c[0],c[1])},{passive:false});
+ m.addEventListener('pointerdown',function(e){PT[e.pointerId]={x:e.clientX,y:e.clientY};DRAGGED=false;MOVED=0;LASTD=pinchDist()})}
+window.addEventListener('pointermove',function(e){var p=PT[e.pointerId],m=document.getElementById('map');if(!p||!m)return;
+ var k=Object.keys(PT),b=m.getBoundingClientRect();
+ if(k.length===1){var dx=e.clientX-p.x,dy=e.clientY-p.y;MOVED+=Math.abs(dx)+Math.abs(dy);if(MOVED>8)DRAGGED=true;
+  if(DRAGGED){VB.x-=dx/b.width*VB.w;VB.y-=dy/b.height*VB.h;clampVB();setVB()}p.x=e.clientX;p.y=e.clientY}
+ else{p.x=e.clientX;p.y=e.clientY;var d=pinchDist();if(LASTD&&d){DRAGGED=true;var a=PT[k[0]],q=PT[k[1]],c=toUnits((a.x+q.x)/2,(a.y+q.y)/2);zoomAt(LASTD/d,c[0],c[1])}LASTD=d}});
+function endPt(e){delete PT[e.pointerId];LASTD=0;setTimeout(function(){DRAGGED=false},60)}
+window.addEventListener('pointerup',endPt);window.addEventListener('pointercancel',endPt);
+function mapV(){var sel=S.sel,u='',v='',h='';
+ SEG.forEach(function(s){var g=GEO[s[0]];if(!g)return;var k=status(s[0]),p=g.map(function(q){return q.join(',')}).join(' ');
+  if(sel===s[0])u='<polyline points="'+p+'" fill="none" stroke="var(--ink)" stroke-width="12" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>';
+  v+='<polyline points="'+p+'" fill="none" stroke="'+COL[k]+'" stroke-width="7" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="'+(k===1?'12 6':k===3?'2 8':'none')+'"/>';
+  h+='<polyline points="'+p+'" fill="none" stroke="transparent" stroke-width="24" vector-effect="non-scaling-stroke" stroke-linecap="round" tabindex="0" role="button" aria-label="'+s[1]+' : '+LV[k].n+'" onclick="pick('+s[0]+')" onkeydown="if(event.key===\'Enter\')pick('+s[0]+')" style="cursor:pointer"/>'});
+ var t=LBL.map(function(l){return '<text x="'+l[1]+'" y="'+l[2]+'" font-size="11" fill="var(--mute)">'+l[0]+'</text>'}).join('');
+ var cap='<div class="card mute">Touchez un tronçon.</div>';
+ if(sel&&seg(sel)){var s=seg(sel),k=status(sel),w=S.watch.indexOf(sel)>=0;
+  cap='<div class="card"><h3 style="margin:0;font-size:16px">'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(sel)+'</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button onclick="SEL='+sel+';setTab(\'report\')">Signaler</button><button class="alt" onclick="toggle('+sel+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+sel+')">Demander</button></div></div>'}
+ var lg='<div class="mute" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">'+LV.map(function(l,i){return '<span><b style="color:'+COL[i]+'">'+l.i+'</b> '+l.n+'</span>'}).join('')+'</div>';
+ return '<svg id="map" viewBox="'+VB.x+' '+VB.y+' '+VB.w+' '+VB.h+'" style="touch-action:none;width:100%;height:auto;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px" role="group" aria-label="Carte d’Haïti avec les tronçons de Port-au-Prince"><rect x="-2000" y="-2000" width="4750" height="4580" fill="var(--card)"/>'+BASE()+'<g transform="'+TF+'">'+u+v+t+h+'</g></svg><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="alt" onclick="zoomBtn(0.6)" aria-label="Zoom avant">Zoom +</button><button class="alt" onclick="zoomBtn(1.6)" aria-label="Zoom arrière">Zoom −</button><button class="alt" onclick="goPAP()">Port-au-Prince</button><button class="alt" onclick="resetMap()">Tout le pays</button></div>'+lg+cap+'<p class="mute">Carte schématique, pas à l’échelle.</p>'}
+/* bulletin de sécurité : sources publiques, mis à jour par Claude (la page ne peut pas aller chercher les sources elle-même) */
+var BUL={u:'2026-10-26T00:00:00Z',ud:'26 oct. 2026',items:[
+ {iso:'2026-10-25T12:00:00Z',d:'25 oct. 2026',z:'Tabarre, près du pont Tabarre / Marassa',l:2,t:'Opérations de sécurité en cours, avec des tirs signalés. L’ambassade recommande d’éviter la zone.',s:'Ambassade des États-Unis',url:'https://ht.usembassy.gov/security-alert-u-s-embassy-port-au-prince-haiti-october-25-2026/',segs:[8,25,26]},
+ {iso:'2026-10-21',d:'21 oct. 2026',z:'Tabarre, près du pont',l:2,t:'Tirs nourris signalés pendant des opérations de sécurité. L’ambassade a suspendu les déplacements de son personnel pour la journée.',s:'Ambassade des États-Unis',url:'https://ht.usembassy.gov/security-alert-u-s-embassy-port-au-prince-haiti-october-21-2026/',segs:[8,25,26]},
+ {iso:'2026-10-18',d:'18 oct. 2026',z:'Tabarre, Santo et Croix-des-Bouquets',l:2,t:'Tirs signalés dans ces secteurs. Il est conseillé de les éviter.',s:'Ambassade des États-Unis',url:'https://ht.usembassy.gov/security-alert-u-s-embassy-port-au-prince-haiti-october-18-2026/',segs:[8,25,26,27]},
+ {iso:'2026-10-23',d:'fin oct. 2026',z:'Agglomération de Port-au-Prince',l:2,t:'Des groupes armés contrôlent ou se disputent de grandes parties de l’agglomération, y compris des routes autour de Croix-des-Bouquets. D’après le rapport du Secrétaire général de l’ONU, 1 123 personnes ont été tuées et 440 blessées par des violences liées aux groupes armés entre juillet et début octobre 2026.',s:'Rio Times, d’après l’ONU',url:'https://www.riotimesonline.com/what-is-happening-in-haiti-2026/',segs:[27]},
+ {iso:'2026-09-08',d:'8 sept. 2026',z:'Zone métropolitaine et reste du pays',l:2,t:'La France juge la situation toujours très préoccupante et indique qu’aucune zone n’est exempte de risques. Elle déconseille de circuler aux abords de l’aéroport sans mesures de sécurité.',s:'Ministère français des Affaires étrangères',url:'https://www.diplomatie.gouv.fr/files/files/pdf/cav/Ha%C3%AFti%20-%20Minist%C3%A8re%20de%20l%27Europe%20et%20des%20Affaires%20%C3%A9trang%C3%A8res.pdf',segs:[6,7]},
+ {iso:'2026-08-28',d:'28 août 2026',z:'Kenscoff',l:2,t:'Une attaque meurtrière de groupes armés a conduit le Conseil de sécurité de l’ONU à se réunir en urgence.',s:'ONU Info',url:'https://news.un.org/fr/focus-topic/haiti',segs:[12]},
+ {iso:'2026-03-01',d:'1er mars 2026',z:'Tabarre et Croix-des-Bouquets',l:1,t:'La police a mené des opérations pour rouvrir l’axe vers Carrefour Marassa et combler des tranchées creusées par les groupes armés. Les alertes d’octobre montrent que ce secteur reste instable.',s:'Le National',url:'https://www.lenational.org/post_article.php?pol=7650',segs:[]}
+]};
+function secSegs(){var o=[],lim=Date.now()-48*3600000;(BUL.items||[]).forEach(function(i){if(i.l>=2&&Array.isArray(i.segs)&&new Date(i.iso).getTime()>lim)i.segs.forEach(function(x){if(typeof x==='number'&&o.indexOf(x)<0)o.push(x)})});return o}
+function ctx(){var b=BUL,age=Math.floor((Date.now()-new Date(b.u).getTime())/86400000);
+ var h='<div class="card"><b>Situation sécuritaire</b><div class="mute">Dernière mise à jour : '+esc(b.ud)+(age>=1?' · <b>information vieille de '+age+' jour'+(age>1?'s':'')+'</b>':'')+'</div>';
+ h+=(b.items||[]).map(function(i){var c=COL[i.l>=2?2:1];return '<div class="al" style="border-left:5px solid '+c+';padding-left:10px"><div class="mute">'+esc(i.d)+' · '+esc(i.z)+'</div><div>'+esc(i.t)+'</div><div class="mute">Source : '+(/^https:\/\//.test(String(i.url))?'<a href="'+esc(i.url)+'" target="_blank" rel="noopener" style="color:var(--ink)">'+esc(i.s)+'</a>':esc(i.s))+'</div></div>'}).join('');
+ return h+'<div class="mute" style="margin-top:8px">Ce bulletin vient de sources publiques et n’est pas en temps réel. En cas de danger, suivez les consignes de la PNH et des autorités.</div></div>'}
+(function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;db.doc('situation/current').onSnapshot(function(s){if(s.exists){var d=s.data();if(d&&Array.isArray(d.items)&&typeof d.u==='string'){BUL=d;render()}}},function(){})}).catch(function(){})}catch(e){}})();
+/* onglet Sécurité : seulement les informations des 48 dernières heures */
+/* score de pertinence calculé par la base (gravité, mots-clés, zone connue, source officielle, fraîcheur) ; repli si absent */
+function relOf(i){if(typeof i.r==='number')return i.r;var a=Math.max(0,(Date.now()-new Date(i.iso).getTime())/3600000);return (i.l>=2?40:20)+(i.segs&&i.segs.length?15:0)+Math.round(15*Math.exp(-a/48))}
+function recent(){var lim=Date.now()-48*3600000;return (BUL.items||[]).filter(function(i){var t=new Date(i.iso).getTime();return t>lim&&t<=Date.now()+3600000}).sort(function(a,b){return relOf(b)-relOf(a)||new Date(b.iso)-new Date(a.iso)})}
+function secItem(i){var c=COL[i.l>=2?2:1];return '<div class="card" style="border-left:6px solid '+c+'"><div class="mute">'+esc(i.d)+' · '+esc(i.z)+'</div><div style="margin:4px 0">'+esc(i.t)+'</div><div class="mute">Source : '+(/^https:\/\//.test(String(i.url))?'<a href="'+esc(i.url)+'" target="_blank" rel="noopener" style="color:var(--ink)">'+esc(i.s)+'</a>':esc(i.s))+'</div></div>'}
+function secBanner(){var n=recent().length;if(!n)return '';return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Sécurité</b><div class="mute">'+(n?n+' alerte'+(n>1?'s':'')+' dans les dernières 48 h':'Aucune alerte vérifiée (48 h)')+'</div></div><button class="alt" onclick="setTab(\'sec\')">Voir</button></div>'}
+function secV(){var r=recent(),age=Math.floor((Date.now()-new Date(BUL.u).getTime())/3600000);
+ return '<div class="mute" style="margin-top:12px">Dernières 48 h · mis à jour '+esc(BUL.ud)+(age>=3?' · <b>données anciennes</b>':'')+'</div>'+
+ (r.length?r.map(secItem).join(''):'<div class="card mute">Aucune alerte vérifiée. Restez prudent.</div>')+
+ '<p class="mute">Sources publiques. En cas de danger, suivez les consignes des autorités.</p>'}
+function listV(){
+  var list=SEG.filter(function(s){return S.zone==='Tous'||s[2]===S.zone}).sort(function(a,b){return status(b[0])-status(a[0])||0});
+  return '<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
+  '<div class="list">'+list.map(function(s){var k=status(s[0]),w=S.watch.indexOf(s[0])>=0;
+    return '<div class="seg"><div class="bar '+LV[k].c+'"></div><div class="b"><h3>'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(s[0])+'</div>'+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
+    '<div class="a" style="flex-direction:column;gap:6px;justify-content:center"><button onclick="SEL='+s[0]+';setTab(\'report\')">Signaler</button><button class="'+(w?'on':'alt')+'" aria-pressed="'+w+'" onclick="toggle('+s[0]+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+s[0]+')">Demander</button></div></div>'}).join('')+'</div>'}
+
+function setView(v){S.view=v;render()}
+function stateV(){
+ var tog='<div class="tog" role="group" aria-label="Affichage"><button aria-pressed="'+(S.view==='list')+'" onclick="setView(\'list\')">Liste</button><button aria-pressed="'+(S.view==='map')+'" onclick="setView(\'map\')">Carte</button></div>';
+ return tog+(S.view==='map'?mapV():listV())}
+/* publicités : remplacez/ajoutez des entrées. img = lien https de la photo (optionnel), url = lien au toucher (optionnel) */
+var ADS=[
+ {t:'NOVACC',
+ s:'Nova Academy and Consulting Center',
+ img:'https://novacademy-six.vercel.app/NOVACC.png',
+ url:'https://novacademy-six.vercel.app/#formations',
+ c:'linear-gradient(135deg,#1B2B3A,#2f5273)'},
+ 
+ {t:'Faites connaître votre commerce',s:'Visible sur l’Accueil de tous',c:'linear-gradient(135deg,#2A8A5B,#1d6a45)'},
+ {t:'Votre offre ici',s:'Station, garage, restaurant…',c:'linear-gradient(135deg,#C93C3C,#8f2727)'}
+],AD_I=0,AD_PAUSE=0;
+function adsHtml(){if(!ADS.length)return '';
+ return '<div class="adwrap"><div class="adlab">Publicité</div><div class="ads" id="ads" aria-roledescription="carrousel">'+ADS.map(function(a,i){
+  var ok=/^https:\/\//.test(String(a.url||'')),im=/^https:\/\//.test(String(a.img||'')),tag=ok?'a':'div';
+  return '<'+tag+' class="ad"'+(ok?' href="'+esc(a.url)+'" target="_blank" rel="noopener sponsored"':'')+' style="background:'+(a.c||'var(--main)')+'">'+(im?'<img src="'+esc(a.img)+'" alt="'+esc(a.t||'')+'" loading="lazy">':'')+'<div class="adt"><b>'+esc(a.t||'')+'</b><span>'+esc(a.s||'')+'</span></div></'+tag+'>'}).join('')+'</div><div class="dots" id="dots">'+ADS.map(function(a,i){return '<i></i>'}).join('')+'</div></div>'}
+function adMark(){var d=document.querySelectorAll('#dots i');for(var i=0;i<d.length;i++)d[i].className=i===AD_I?'on':''}
+function adInit(){var el=document.getElementById('ads');if(!el)return;
+ el.scrollLeft=AD_I*el.clientWidth;adMark();
+ el.addEventListener('scroll',function(){var w=el.clientWidth||1,i=Math.round(el.scrollLeft/w);if(i!==AD_I){AD_I=i;adMark()}});
+ ['pointerdown','touchstart','mouseenter'].forEach(function(e){el.addEventListener(e,function(){AD_PAUSE=Date.now()+8000})})}
+setInterval(function(){var el=document.getElementById('ads');
+ if(!el||S.tab!=='home'||ADS.length<2||Date.now()<AD_PAUSE||(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches))return;
+ AD_I=(AD_I+1)%ADS.length;el.scrollTo({left:AD_I*el.clientWidth,behavior:'smooth'});adMark()},4000);
+var DIP=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();DIP=e;if(S.tab==='home')render()});
+window.addEventListener('appinstalled',function(){DIP=null;toast('App installée');render()});
+function isStandalone(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}
+function closeSheet(){var e=document.getElementById('sheet');if(e)e.remove()}
+function installApp(){
+ if(DIP){var d=DIP;DIP=null;d.prompt();d.userChoice.then(function(){render()});return}
+ var ua=navigator.userAgent,ios=/iphone|ipad|ipod/i.test(ua)||(/macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
+ var steps=ios?['Touchez le bouton <b>Partager</b> (carré avec une flèche) en bas de Safari.','Choisissez <b>Sur l’écran d’accueil</b>.','Touchez <b>Ajouter</b>.']:['Ouvrez le menu du navigateur (<b>⋮</b> ou <b>⋯</b>).','Touchez <b>Installer l’application</b> ou <b>Ajouter à l’écran d’accueil</b>.','Confirmez.'];
+ closeSheet();var w=document.createElement('div');w.id='sheet';w.className='sheetbg';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');
+ w.innerHTML='<div class="sheet"><h3>Ajouter à l’écran d’accueil</h3><ol>'+steps.map(function(t){return '<li>'+t+'</li>'}).join('')+'</ol><button style="width:100%" onclick="closeSheet()">OK</button></div>';
+ w.addEventListener('click',function(e){if(e.target===w)closeSheet()});document.body.appendChild(w)}
+function instBtn(){return isStandalone()?'':'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="alt inst" onclick="installApp()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Installer l’app</button></div>'}
+function lastRep(id){var t=0;S.reports.forEach(function(r){if(r.seg===id&&r.t>t&&Date.now()-r.t<45*MIN)t=r.t});return t}
+function miniSeg(id){var sg=seg(id);if(!sg)return '';var k=status(id),t=lastRep(id);
+ return '<div class="row" role="button" tabindex="0" onclick="S.sel='+id+';S.view=\'map\';setTab(\'state\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}"><span class="dot '+LV[k].c+'"></span><div class="nm">'+esc(sg[1])+'<div class="mute">'+(t?ago(t):'Aucun signalement récent')+'</div></div><span class="chip '+LV[k].c+'">'+LV[k].n+'</span></div>'}
+function panel(t,body,act){return '<section class="panel"><div class="ph"><b>'+t+'</b>'+(act||'')+'</div>'+body+'</section>'}
+function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3)c[k]++});
+ var T=[['state','Trafic','Liste des routes','S.view=\'list\''],['state','Carte','Vue d’ensemble','S.view=\'map\''],['fuel','Essence','Stations ouvertes',''],['sec','Sécurité','Alertes 48 h','']];
+ var r=recent();
+ var bad=SEG.filter(function(s){return status(s[0])>=1&&status(s[0])<3}).sort(function(a,b){return status(b[0])-status(a[0])||lastRep(b[0])-lastRep(a[0])}).slice(0,4);
+ var ic=function(n){return IC[n==='Carte'?'map':n==='Trafic'?'state':n==='Essence'?'fuel':'sec']};
+ return instBtn()+'<div class="sum" style="margin-top:8px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
+ '<div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
+ '<div class="sep"><span>En direct</span></div>'+
+ (r.length?secItem(r[0]).replace('class="card"','class="card" style="margin-top:0"'):'')+
+ panel('Routes à éviter',bad.length?bad.map(function(s){return miniSeg(s[0])}).join(''):'<div class="row mute">Rien de signalé pour le moment</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Tout voir</button>')+
+ panel('Mes routes',S.watch.length?S.watch.map(miniSeg).join(''):'<div class="row mute">Aucune route suivie</div>',S.alerts.length?'<button class="lnk" onclick="setTab(\'alerts\')">Alertes ('+S.alerts.length+')</button>':'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
+ '<button class="cta" onclick="setTab(\'report\')"><b>Vous êtes sur la route ?</b><span>Signalez en 1 touche</span></button>'+adsHtml()
+}
+function reportV(){var pend=SEG.filter(function(s){return openReq(s[0])});return ''+(pend.length?'<div class="card"><b>On attend votre réponse</b>'+pend.map(function(s){return '<div class="al">'+s[1]+'</div>'}).join('')+'</div>':'')+heroCta('Signalez en 1 touche')+
+  '<div class="card"><label for="sg">Tronçon</label><select id="sg" onchange="SEL=+this.value">'+SEG.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===SEL?' selected':'')+'>'+s[1]+'</option>'}).join('')+'</select>'+
+  '<div class="big"><button class="l0" onclick="report(+sg.value,0)"><b>●</b> Fluide : ça roule bien</button>'+
+  '<button class="l1" onclick="report(+sg.value,1)"><b>▲</b> Ralenti : ça avance lentement</button>'+
+  '<button class="l2" onclick="report(+sg.value,2)"><b>■</b> Bloqué : embouteillage ou barrage</button></div></div>'+
+  '<p class="mute">🚫 Pas de téléphone en conduisant.</p>'+
+  segAdmin()+'<h2>Une route manque ?</h2><div class="card">'+loginNote()+'<label for="sn">Nom de la route</label><input id="sn" placeholder="Ex. Rue Saint-Honoré"><label for="sz">Zone</label><select id="sz">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><button class="alt" style="width:100%;margin-top:12px" onclick="addSeg()">Ajouter ce tronçon</button></div>'}
+
+function alertsV(){
+  var perm=('Notification' in window)?Notification.permission:'none';
+  var nb=(perm==='default'||(perm==='granted'&&!PUSHON&&window.LOGGED))?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Notifications</b><div class="mute">Même quand l’app est fermée</div></div><button onclick="askNotif()">Activer</button></div>':(PUSHON?'<div class="card" style="display:flex;align-items:center;gap:10px"><span class="dot l0"></span><div><b>Notifications actives</b><div class="mute">Même quand l’app est fermée</div></div></div>':'');
+  var al=S.alerts.length?S.alerts.map(function(a){return '<div class="row" style="cursor:default"><span class="dot '+LV[a.l].c+'"></span><div class="nm">'+a.txt+'<div class="mute">'+esc(a.t)+'</div></div></div>'}).join(''):'<div class="row mute" style="cursor:default">Aucune alerte pour le moment</div>';
+  return nb+
+   panel('Routes suivies',S.watch.length?S.watch.map(miniSeg).join(''):'<div class="row mute" style="cursor:default">Aucune route suivie</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
+   panel('Alertes',al,S.alerts.length?'<button class="lnk" onclick="clearAlerts()">Effacer</button>':'')+
+   (window.LOGGED?'':'<p class="mute" style="margin-top:12px">Connectez-vous pour retrouver vos routes suivies sur tous vos appareils.</p>')}
+
+/* stations-service : liste de base (sources publiques, Google Maps) ; l'état (ouverte/limitée/fermée) vient uniquement des signalements, jamais préétabli */
+var FLV=[{n:'Fonctionnelle',i:'●',c:'l0'},{n:'Limitée',i:'▲',c:'l1'},{n:'Non fonctionnelle',i:'■',c:'l2'},{n:'Pas d’info',i:'–',c:'l3'}];
+var FMIN=180,STN=[
+[1,'Total — angle Av. Martin Luther King / Av. John Brown','Centre'],
+[2,'Pump Gasoline — 224 Av. John Brown','Centre'],
+[3,'GO Faustin 1er — Rue Dumesle','Centre'],
+[4,'Total — Rue Oswald Durand','Centre'],
+[5,'Pompe Capital — Martin Luther King / Rue 101','Centre'],
+[6,'TotalEnergies — Delmas 75','Delmas'],
+[7,'Total — Delmas 33','Delmas'],
+[8,'National — Delmas 83','Delmas'],
+[9,'TotalEnergies — Delmas 41','Delmas'],
+[10,'TotalEnergies — angle Delmas 83','Delmas'],
+[11,'GO — Delmas 60','Delmas'],
+[12,'National — Delmas 21','Delmas'],
+[13,'Sol — près de Delmas 33','Delmas'],
+[14,'Total — Delmas 69','Delmas'],
+[15,'National Delmas Deluxe','Delmas'],
+[16,'DNC — Delmas 45','Delmas'],
+[17,'DNC — Carrefour Vincent (RN1, entrée Delmas)','Delmas'],
+[18,'National — Boulevard du 15 Octobre','Tabarre'],
+[19,'Sodigaz National Theodat — Bd du 15 Octobre','Tabarre'],
+[20,'Carrefour Fleurio — Bd du 15 Octobre','Tabarre'],
+[21,'TotalEnergies Tabarre — Bd Toussaint Louverture','Tabarre'],
+[22,'Total Canne à Sucre — Bd du 15 Octobre','Tabarre'],
+[23,'Texaco — Rue Flerio, Croix-des-Bouquets','Est'],
+[24,'Pompe Croix-des-Bouquets — Rue J-J Dessalines','Est'],
+[25,'TotalEnergies — Rue Flerio, Croix-des-Bouquets','Est'],
+[26,'Sol — Croix-des-Bouquets','Est'],
+[27,'National Carrefour Marassa — Croix-des-Bouquets','Est'],
+[28,'National — Croix-des-Bouquets','Est'],
+[29,'FAS — RN3, Croix-des-Bouquets','Est'],
+[30,'Texaco — RN8, Croix-des-Bouquets','Est'],
+[31,'Total (Glace Dragon) — Pétion-Ville','Pétion-Ville'],
+[32,'Sol Thérèse — Pétion-Ville (24h)','Pétion-Ville'],
+[33,'National — Rte de Delmas (bas Pétion-Ville)','Pétion-Ville'],
+[34,'Novatech Gaz — Rue Rigaud','Pétion-Ville'],
+[35,'Marlique — Rue Borno prolongée','Pétion-Ville'],
+[36,'Sodigaz National Omni','Pétion-Ville'],
+[37,'Sodigaz National Juvénat — Av. Lamartinière','Pétion-Ville'],
+[38,'Pompe Capital — Rue Métellus','Pétion-Ville'],
+[39,'DNC — Rue Clerveaux','Pétion-Ville'],
+[40,'Capital — Av. Lamartinière','Pétion-Ville'],
+[41,'Station d’essence de Carrefour','Sud'],
+[42,'National — Mariani, RN2 (Carrefour)','Sud'],
+[43,'GO Gaideline — Route 9','Nord'],
+[44,'Pompe Gasoline — Route 9 (nord)','Nord'],
+[45,'Pompe Gasoline — Route 9, vers Cité Soleil','Nord'],
+[46,'Capital — Route 9, vers Duvivier','Nord'],
+[47,'Total — Cabaret','Nord'],
+[48,'National — Cabaret','Nord'],
+[49,'Garescher-Prince — Cabaret','Nord']
+].map(function(s){return {id:s[0],name:s[1],zone:s[2]}}),FREP=[],FLOC=[],lastFuel={};
+S.fz='Tous';S.fs='T';
+function ago(t){var m=Math.max(0,Math.round((Date.now()-t)/MIN));return m<1?'à l’instant':m<60?'il y a '+m+' min':'il y a '+Math.floor(m/60)+' h'}
+/* la majorité des signalements récents l'emporte (les plus récents comptent davantage) ; égalité ouverte/fermée = Limitée */
+function fstat(id){var now=Date.now(),w=[0,0,0];
+  FREP.forEach(function(r){var a=(now-r.t)/MIN;if(r.st===id&&a<FMIN)w[r.lvl]+=1/(1+a/45)});
+  if(!w[0]&&!w[1]&&!w[2])return 3;
+  var m=Math.max(w[0],w[1],w[2]),top=[0,1,2].filter(function(i){return Math.abs(w[i]-m)<1e-9});
+  return top.length===1?top[0]:(top.indexOf(0)>=0&&top.indexOf(2)>=0?1:Math.max.apply(null,top))}
+function finfo(id){var rs=FREP.filter(function(r){return r.st===id&&(Date.now()-r.t)<FMIN*MIN});
+  if(!rs.length)return 'Aucun signalement récent (3 h)';
+  var last=Math.max.apply(null,rs.map(function(r){return r.t})),c=[0,0,0];rs.forEach(function(r){c[r.lvl]++});
+  return ago(last)+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fonctionnelle, '+c[1]+' limitée, '+c[2]+' non fonctionnelle)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
+function fReport(id,lvl){
+  if(lastFuel[id]&&Date.now()-lastFuel[id]<5*MIN)return toast('Vous avez déjà signalé cette station. Patientez quelques minutes.');
+  lastFuel[id]=Date.now();var r={st:id,lvl:lvl,t:Date.now()};
+  function loc(){FLOC.push(r);FREP.push(r);render()}
+  if(DB){DB.collection('fuel').add(r).then(function(){toast('Merci ! Signalement partagé')}).catch(function(){loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
+  else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
+function addStation(){var n=document.getElementById('fn').value.trim().slice(0,80),z=document.getElementById('fzone').value;
+  if(n.length<3)return toast('Entrez le nom ou le repère de la station');
+  if(STN.some(function(s){return s.name.toLowerCase()===n.toLowerCase()&&s.zone===z}))return toast('Cette station existe déjà dans cette zone');
+  needLogin(function(){DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){toast('Merci ! Station envoyée : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer une station':'Échec de l’envoi : réessayez plus tard')})},'proposer une station')}
+function setFz(z){S.fz=z;render()}
+function setFs(t){S.fs=t;render()}
+function jid(v){return typeof v==='number'?v:"'"+String(v).replace(/'/g,'')+"'"}
+function approveStation(id){if(!window.sbRpc)return;window.sbRpc('approve_station',{request_id:Number(id)}).then(function(){toast('Station publiée dans l’app')}).catch(function(){toast('Échec : droits administrateur requis')})}
+function rejectStation(id){if(!DB)return;DB.collection('station_requests').doc(id).delete().then(function(){toast('Proposition rejetée')}).catch(function(){toast('Échec du rejet')})}
+var PND=[],ADMIN=false,PNDS=[];
+/* tronçons proposés : visibles seulement par leur auteur et par les administrateurs (règles de la base) */
+function approveSeg(id){if(!window.sbRpc)return;window.sbRpc('approve_segment',{request_id:id}).then(function(){toast('Tronçon publié dans l’app')}).catch(function(){toast('Échec : droits administrateur requis')})}
+function rejectSeg(id){if(!DB)return;DB.collection('segment_requests').doc(id).delete().then(function(){toast('Proposition rejetée')}).catch(function(){toast('Échec du rejet')})}
+function segAdmin(){return (ADMIN&&PNDS.length)?'<div class="card"><b>Tronçons à valider ('+PNDS.length+')</b>'+PNDS.map(function(p){return '<div class="al" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div>'+esc(p.name)+'<div class="mute">'+esc(p.zone)+'</div></div><div style="display:flex;gap:6px"><button onclick="approveSeg('+p.id+')">Approuver</button><button class="alt" onclick="rejectSeg('+p.id+')">Rejeter</button></div></div>'}).join('')+'</div>':''}
+(function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;
+ db.collection('segment_requests').onSnapshot(function(snap){PNDS=snap.docs.map(function(d){var x=d.data();return{id:Number(d.id),name:typeof x.name==='string'?x.name.slice(0,80):'',zone:ZONES.indexOf(x.zone)>0?x.zone:'Centre',own:1}}).filter(function(p){return p.name});if(S.tab==='report')render()},function(){})}).catch(function(){})}catch(e){}})();
+(function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;
+ db.collection('stations').onSnapshot(function(snap){snap.docs.forEach(function(d){var x=d.data();
+  if(typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!STN.some(function(s){return s.id===d.id}))STN.push({id:d.id,name:x.name.slice(0,80),zone:x.zone})});render()},function(){});
+ db.collection('station_requests').onSnapshot(function(snap){PND=snap.docs.map(function(d){var x=d.data();return{id:d.id,name:typeof x.name==='string'?x.name.slice(0,80):'',zone:ZONES.indexOf(x.zone)>0?x.zone:'Centre'}}).filter(function(p){return p.name});render()},function(){});
+ db.collection('fuel').where('t','>',Date.now()-FMIN*MIN).onSnapshot(function(snap){
+  FREP=snap.docs.map(function(d){return d.data()}).filter(function(r){return(typeof r.st==='number'||typeof r.st==='string')&&typeof r.t==='number'&&(r.lvl===0||r.lvl===1||r.lvl===2)}).concat(FLOC);render()},function(){})}).catch(function(){});
+ window.claude.use('user').then(function(u){if(!u)return;u.canEdit().then(function(b){ADMIN=b;render()})}).catch(function(){})}catch(e){}})();
+function fuelV(){var c=[0,0,0],all=STN.map(function(s){var k=fstat(s.id);if(k<3)c[k]++;return {s:s,k:k}});
+  var list=all.filter(function(x){return (S.fz==='Tous'||x.s.zone===S.fz)&&(S.fs==='T'||x.k===+S.fs)}).sort(function(a,b){return a.k-b.k});
+  var FS=[['T','Toutes'],['0','Fonctionnelles'],['1','Limitées'],['2','Non fonctionnelles'],['3','Pas d’info']];
+  var sum='<div class="sum">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>';
+  var chips='<div class="chips" role="group" aria-label="État">'+FS.map(function(f){return '<button aria-pressed="'+(S.fs===f[0])+'" onclick="setFs(\''+f[0]+'\')">'+f[1]+'</button>'}).join('')+'</div>'+
+   '<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.fz===z)+'" onclick="setFz(\''+z+'\')">'+z+'</button>'}).join('')+'</div>';
+  var cards=list.map(function(x){var s=x.s,k=x.k,nm=esc(s.name),ji=jid(s.id);
+    return '<div class="seg"><div class="bar '+FLV[k].c+'"></div><div class="b" style="padding-right:12px"><h3>'+nm+'</h3><div class="mute">'+esc(s.zone)+'</div><div><span class="st s'+k+'">'+FLV[k].i+' '+FLV[k].n+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+
+    '<div class="fb"><button class="l0" aria-label="Signaler '+nm+' : fonctionnelle" onclick="fReport('+ji+',0)">● Ouverte</button><button class="l1" aria-label="Signaler '+nm+' : limitée" onclick="fReport('+ji+',1)">▲ Limitée</button><button class="l2" aria-label="Signaler '+nm+' : non fonctionnelle" onclick="fReport('+ji+',2)">■ Fermée</button></div></div></div>'}).join('');
+  var admin=(ADMIN&&PND.length)?'<div class="card"><b>À valider ('+PND.length+')</b>'+PND.map(function(p){return '<div class="al" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div>'+esc(p.name)+'<div class="mute">'+esc(p.zone)+'</div></div><div style="display:flex;gap:6px"><button onclick="approveStation('+jid(p.id)+')">Approuver</button><button class="alt" onclick="rejectStation('+jid(p.id)+')">Rejeter</button></div></div>'}).join('')+'</div>':''
+  var empty=!STN.length?'<div class="card mute">Aucune station dans la liste pour le moment. Ajoutez la première avec le formulaire ci-dessous, puis chacun pourra signaler son état.</div>':(!list.length?'<div class="card mute">Aucune station ne correspond à ce filtre.</div>':'');
+  var form='<h2>Une station manque ?</h2><div class="card">'+loginNote()+'<label for="fn">Nom ou repère</label><input id="fn" maxlength="80" placeholder="Ex. Station près de Delmas 33"><label for="fzone">Zone</label><select id="fzone">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><button class="alt" style="width:100%;margin-top:12px" onclick="addStation()">Ajouter cette station</button></div>';
+  return '<div class="mute" style="margin-top:12px">Selon les signalements des 3 dernières heures</div>'+heroCta('Aidez les autres')+admin+sum+chips+empty+'<div class="list">'+cards+'</div>'+form+'<p class="mute">Signalez seulement ce que vous avez vu.</p>'}
+render();
+</script>
+<aside class="side l" aria-hidden="true">
+ <div class="sl"><div class="logo"><svg viewBox="0 0 24 24"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#fff"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><h2>Trafik PAP</h2></div>
+ <p>La circulation et les stations-service de Port-au-Prince, signalées en direct par la communauté.</p>
+ <ul><li><i style="background:#2A8A5B"></i>Ouverte / fonctionnelle</li><li><i style="background:#E0A100"></i>Limitée</li><li><i style="background:#C93C3C"></i>Fermée / non fonctionnelle</li></ul>
+</aside>
+<aside class="side r">
+ <h3>Ouvrir sur votre téléphone</h3>
+ <div class="qr" id="qr" role="img" aria-label="QR code pour ouvrir Trafik PAP"></div>
+ <p>Scannez le code avec l’appareil photo de votre téléphone.</p>
+ <button class="alt inst" onclick="installApp()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Installer l’app</button>
+</aside>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(function(){try{var el=document.getElementById('qr');if(!el||!window.qrcode)return;var q=qrcode(0,'M');q.addData(location.origin+location.pathname);q.make();el.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true})}catch(e){}})();
+</script>
+<div class="hw" aria-hidden="true"><i></i><i></i><i></i></div>
+</body>
+</html>

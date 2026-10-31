@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B2B3A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trafik PAP">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Connexion / Inscription – TRAFIK</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F1F2EE;--card:#FFFFFF;--ink:#1B2024;--mute:#5F6870;--line:#DCDED8;--main:#1B2B3A;--on:#FFFFFF;--g:#2A8A5B;--y:#E0A100;--r:#C93C3C;--soft:#E7E9E3;--err:#C93C3C;--ok:#2A8A5B;--okbg:#EAF5EF;--errbg:#FBECEC;
+box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#12171B;--card:#1B2329;--ink:#E9EDEF;--mute:#9AA6AE;--line:#2D3840;--main:#2B4257;--g:#46B982;--y:#F2B91F;--r:#EE6A6A;--soft:#232D34;--err:#EE6A6A;--ok:#46B982;--okbg:#14291F;--errbg:#2E1A1A}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:400 16px/1.45 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+
+/* Barre du haut : boutons Connexion / S'inscrire */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--main);color:#fff;position:sticky;top:0;z-index:5;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.01em;color:#fff;text-decoration:none;white-space:nowrap}
+.dots{flex:none;display:flex;flex-direction:column;gap:3px;background:#fff;padding:6px 9px;border-radius:12px;width:40px;height:40px;align-items:center;justify-content:center}
+.dots::before{content:none}
+.dots i{display:block;width:8px;height:8px;border-radius:50%}
+.dots i:nth-child(1){background:var(--r)}.dots i:nth-child(2){background:var(--y)}.dots i:nth-child(3){background:var(--g)}
+.top nav{display:flex;gap:8px}
+.top button{font:inherit;font-weight:800;font-size:15px;min-height:44px;padding:0 16px;border:2px solid rgba(255,255,255,.85);border-radius:12px;background:transparent;color:#fff;cursor:pointer}
+.top button[aria-selected="true"]{background:var(--y);border-color:var(--y);color:#2b2000}
+.top button:focus-visible{outline:3px solid var(--y);outline-offset:2px}
+
+/* Formulaire */
+main{display:flex;justify-content:center;padding:28px 16px 64px}
+.box{width:100%;max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 20px;box-shadow:0 1px 2px rgba(20,30,40,.06),0 6px 18px rgba(20,30,40,.06)}
+h1{font-size:24px;line-height:1.2;font-weight:800;margin:0 0 6px;letter-spacing:-.01em}
+.lead{color:var(--mute);margin:0 0 20px;font-size:15px}
+.row{display:grid;grid-template-columns:1fr;gap:0}
+@media(min-width:480px){.row{grid-template-columns:1fr 1fr;gap:12px}}
+.f{margin-bottom:12px}
+label{display:block;font-weight:600;font-size:14px;color:var(--mute);margin-bottom:6px}
+.in{position:relative}
+input{font:inherit;width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+input::placeholder{color:var(--mute);opacity:.7}
+input:focus-visible{outline:3px solid var(--y);outline-offset:1px;border-color:var(--y)}
+input[aria-invalid="true"]{border-color:var(--err);box-shadow:inset 0 0 0 1px var(--err)}
+.in input.pw{padding-right:52px}
+.eye{position:absolute;right:2px;top:2px;height:44px;width:46px;border:0;border-radius:8px;background:none;color:var(--mute);cursor:pointer;display:grid;place-items:center}
+.eye:hover{color:var(--ink)}
+.eye:focus-visible{outline:3px solid var(--y);outline-offset:-2px}
+.eye svg{width:22px;height:22px}
+.eye .off{display:none}
+.eye[aria-pressed="true"] .on{display:none}
+.eye[aria-pressed="true"] .off{display:block}
+.hint{font-size:13px;color:var(--mute);margin-top:5px}
+.err{font-size:13px;font-weight:600;color:var(--err);margin-top:5px}
+.submit{font:inherit;font-weight:800;width:100%;min-height:52px;border:0;border-radius:14px;background:var(--y);color:#2b2000;font-size:17px;cursor:pointer;margin-top:6px}
+.submit:hover{filter:brightness(1.12)}
+.submit:focus-visible{outline:3px solid var(--y);outline-offset:2px}
+.submit[disabled]{opacity:.65;cursor:progress}
+.msg{padding:12px 14px;margin-bottom:16px;font-size:14px;border-radius:10px;border:1px solid;display:none}
+.msg.show{display:block}
+.msg.bad{color:var(--err);border-color:var(--err);background:var(--errbg)}
+.msg.good{color:var(--ok);border-color:var(--ok);background:var(--okbg)}
+.switch{text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:15px}
+.switch a{color:var(--ink);font-weight:700;text-decoration:underline;cursor:pointer}
+.switch a:focus-visible{outline:3px solid var(--y);outline-offset:2px}
+[hidden]{display:none!important}
+@media(max-width:440px){.top{padding:10px 12px}.top nav{gap:6px}.top button{padding:0 11px;font-size:14px}.logo{font-size:16px;gap:8px}.dots{width:34px;height:34px;padding:4px}.dots i{width:7px;height:7px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="index.html"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>Trafik PAP</a>
+  <nav role="tablist" aria-label="Authentification">
+    <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="panel-login">Connexion</button>
+    <button type="button" role="tab" id="tab-signup" aria-selected="false" aria-controls="panel-signup">S’inscrire</button>
+  </nav>
+</header>
+
+<main>
+<div class="box">
+
+  <!-- CONNEXION -->
+  <section id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+    <h1 style="margin-bottom:16px">Connexion</h1>
+    
+    <div class="msg" id="msg-login" role="alert"></div>
+    <form id="form-login" novalidate>
+      <div class="f">
+        <label for="l-email">Email</label>
+        <input id="l-email" type="email" autocomplete="email" placeholder="nom@exemple.com">
+        <div class="err" id="l-email-e"></div>
+      </div>
+      <div class="f">
+        <label for="l-pass">Mot de passe</label>
+        <div class="in">
+          <input id="l-pass" class="pw" type="password" autocomplete="current-password">
+          <button type="button" class="eye" data-target="l-pass" aria-pressed="false" aria-label="Afficher le mot de passe"></button>
+        </div>
+        <div class="err" id="l-pass-e"></div>
+      </div>
+      <button class="submit" type="submit">Se connecter</button>
+    </form>
+    <div class="switch">Pas encore de compte ? <a data-go="signup" tabindex="0" role="button">Inscrivez-vous</a></div>
+  </section>
+
+  <!-- INSCRIPTION -->
+  <section id="panel-signup" role="tabpanel" aria-labelledby="tab-signup" hidden>
+    <h1 style="margin-bottom:16px">Inscription</h1>
+    
+    <div class="msg" id="msg-signup" role="alert"></div>
+    <form id="form-signup" novalidate>
+      <div class="row">
+        <div class="f">
+          <label for="s-nom">Nom</label>
+          <input id="s-nom" type="text" autocomplete="family-name">
+          <div class="err" id="s-nom-e"></div>
+        </div>
+        <div class="f">
+          <label for="s-prenom">Prénom</label>
+          <input id="s-prenom" type="text" autocomplete="given-name">
+          <div class="err" id="s-prenom-e"></div>
+        </div>
+      </div>
+      <div class="f">
+        <label for="s-email">Email</label>
+        <input id="s-email" type="email" autocomplete="email" placeholder="nom@exemple.com">
+        <div class="err" id="s-email-e"></div>
+      </div>
+      <div class="f">
+        <label for="s-tel">Téléphone</label>
+        <input id="s-tel" type="tel" autocomplete="tel" placeholder="+509 34 00 0000">
+        <div class="err" id="s-tel-e"></div>
+      </div>
+      <div class="f">
+        <label for="s-pass">Mot de passe</label>
+        <div class="in">
+          <input id="s-pass" class="pw" type="password" autocomplete="new-password" aria-describedby="s-pass-h">
+          <button type="button" class="eye" data-target="s-pass" aria-pressed="false" aria-label="Afficher le mot de passe"></button>
+        </div>
+        <div class="hint" id="s-pass-h">8 caractères minimum.</div>
+        <div class="err" id="s-pass-e"></div>
+      </div>
+      <div class="f">
+        <label for="s-pass2">Confirmation du mot de passe</label>
+        <div class="in">
+          <input id="s-pass2" class="pw" type="password" autocomplete="new-password">
+          <button type="button" class="eye" data-target="s-pass2" aria-pressed="false" aria-label="Afficher le mot de passe"></button>
+        </div>
+        <div class="err" id="s-pass2-e"></div>
+      </div>
+      <button class="submit" type="submit">S’inscrire</button>
+    </form>
+    <div class="switch">Vous avez déjà un compte ? <a data-go="login" tabindex="0" role="button">Connectez-vous</a></div>
+  </section>
+
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ===== Configuration : projet Supabase TRAFIK ===== */
+var SUPABASE_URL = 'https://oyrkbvwfsmdifpqyngea.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_OIZAPZdPhM6UA4Nfucyj7A_eWzGTFx3'; // Project Settings > API Keys
+var PAGE_APRES_CONNEXION = 'index.html';
+
+var sb = null;
+try {
+  if (window.supabase && SUPABASE_KEY.indexOf('COLLEZ') !== 0) {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch (e) { sb = null; }
+
+function $(id){ return document.getElementById(id); }
+
+/* ===== Icône œil ===== */
+var EYE = '<svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+         + '<svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+document.querySelectorAll('.eye').forEach(function(b){
+  b.innerHTML = EYE;
+  b.addEventListener('click', function(){
+    var inp = $(b.dataset.target);
+    var show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    b.setAttribute('aria-pressed', show ? 'true' : 'false');
+    b.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+  });
+});
+
+/* ===== Basculer Connexion / S'inscrire ===== */
+function setMode(m){
+  var login = m === 'login';
+  $('panel-login').hidden = !login;
+  $('panel-signup').hidden = login;
+  $('tab-login').setAttribute('aria-selected', login ? 'true' : 'false');
+  $('tab-signup').setAttribute('aria-selected', login ? 'false' : 'true');
+  document.title = (login ? 'Connexion' : 'Inscription') + ' – TRAFIK';
+  if (history.replaceState) history.replaceState(null, '', '#' + m);
+  window.scrollTo(0, 0);
+}
+$('tab-login').onclick = function(){ setMode('login'); };
+$('tab-signup').onclick = function(){ setMode('signup'); };
+document.querySelectorAll('[data-go]').forEach(function(a){
+  a.onclick = function(){ setMode(a.dataset.go); };
+  a.onkeydown = function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMode(a.dataset.go); } };
+});
+setMode(location.hash === '#signup' ? 'signup' : 'login');
+
+/* ===== Aides ===== */
+function setErr(id, text){
+  var input = $(id), box = $(id + '-e');
+  box.textContent = text || '';
+  if (text) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+  return !text;
+}
+function clearErrs(prefix, ids){ ids.forEach(function(i){ setErr(prefix + i, ''); }); }
+function showMsg(id, kind, text){
+  var m = $(id);
+  m.className = 'msg show ' + (kind === 'ok' ? 'good' : 'bad');
+  m.textContent = text;
+}
+function hideMsg(id){ $(id).className = 'msg'; }
+function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
+function validTel(v){
+  if (!/^[+0-9\s().-]+$/.test(v)) return false;
+  var d = v.replace(/\D/g, '');
+  return d.length >= 8 && d.length <= 15;
+}
+function traduire(err){
+  var m = (err && err.message || '').toLowerCase();
+  if (m.indexOf('already registered') > -1 || m.indexOf('already been registered') > -1) return 'Un compte existe déjà avec cet email. Connectez-vous.';
+  if (m.indexOf('invalid login') > -1) return 'Email ou mot de passe incorrect.';
+  if (m.indexOf('not confirmed') > -1) return 'Confirmez d’abord votre email : ouvrez le message que nous vous avons envoyé.';
+  if (m.indexOf('rate limit') > -1 || m.indexOf('too many') > -1) return 'Trop de tentatives. Réessayez dans quelques minutes.';
+  if (m.indexOf('password') > -1 && m.indexOf('6') > -1) return 'Le mot de passe est trop court.';
+  if (m.indexOf('failed to fetch') > -1 || m.indexOf('network') > -1) return 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+  return (err && err.message) ? err.message : 'Une erreur est survenue. Réessayez.';
+}
+function pasConfigure(msgId){
+  showMsg(msgId, 'bad', 'La clé Supabase du projet TRAFIK n’est pas encore renseignée dans le fichier (variable SUPABASE_KEY).');
+}
+
+/* ===== Connexion ===== */
+$('form-login').addEventListener('submit', async function(e){
+  e.preventDefault();
+  hideMsg('msg-login');
+  var email = $('l-email').value.trim(), pass = $('l-pass').value;
+  var ok = true;
+  ok = setErr('l-email', !email ? 'Entrez votre email.' : (!validEmail(email) ? 'Entrez un email valide.' : '')) && ok;
+  ok = setErr('l-pass', !pass ? 'Entrez votre mot de passe.' : '') && ok;
+  if (!ok) return;
+  if (!sb) return pasConfigure('msg-login');
+  var btn = e.target.querySelector('.submit'); btn.disabled = true; btn.textContent = 'Connexion…';
+  try {
+    var r = await sb.auth.signInWithPassword({ email: email, password: pass });
+    if (r.error) throw r.error;
+    window.location.href = PAGE_APRES_CONNEXION;
+  } catch (err) {
+    showMsg('msg-login', 'bad', traduire(err));
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+});
+
+/* ===== Inscription ===== */
+$('form-signup').addEventListener('submit', async function(e){
+  e.preventDefault();
+  hideMsg('msg-signup');
+  var nom = $('s-nom').value.trim(), prenom = $('s-prenom').value.trim(),
+      email = $('s-email').value.trim(), tel = $('s-tel').value.trim(),
+      p1 = $('s-pass').value, p2 = $('s-pass2').value;
+  var ok = true;
+  ok = setErr('s-nom', !nom ? 'Entrez votre nom.' : '') && ok;
+  ok = setErr('s-prenom', !prenom ? 'Entrez votre prénom.' : '') && ok;
+  ok = setErr('s-email', !email ? 'Entrez votre email.' : (!validEmail(email) ? 'Entrez un email valide.' : '')) && ok;
+  ok = setErr('s-tel', !tel ? 'Entrez votre numéro de téléphone.' : (!validTel(tel) ? 'Entrez un numéro valide (8 à 15 chiffres).' : '')) && ok;
+  ok = setErr('s-pass', !p1 ? 'Choisissez un mot de passe.' : (p1.length < 8 ? 'Le mot de passe doit contenir au moins 8 caractères.' : '')) && ok;
+  ok = setErr('s-pass2', !p2 ? 'Confirmez votre mot de passe.' : (p1 !== p2 ? 'Les mots de passe ne correspondent pas.' : '')) && ok;
+  if (!ok) return;
+  if (!sb) return pasConfigure('msg-signup');
+  var btn = e.target.querySelector('.submit'); btn.disabled = true; btn.textContent = 'Création du compte…';
+  try {
+    var r = await sb.auth.signUp({
+      email: email,
+      password: p1,
+      options: { data: { nom: nom, prenom: prenom, telephone: tel, full_name: prenom + ' ' + nom } }
+    });
+    if (r.error) throw r.error;
+    if (r.data && r.data.session) {
+      window.location.href = PAGE_APRES_CONNEXION;
+      return;
+    }
+    e.target.reset();
+    showMsg('msg-signup', 'ok', 'Compte créé. Un email de confirmation vient d’être envoyé à ' + email + '. Confirmez-le, puis connectez-vous.');
+    btn.disabled = false; btn.textContent = 'S’inscrire';
+  } catch (err) {
+    showMsg('msg-signup', 'bad', traduire(err));
+    btn.disabled = false; btn.textContent = 'S’inscrire';
+  }
+});
+
+/* Effacer l'erreur d'un champ dès que la personne le corrige */
+document.querySelectorAll('input').forEach(function(i){
+  i.addEventListener('input', function(){ if (i.getAttribute('aria-invalid')) setErr(i.id, ''); });
+});
+</script>
+</body>
+</html>
