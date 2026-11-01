@@ -460,7 +460,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-01-e';
+var BUILD='2026-11-01-h';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -577,8 +577,8 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
   (window.CURU?srow('Supprimer mon compte','Efface définitivement votre compte et vos données','<button type="button" class="dng" onclick="openDelete()">Supprimer</button>'):'')+
   '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p>')}
 function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
-function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();render()}
-function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();render();openSettings()}
+function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();pushPrefs();render()}
+function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();pushPrefs();render();openSettings()}
 function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
 function togglePush(){
@@ -631,7 +631,7 @@ function pushReg(){return ('serviceWorker' in navigator&&location.protocol!=='fi
 /* envoie au serveur : tous les tronçons ou seulement ceux suivis, pour ne pas déranger */
 function pushPrefs(){var c=window.sbClient;if(!c||!('serviceWorker' in navigator))return;
  pushReg().then(function(reg){return reg.pushManager&&reg.pushManager.getSubscription()}).then(function(sub){if(!sub)return;
-  return c.rpc('set_push_prefs',{p_endpoint:sub.endpoint,p_all:PR.req!=='mine',p_segments:S.watch.slice(0,200)})}).catch(function(){})}
+  return c.rpc('set_push_prefs',{p_endpoint:sub.endpoint,p_all:PR.req!=='mine',p_segments:S.watch.slice(0,200),p_all_stations:PR.fuel!==false,p_stations:S.fwatch.map(Number).filter(function(n){return isFinite(n)}).slice(0,200)})}).catch(function(){})}
 function pushSave(sub){var j=sub.toJSON(),c=window.sbClient;
  return c.rpc('register_push',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth}).then(function(r){if(!r.error)return;
   return c.from('push_subscriptions').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'}).then(function(r2){if(r2.error)throw r2.error})}).then(function(){pushPrefs()})}
@@ -668,22 +668,23 @@ function cand(id){var now=Date.now(),sw=0,sl=0,rs=recentRep(id);
   if(!rs.length)return -1;
   rs.forEach(function(r){var a=(now-r.t)/MIN,w=1/(1+a/10);sw+=w;sl+=w*r.lvl});
   var v=sl/sw;return v<0.5?0:v<1.4?1:2}
-/* votes : chaque signalement compte pour un vote positif de son auteur ; « Confirmer » = positif, « Contester » = négatif.
-   Un seul avis par personne (le plus récent) sur la durée de vie de l'état (45 min tronçons, 3 h stations). */
+/* rôles séparés : un signalement PROPOSE un état, seuls les votes le VALIDENT (« Confirmer » = positif, « Contester » = négatif).
+   Un signalement ne compte jamais comme un vote, et la personne qui a signalé ne peut pas voter sur son propre signalement (sauf l'administrateur).
+   Un seul vote par personne (le plus récent) sur la durée de vie de l'état (45 min tronçons, 3 h stations). */
 var VOTES=[];
+function reporters(kind,id,win){var now=Date.now(),m={};(kind==='seg'?S.reports:FREP).forEach(function(r){if((kind==='seg'?r.seg:r.st)===id&&now-r.t<win&&r.u)m[r.u]=1});return m}
+function iReported(kind,id){var u=window.UID;if(window.ADMIN)return false;return !!(u&&reporters(kind,id,kind==='seg'?45*MIN:FMIN*MIN)[u])}
 function tally(kind,id,lvl,win){var now=Date.now(),m={},p=0,n=0;
- function add(u,t,l,pos){var k=u||'local';if(!m[k]||t>m[k].t)m[k]={t:t,l:l,pos:pos}}
- (kind==='seg'?S.reports:FREP).forEach(function(r){if((kind==='seg'?r.seg:r.st)===id&&now-r.t<win)add(r.u,r.t,r.lvl,true)});
- VOTES.forEach(function(v){if(v.k===kind&&v.id===id&&now-v.t<win)add(v.u,v.t,v.lvl,v.val>0)});
+ VOTES.forEach(function(v){if(v.k!==kind||v.id!==id||now-v.t>=win)return;var k=v.u||'local';if(!m[k]||v.t>m[k].t)m[k]={t:v.t,l:v.lvl,pos:v.val>0}});
  Object.keys(m).forEach(function(k){if(m[k].l!==lvl)return;m[k].pos?p++:n++});
  return {p:p,n:n}}
 /* validé : au moins 2 votes positifs et plus de positifs que de négatifs ; égalité = vote nul ; plus de négatifs = retour à « Pas d’info » */
 function valid(t){return t.p>=QUORUM&&t.p>t.n}
-function voteNote(t){return t.p<QUORUM?'en attente de confirmation ('+t.p+'/'+QUORUM+' votes positifs'+(t.n?', '+t.n+' négatif'+(t.n>1?'s':''):'')+')':t.n>t.p?'contesté : '+t.n+' votes négatifs contre '+t.p+' positifs, retour à « Pas d’info »':t.n===t.p?'vote nul ('+t.p+' pour, '+t.n+' contre) : non confirmé':''}
+function voteNote(t){var a=!!window.ADMIN;return t.p<QUORUM?'en attente de confirmation'+(a?' ('+t.p+'/'+QUORUM+' votes positifs'+(t.n?', '+t.n+' négatif'+(t.n>1?'s':''):'')+')':''):t.n>t.p?'contesté, retour à « Pas d’info »'+(a?' ('+t.n+' votes négatifs contre '+t.p+' positifs)':''):t.n===t.p?'vote nul, non confirmé'+(a?' ('+t.p+' pour, '+t.n+' contre)':''):''}
 function status(id){var k=cand(id);if(k<0)return 3;return valid(tally('seg',id,k,45*MIN))?k:3}
 /* état proposé mais pas encore validé : au moins un vote positif et plus de positifs que de négatifs (-1 = rien en attente) ; un état contesté ou à égalité n’est pas montré */
-function pendSeg(id){if(status(id)!==3)return -1;var k=cand(id);if(k<0)return -1;var t=tally('seg',id,k,45*MIN);return (!valid(t)&&t.p>t.n)?k:-1}
-function pendSt(id){if(fstat(id)!==3)return -1;var k=fcand(id);if(k<0)return -1;var t=tally('st',id,k,FMIN*MIN);return (!valid(t)&&t.p>t.n)?k:-1}
+function pendSeg(id){if(status(id)!==3)return -1;var k=cand(id);if(k<0)return -1;var t=tally('seg',id,k,45*MIN);return (!valid(t)&&(t.p>t.n||t.n===0))?k:-1}
+function pendSt(id){if(fstat(id)!==3)return -1;var k=fcand(id);if(k<0)return -1;var t=tally('st',id,k,FMIN*MIN);return (!valid(t)&&(t.p>t.n||t.n===0))?k:-1}
 function info(id){var rs=recentRep(id),k=cand(id);
   if(!rs.length)return 'Aucun signalement récent';
   var tl=tally('seg',id,k,45*MIN);
@@ -697,15 +698,17 @@ function change(id,before,after){
   pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:after,k:'suivi'});
   toast('Suivi · '+txt);if(PR.vib)try{navigator.vibrate&&navigator.vibrate(after===2?[200,100,200]:100)}catch(e){}}
 /* anti-spam : un même utilisateur ne peut signaler le même tronçon / la même station qu'une fois toutes les 20 min (mémorisé sur l'appareil, survit au rechargement) */
-var COOL=20,CKEY='trafik-cool';
-function coolLoad(){try{var o=JSON.parse(localStorage.getItem(CKEY))||{},n=Date.now();for(var k in o)if(n-o[k]>=COOL*MIN)delete o[k];return o}catch(e){return {}}}
-function coolLeft(k){var o=coolLoad();return o[k]?Math.max(1,Math.ceil((COOL*MIN-(Date.now()-o[k]))/MIN)):0}
+var COOL=20,VCOOL=30,CKEY='trafik-cool';
+/* votes : une fois qu'on a voté sur un tronçon / une station, on ne peut plus voter (ni changer d'option) avant 30 min ; signalements : 20 min */
+function coolDur(k){return (k.indexOf('v:')===0?VCOOL:COOL)*MIN}
+function coolLoad(){try{var o=JSON.parse(localStorage.getItem(CKEY))||{},n=Date.now();for(var k in o)if(n-o[k]>=coolDur(k))delete o[k];return o}catch(e){return {}}}
+function coolLeft(k){var o=coolLoad();return o[k]?Math.max(1,Math.ceil((coolDur(k)-(Date.now()-o[k]))/MIN)):0}
 function coolMark(k){try{var o=coolLoad();o[k]=Date.now();localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}}
 function coolCheck(k,what){var m=coolLeft(k);if(m){toast('Vous avez déjà signalé '+what+'. Réessayez dans '+m+' min.');return false}coolMark(k);return true}
 /* ===== Validation par géolocalisation =====
    Un signalement n'est accepté que si le GPS place la personne près de la route (≤ 1 km du tracé) ou de la station (≤ 1 km, ou le rayon indiqué
    quand les coordonnées sont approximatives). La position est envoyée avec le signalement pour être revérifiée par le serveur (fonctions submit_report / submit_fuel), puis elle n'est pas conservée. */
-var GEO_R=1000,GEO_ACC=1500;
+var GEO_R=1000,GEO_ACC=800;
 /* centres de zone : repli pour les tronçons/stations ajoutés par les utilisateurs (sans coordonnées) [lat,lng,rayon m] */
 var ZC={'Centre':[18.5430,-72.3370,3500],'Delmas':[18.5590,-72.3050,4500],'Tabarre':[18.5800,-72.2600,5000],'Est':[18.5750,-72.2100,7000],'Pétion-Ville':[18.5120,-72.2880,4500],'Montagne':[18.4700,-72.2800,8000],'Sud':[18.5250,-72.4300,15000],'Nord':[18.7300,-72.4200,25000]};
 /* coordonnées approximatives des stations (id : [lat,lng,rayon m]) : à corriger avec les vraies positions GPS dès que possible */
@@ -820,12 +823,12 @@ var PVS=null,PVF=null,FLOADED=false;
 function valCheck(){
  if(SHARED){var cur={};SEG.forEach(function(s){cur[s[0]]=status(s[0])});
   if(PVS)SEG.forEach(function(s){var id=s[0],k=cur[id];
-   if(k<3&&PVS[id]!==undefined&&PVS[id]!==k&&S.watch.indexOf(id)<0&&reqWanted(id)){var t=tally('seg',id,k,45*MIN),txt=s[1]+' : '+LV[k].n.toLowerCase()+' validé par vote ('+t.p+' pour, '+t.n+' contre)';
+   if(k<3&&PVS[id]!==undefined&&PVS[id]!==k&&S.watch.indexOf(id)<0&&reqWanted(id)){var t=tally('seg',id,k,45*MIN),txt=s[1]+' : '+LV[k].n.toLowerCase()+' validé par vote'+(window.ADMIN?' ('+t.p+' pour, '+t.n+' contre)':'');
     pushAlert({t:hhmm(Date.now()),txt:txt,l:k,k:'valide',seg:id});toast('Validé · '+txt)}});
   PVS=cur}
  if(FLOADED){var cf={};STN.forEach(function(s){cf[s.id]=fstat(s.id)});
   if(PVF)STN.forEach(function(s){var k=cf[s.id];
-   if(k<3&&fWanted(s.id)&&PVF[s.id]!==undefined&&PVF[s.id]!==k){var t=tally('st',s.id,k,FMIN*MIN),txt='Station '+esc(s.name)+' : '+FLV[k].n.toLowerCase()+' validée par vote ('+t.p+' pour, '+t.n+' contre)';
+   if(k<3&&fWanted(s.id)&&PVF[s.id]!==undefined&&PVF[s.id]!==k){var t=tally('st',s.id,k,FMIN*MIN),txt='Station '+esc(s.name)+' : '+FLV[k].n.toLowerCase()+' validée par vote'+(window.ADMIN?' ('+t.p+' pour, '+t.n+' contre)':'');
     pushAlert({t:hhmm(Date.now()),txt:txt,l:k,k:'valide',st:s.id});toast('Validé · station '+s.name)}});
   PVF=cf}}
 function render(){
@@ -1167,13 +1170,14 @@ function addStation(){var n=document.getElementById('fn').value.trim().slice(0,8
   if(STN.some(function(s){return s.name.toLowerCase()===n.toLowerCase()&&s.zone===z}))return toast('Cette station existe déjà dans cette zone');
   needLogin(function(){DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){toast('Merci ! Station envoyée : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer une station':(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard'))})},'proposer une station')}
 function vote(kind,id,val){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return toast('Aucun signalement récent à confirmer');
- var ck='v:'+kind+':'+id,m=coolLeft(ck);if(m)return toast('Vous avez déjà voté ici. Réessayez dans '+m+' min.');
+ if(iReported(kind,id))return toast('Vous avez signalé cet état : seuls les autres utilisateurs peuvent voter.');
+ var ck='v:'+kind+':'+id,m=coolLeft(ck);if(m)return toast('Vous avez déjà voté ici. Vous pourrez voter à nouveau dans '+m+' min.');
  needLogin(function(){geoGate(kind,id,function(){
   if(!DB)return toast('Connexion indisponible : réessayez dans un instant');
   DB.collection('votes').add({kind:kind,id:id,lvl:k,val:val}).then(function(){coolMark(ck);VOTES.push({k:kind,id:id,lvl:k,val:val,u:window.UID,t:Date.now()});render();toast(val>0?'Merci ! Vote positif enregistré':'Merci ! Vote négatif enregistré')}).catch(function(e){toast(e&&e.code==='P0001'?e.message:'Échec du vote : réessayez plus tard')})})},'voter')}
 function voteRow(kind,id){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return '';
- var gk=geoCheck(kind,id),gd=(gk&&!gk.ok)?' disabled':'',t=tally(kind,id,k,kind==='seg'?45*MIN:FMIN*MIN),j=jid(id);
- return (gd?'<div class="mute">📍 Vous devez être à proximité pour voter.</div>':'')+'<div class="fb"><button class="alt"'+gd+' aria-label="Confirmer cet état" onclick="vote(\''+kind+'\','+j+',1)">👍 Confirmer ('+t.p+')</button><button class="alt"'+gd+' aria-label="Contester cet état" onclick="vote(\''+kind+'\','+j+',-1)">👎 Contester ('+t.n+')</button></div>'}
+ var vl=coolLeft('v:'+kind+':'+id),ir=iReported(kind,id),gk=geoCheck(kind,id),gd=((gk&&!gk.ok)||vl||ir)?' disabled':'',t=tally(kind,id,k,kind==='seg'?45*MIN:FMIN*MIN),j=jid(id);
+ return (ir?'<div class="mute">Vous avez signalé cet état : seuls les autres utilisateurs peuvent le confirmer ou le contester.</div>':vl?'<div class=\"mute\">✔ Vous avez voté. Vous pourrez voter à nouveau dans '+vl+' min.</div>':gd?'<div class="mute">📍 Vous devez être à proximité pour voter.</div>':'')+'<div class="fb"><button class="alt"'+gd+' aria-label="Confirmer cet état" onclick="vote(\''+kind+'\','+j+',1)">👍 Confirmer'+(window.ADMIN?' ('+t.p+')':'')+'</button><button class="alt"'+gd+' aria-label="Contester cet état" onclick="vote(\''+kind+'\','+j+',-1)">👎 Contester'+(window.ADMIN?' ('+t.n+')':'')+'</button></div>'}
 function setFz(z){S.fz=z;render()}
 function setFs(t){S.fs=t;render()}
 function jid(v){return typeof v==='number'?v:"'"+String(v).replace(/'/g,'')+"'"}
