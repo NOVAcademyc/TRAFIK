@@ -45,6 +45,10 @@ main{padding:6px 16px 24px}
 .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .sum div{border-radius:16px;padding:12px 6px;color:#fff;text-align:center;font-weight:800;font-size:28px;line-height:1.1;box-shadow:var(--sh)}
 .sum span{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.hd{color:#fff;font-weight:700;text-align:center}
+.hl{height:1px;background:#fff;margin:16px 0 0}
+:root[data-theme="light"] .hd{color:var(--ink)}
+:root[data-theme="light"] .hl{background:var(--ink)}
 .l0{background:var(--g)}.l1{background:var(--y);color:#2b2000!important}.l2{background:var(--r)}.l3{background:var(--n)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
@@ -764,7 +768,7 @@ function syncWatch(){var c=window.sbClient;if(!c)return;
    if(add.length)return c.from('watched_segments').upsert(add.map(function(id){return {segment_id:id}}),{onConflict:'user_id,segment_id',ignoreDuplicates:true})
   })}).catch(function(){WSYNC=''})}
 window.syncWatch=syncWatch;syncWatch();
-function setTab(t){if(t!=='state')S.focus=null;if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;S.tab=t;window.scrollTo(0,0);render()}
+function setTab(t){if(t!=='state'){S.focus=null;S.ts='T'}if(t!=='fuel')S.fs='T';if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;S.tab=t;window.scrollTo(0,0);render()}
 /* ouvre l’onglet Trafic (liste) directement sur le tronçon : il est placé en tête de liste et mis en évidence */
 function goSeg(id){S.view='list';S.zone='Tous';S.focus=id;setTab('state')}
 function setZone(z){S.focus=null;S.zone=z;render()}
@@ -979,15 +983,18 @@ function secV(){var r=recent(),age=Math.floor((Date.now()-new Date(BUL.u).getTim
  (r.length?r.map(secItem).join(''):'<div class="card mute">Aucune alerte vérifiée. Restez prudent.</div>')+
  '<p class="mute">Sources publiques. En cas de danger, suivez les consignes des autorités.</p>'}
 function listV(){
-  var list=SEG.filter(function(s){return S.zone==='Tous'||s[2]===S.zone}).sort(function(a,b){return status(b[0])-status(a[0])||((pendSeg(b[0])>=0)-(pendSeg(a[0])>=0))});
+  var list=SEG.filter(function(s){return (S.zone==='Tous'||s[2]===S.zone)&&(S.ts==='T'||status(s[0])===+S.ts)}).sort(function(a,b){return status(b[0])-status(a[0])||((pendSeg(b[0])>=0)-(pendSeg(a[0])>=0))});
   var fs=S.focus&&seg(S.focus);if(fs)list=[fs].concat(list.filter(function(s){return s[0]!==S.focus}));
   var fb=fs?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Alerte de sécurité</b><div class="mute">Tronçon concerné en tête de liste</div></div><button class="alt" onclick="S.focus=null;render()">Toute la liste</button></div>':'';
-  return fb+'<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
-  '<div class="list">'+list.map(function(s){var k=status(s[0]),pk=pendSeg(s[0]),w=S.watch.indexOf(s[0])>=0,sk=pk>=0?pk:k;
+  var TS=[['T','Toutes'],['0','Fluides'],['1','Ralenties'],['2','Bloquées'],['3','Pas d’info']];
+  var tchips='<div class="chips" role="group" aria-label="État">'+TS.map(function(f){return '<button aria-pressed="'+(S.ts===f[0])+'" onclick="setTs(\''+f[0]+'\')">'+f[1]+'</button>'}).join('')+'</div>';
+  return fb+tchips+'<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
+  '<div class="list">'+(list.length?'':'<div class="card mute">Aucun tronçon dans cet état.</div>')+list.map(function(s){var k=status(s[0]),pk=pendSeg(s[0]),w=S.watch.indexOf(s[0])>=0,sk=pk>=0?pk:k;
     return '<div class="seg'+(S.focus===s[0]?' pin':'')+'" id="seg'+s[0]+'"><div class="bar '+LV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b"><h3>'+s[1]+'</h3><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+LV[sk].i+' '+LV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+info(s[0])+'</div>'+voteRow('seg',s[0])+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
     '<div class="a" style="flex-direction:column;gap:6px;justify-content:center"><button onclick="SEL='+s[0]+';setTab(\'report\')">Signaler</button><button class="'+(w?'on':'alt')+'" aria-pressed="'+w+'" onclick="toggle('+s[0]+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+s[0]+')">Demander</button></div></div>'}).join('')+'</div>'}
 
 function setView(v){S.view=v;render()}
+function setTs(t){S.ts=t;render()}
 function stateV(){
  var tog='<div class="tog" role="group" aria-label="Affichage"><button aria-pressed="'+(S.view==='list')+'" onclick="setView(\'list\')">Liste</button><button aria-pressed="'+(S.view==='map')+'" onclick="setView(\'map\')">Carte</button></div>';
  return tog+(S.view==='map'?mapV():listV())}
@@ -1039,9 +1046,11 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  var sgs=secSegs(),bad=SEG.filter(function(s){return sgs.indexOf(s[0])>=0}).sort(function(a,b){return status(b[0])-status(a[0])||lastRep(b[0])-lastRep(a[0])});
  var ic=function(n){return IC[n==='Carte'?'map':n==='Trafic'?'state':n==='Essence'?'fuel':'sec']};
  var np=SEG.filter(function(s){return pendSeg(s[0])>=0}).length;
- return instBtn()+'<div class="sum" style="margin-top:8px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
+ var fc=[0,0,0];STN.forEach(function(s){var k=fstat(s.id);if(k<3)fc[k]++});
+ return instBtn()+'<div class="hd" style="margin-top:8px">Circulation</div><div class="sum" style="margin-top:6px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.view=\'list\';S.zone=\'Tous\';S.ts=\''+i+'\';setTab(\'state\')">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
  (np?'<div class="mute" style="margin-top:8px;text-align:center">+ '+np+' état'+(np>1?'s':'')+' en attente de confirmation (voir Trafic)</div>':'')+
- '<div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
+ '<div class="hl"></div><div class="hd" style="margin-top:12px">Essence</div><div class="sum" style="margin-top:6px">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.fz=\'Tous\';S.fs=\''+i+'\';setTab(\'fuel\')">'+fc[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
+ '<div class="hl"></div><div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
  '<div class="sep"><span>En direct</span></div>'+
  (r.length?secItem(r[0]).replace('class="card"','class="card" style="margin-top:0"'):'')+
  dropPanel('bad','Routes à éviter',bad.length,bad.length?bad.map(function(s){return miniSeg(s[0],1)}).join(''):'<div class="row mute" style="cursor:default">Aucune route avec alerte de sécurité rouge</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Tout voir</button>')+
@@ -1128,7 +1137,7 @@ var FMIN=180,STN=[
 [48,'National — Cabaret','Nord'],
 [49,'Garescher-Prince — Cabaret','Nord']
 ].map(function(s){return {id:s[0],name:s[1],zone:s[2]}}),FREP=[],FLOC=[],lastFuel={};
-S.fz='Tous';S.fs='T';
+S.fz='Tous';S.fs='T';S.ts='T';
 function ago(t){var m=Math.max(0,Math.round((Date.now()-t)/MIN));return m<1?'à l’instant':m<60?'il y a '+m+' min':'il y a '+Math.floor(m/60)+' h'}
 /* la majorité des signalements récents l'emporte (les plus récents comptent davantage) ; égalité ouverte/fermée = Limitée */
 function frecent(id){var now=Date.now(),m={};FREP.forEach(function(r){if(r.st===id&&(now-r.t)/MIN<FMIN){var k=r.u||'local';if(!m[k]||r.t>m[k].t)m[k]=r}});return Object.keys(m).map(function(k){return m[k]})}
