@@ -460,7 +460,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-01-d';
+var BUILD='2026-11-01-e';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -497,9 +497,9 @@ function delReq(k){DIS[k]=Date.now();saveDis();render()}
 function clearKind(k){if(k==='demande')reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});else if(k==='essence')freqList().forEach(function(q){DIS['f'+q.st+':'+q.t]=Date.now()});else S.alerts=S.alerts.filter(function(a){return (a.k||'suivi')!==k});saveAlerts();saveDis();render()}
 function clearAlerts(){S.alerts=[];saveAlerts();reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});freqList().forEach(function(q){DIS['f'+q.st+':'+q.t]=Date.now()});saveDis();render()}
 /* ===== Préférences, sonnerie, cloche d'alertes, menu déroulant et fenêtres ===== */
-/* alertes : par défaut seulement les routes suivies ; « toute la ville » est une option (rqSet = choix fait volontairement par la personne) */
-var PR={sound:true,tone:'cloche',vol:0.7,vib:true,req:'mine',rqSet:false,fuel:false};
-try{var _p=JSON.parse(localStorage.getItem('trafik-prefs'));if(_p&&typeof _p==='object'){if(typeof _p.sound==='boolean')PR.sound=_p.sound;if(typeof _p.vib==='boolean')PR.vib=_p.vib;if(_p.fuel===true)PR.fuel=true;if(_p.rqSet===true&&(_p.req==='mine'||_p.req==='all')){PR.req=_p.req;PR.rqSet=true}if(typeof _p.vol==='number')PR.vol=Math.max(0,Math.min(1,_p.vol));if(typeof _p.tone==='string')PR.tone=_p.tone}}catch(e){}
+/* alertes : par défaut toute la ville (routes et stations) ; désactivé = seulement les éléments suivis ; « toute la ville » est une option (rqSet = choix fait volontairement par la personne) */
+var PR={sound:true,tone:'cloche',vol:0.7,vib:true,req:'all',rqSet:false,fuel:true,fuelSet:false};
+try{var _p=JSON.parse(localStorage.getItem('trafik-prefs'));if(_p&&typeof _p==='object'){if(typeof _p.sound==='boolean')PR.sound=_p.sound;if(typeof _p.vib==='boolean')PR.vib=_p.vib;if(_p.fuelSet===true&&typeof _p.fuel==='boolean'){PR.fuel=_p.fuel;PR.fuelSet=true}if(_p.rqSet===true&&(_p.req==='mine'||_p.req==='all')){PR.req=_p.req;PR.rqSet=true}if(typeof _p.vol==='number')PR.vol=Math.max(0,Math.min(1,_p.vol));if(typeof _p.tone==='string')PR.tone=_p.tone}}catch(e){}
 function savePR(){try{localStorage.setItem('trafik-prefs',JSON.stringify(PR))}catch(e){}}
 var AC=null;
 function audio(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
@@ -567,8 +567,8 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
  var pt=perm==='denied'?'Bloquées dans les réglages du navigateur':(PUSHON?'Actives, même app fermée':'Désactivées');
  openSheet('Paramètres',
   srow('Notifications',pt,sw(PUSHON,'togglePush()','Notifications'))+
-  srow('Demandes d’état',PR.req==='mine'?'Seulement les tronçons que vous suivez (bouton Suivre). Désactivez pour recevoir aussi les alertes de toute la ville.':'Toute la ville. Activez pour ne garder que vos tronçons suivis (bouton Suivre).',sw(PR.req==='mine','toggleReq()','Demandes seulement pour mes tronçons suivis'))+
-  srow('Alertes de toutes les stations',PR.fuel?'Vous recevez les alertes de toutes les stations. Désactivez pour ne garder que celles que vous suivez.':'Désactivées : seules les stations que vous suivez (bouton Suivre, onglet Essence) vous alertent. Activez pour toutes les stations.',sw(PR.fuel,'toggleFuel()','Alertes de toutes les stations'))+
+  srow('Alertes de tous les tronçons',PR.req!=='mine'?'Vous recevez les alertes de toute la ville. Désactivez pour ne garder que les tronçons que vous suivez (bouton Suivre).':'Seulement les tronçons que vous suivez (bouton Suivre). Activez pour recevoir toute la ville.',sw(PR.req!=='mine','toggleReq()','Alertes de tous les tronçons'))+
+  srow('Alertes de toutes les stations',PR.fuel?'Vous recevez les alertes de toutes les stations. Désactivez pour ne garder que celles que vous suivez (bouton Suivre, onglet Essence).':'Seulement les stations que vous suivez (bouton Suivre, onglet Essence). Activez pour recevoir toutes les stations.',sw(PR.fuel,'toggleFuel()','Alertes de toutes les stations'))+
   (window.ADMIN?srow('Mode test (administrateur)','Désactive la vérification GPS pour tester de chez vous. Revient à la normale au rechargement de la page.',sw(!!S.test,'toggleTest()','Mode test')):'')+
   srow('Vibration','Quand une alerte arrive',sw(PR.vib,'togglePR(\'vib\')','Vibration'))+
   srow('Sonnerie',PR.sound?TONES[PR.tone].n:'Désactivée','<button type="button" class="alt" onclick="openRing()">Choisir</button>')+
@@ -578,7 +578,7 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
   '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p>')}
 function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
 function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();render()}
-function toggleFuel(){PR.fuel=!PR.fuel;savePR();render();openSettings()}
+function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();render();openSettings()}
 function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
 function togglePush(){
