@@ -452,14 +452,15 @@ function addSeg(){var n=document.getElementById('sn').value.trim(),z=document.ge
   if(typeof x.id==='number'&&typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!SEG.some(function(s){return s[0]===x.id}))SEG.push([x.id,esc(x.name.slice(0,80)),x.zone])});render()},function(){})}).catch(function(){})}catch(e){}})();
 var LV=[{n:'Fluide',i:'●',c:'l0'},{n:'Ralenti',i:'▲',c:'l1'},{n:'Bloqué',i:'■',c:'l2'},{n:'Pas d’info',i:'–',c:'l3'}];
 var S={reports:[],watch:[],alerts:[],live:true,tab:'home',view:'list',zone:'Tous'};
-try{var p=JSON.parse(localStorage.getItem(KEY));if(p){S.watch=p.watch||[];S.live=p.live!==false}}catch(e){}
+S.fwatch=[];
+try{var p=JSON.parse(localStorage.getItem(KEY));if(p){S.watch=p.watch||[];S.live=p.live!==false;if(Array.isArray(p.fwatch))S.fwatch=p.fwatch.filter(function(x){return typeof x==='string'}).slice(0,200)}}catch(e){}
 try{var pa=JSON.parse(localStorage.getItem('trafik-alerts'));if(Array.isArray(pa))S.alerts=pa.slice(0,30)}catch(e){}
 function saveAlerts(){try{localStorage.setItem('trafik-alerts',JSON.stringify(S.alerts))}catch(e){}}
 var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-01-b';
+var BUILD='2026-11-01-d';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -482,12 +483,13 @@ function pushAlert(a){S.alerts.unshift(a);S.alerts=S.alerts.slice(0,30);saveAler
 var DIS={};try{DIS=JSON.parse(localStorage.getItem('trafik-dis'))||{}}catch(e){}
 function saveDis(){try{var n=Date.now();for(var k in DIS)if(n-DIS[k]>2*3600000)delete DIS[k];localStorage.setItem('trafik-dis',JSON.stringify(DIS))}catch(e){}}
 /* alertes de demande : tous les tronçons, ou seulement ceux que la personne suit */
+function fWanted(id){return PR.fuel||S.fwatch.indexOf(String(id))>=0}
 function reqWanted(id){return PR.req!=='mine'||S.watch.indexOf(id)>=0}
 function reqList(){var out=[];SEG.forEach(function(sg){var t=reqWanted(sg[0])&&openReq(sg[0]);if(t&&!DIS[sg[0]+':'+t])out.push({seg:sg[0],t:t})});return out.sort(function(a,b){return b.t-a.t})}
 /* demandes de disponibilité d’essence (onglet Essence) */
 function fopenReq(id){var rs=(window.FREQ||[]).filter(function(q){return q.st===id&&Date.now()-q.t<45*MIN&&!mine(q)});if(!rs.length)return null;var t=Math.max.apply(null,rs.map(function(q){return q.t}));
  return (window.FREP||[]).some(function(r){return r.st===id&&r.t>t})?null:t}
-function freqList(){var out=[];(window.STN||[]).forEach(function(s){var t=PR.req!=='mine'&&fopenReq(s.id);if(t&&!DIS['f'+s.id+':'+t])out.push({st:s.id,t:t})});return out.sort(function(a,b){return b.t-a.t})}
+function freqList(){var out=[];(window.STN||[]).forEach(function(s){var t=fWanted(s.id)&&fopenReq(s.id);if(t&&!DIS['f'+s.id+':'+t])out.push({st:s.id,t:t})});return out.sort(function(a,b){return b.t-a.t})}
 function alKind(k){return S.alerts.map(function(a,i){return {a:a,i:i}}).filter(function(o){return (o.a.k||'suivi')===k})}
 function alertN(){return S.alerts.length+reqList().length+freqList().length}
 function delAlert(i){S.alerts.splice(i,1);saveAlerts();render()}
@@ -496,8 +498,8 @@ function clearKind(k){if(k==='demande')reqList().forEach(function(q){DIS[q.seg+'
 function clearAlerts(){S.alerts=[];saveAlerts();reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});freqList().forEach(function(q){DIS['f'+q.st+':'+q.t]=Date.now()});saveDis();render()}
 /* ===== Préférences, sonnerie, cloche d'alertes, menu déroulant et fenêtres ===== */
 /* alertes : par défaut seulement les routes suivies ; « toute la ville » est une option (rqSet = choix fait volontairement par la personne) */
-var PR={sound:true,tone:'cloche',vol:0.7,vib:true,req:'mine',rqSet:false};
-try{var _p=JSON.parse(localStorage.getItem('trafik-prefs'));if(_p&&typeof _p==='object'){if(typeof _p.sound==='boolean')PR.sound=_p.sound;if(typeof _p.vib==='boolean')PR.vib=_p.vib;if(_p.rqSet===true&&(_p.req==='mine'||_p.req==='all')){PR.req=_p.req;PR.rqSet=true}if(typeof _p.vol==='number')PR.vol=Math.max(0,Math.min(1,_p.vol));if(typeof _p.tone==='string')PR.tone=_p.tone}}catch(e){}
+var PR={sound:true,tone:'cloche',vol:0.7,vib:true,req:'mine',rqSet:false,fuel:false};
+try{var _p=JSON.parse(localStorage.getItem('trafik-prefs'));if(_p&&typeof _p==='object'){if(typeof _p.sound==='boolean')PR.sound=_p.sound;if(typeof _p.vib==='boolean')PR.vib=_p.vib;if(_p.fuel===true)PR.fuel=true;if(_p.rqSet===true&&(_p.req==='mine'||_p.req==='all')){PR.req=_p.req;PR.rqSet=true}if(typeof _p.vol==='number')PR.vol=Math.max(0,Math.min(1,_p.vol));if(typeof _p.tone==='string')PR.tone=_p.tone}}catch(e){}
 function savePR(){try{localStorage.setItem('trafik-prefs',JSON.stringify(PR))}catch(e){}}
 var AC=null;
 function audio(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
@@ -565,7 +567,8 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
  var pt=perm==='denied'?'Bloquées dans les réglages du navigateur':(PUSHON?'Actives, même app fermée':'Désactivées');
  openSheet('Paramètres',
   srow('Notifications',pt,sw(PUSHON,'togglePush()','Notifications'))+
-  srow('Demandes d’état',PR.req==='mine'?'Seulement les tronçons que vous suivez (bouton Suivre). Désactivez pour recevoir aussi les alertes de toute la ville et des stations-service.':'Toute la ville, stations-service comprises. Activez pour ne garder que vos tronçons suivis (bouton Suivre).',sw(PR.req==='mine','toggleReq()','Demandes seulement pour mes tronçons suivis'))+
+  srow('Demandes d’état',PR.req==='mine'?'Seulement les tronçons que vous suivez (bouton Suivre). Désactivez pour recevoir aussi les alertes de toute la ville.':'Toute la ville. Activez pour ne garder que vos tronçons suivis (bouton Suivre).',sw(PR.req==='mine','toggleReq()','Demandes seulement pour mes tronçons suivis'))+
+  srow('Alertes de toutes les stations',PR.fuel?'Vous recevez les alertes de toutes les stations. Désactivez pour ne garder que celles que vous suivez.':'Désactivées : seules les stations que vous suivez (bouton Suivre, onglet Essence) vous alertent. Activez pour toutes les stations.',sw(PR.fuel,'toggleFuel()','Alertes de toutes les stations'))+
   (window.ADMIN?srow('Mode test (administrateur)','Désactive la vérification GPS pour tester de chez vous. Revient à la normale au rechargement de la page.',sw(!!S.test,'toggleTest()','Mode test')):'')+
   srow('Vibration','Quand une alerte arrive',sw(PR.vib,'togglePR(\'vib\')','Vibration'))+
   srow('Sonnerie',PR.sound?TONES[PR.tone].n:'Désactivée','<button type="button" class="alt" onclick="openRing()">Choisir</button>')+
@@ -574,6 +577,8 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
   (window.CURU?srow('Supprimer mon compte','Efface définitivement votre compte et vos données','<button type="button" class="dng" onclick="openDelete()">Supprimer</button>'):'')+
   '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p>')}
 function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
+function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();render()}
+function toggleFuel(){PR.fuel=!PR.fuel;savePR();render();openSettings()}
 function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
 function togglePush(){
@@ -650,7 +655,7 @@ function pendingReply(){try{var v=localStorage.getItem('trafik-reply');localStor
 function hashReply(){var m=/^#repondre-(\d+)$/.exec(location.hash),f=/^#essence-(\d+)$/.exec(location.hash);if(!m&&!f)return;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}if(m)openReply(m[1]);else openFuelReply(f[1])}
 try{if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(ev){if(ev.data&&ev.data.type==='reply')openReply(ev.data.seg);else if(ev.data&&ev.data.type==='fuel')openFuelReply(ev.data.st)})}catch(e){}
 window.addEventListener('hashchange',hashReply);setTimeout(hashReply,400);
-function save(){try{localStorage.setItem(KEY,JSON.stringify({watch:S.watch,live:S.live}))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({watch:S.watch,fwatch:S.fwatch,live:S.live}))}catch(e){}}
 function toast(t){var el=document.getElementById('toast');el.textContent=t;el.className='show';clearTimeout(toast.t);toast.t=setTimeout(function(){el.className=''},3500)}
 function seg(id){return SEG.filter(function(s){return s[0]===id})[0]}
 /* aucune donnée inventée : les états viennent uniquement des signalements */
@@ -819,8 +824,8 @@ function valCheck(){
     pushAlert({t:hhmm(Date.now()),txt:txt,l:k,k:'valide',seg:id});toast('Validé · '+txt)}});
   PVS=cur}
  if(FLOADED){var cf={};STN.forEach(function(s){cf[s.id]=fstat(s.id)});
-  if(PVF&&PR.req!=='mine')STN.forEach(function(s){var k=cf[s.id];
-   if(k<3&&PVF[s.id]!==undefined&&PVF[s.id]!==k){var t=tally('st',s.id,k,FMIN*MIN),txt='Station '+esc(s.name)+' : '+FLV[k].n.toLowerCase()+' validée par vote ('+t.p+' pour, '+t.n+' contre)';
+  if(PVF)STN.forEach(function(s){var k=cf[s.id];
+   if(k<3&&fWanted(s.id)&&PVF[s.id]!==undefined&&PVF[s.id]!==k){var t=tally('st',s.id,k,FMIN*MIN),txt='Station '+esc(s.name)+' : '+FLV[k].n.toLowerCase()+' validée par vote ('+t.p+' pour, '+t.n+' contre)';
     pushAlert({t:hhmm(Date.now()),txt:txt,l:k,k:'valide',st:s.id});toast('Validé · station '+s.name)}});
   PVF=cf}}
 function render(){
@@ -1192,7 +1197,7 @@ function segAdmin(){return (ADMIN&&PNDS.length)?'<div class="card"><b>Tronçons 
  db.collection('fuel_requests').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
   if(snap.fromCache){FREQ=snap.docs.map(function(d){return d.data()});render();return}
   if(!ffirst)snap.docChanges().forEach(function(c){if(c.type==='added'){var q=c.doc.data(),st=STN.filter(function(x){return x.id===q.st})[0];
-   if(!mine(q)&&st&&PR.req!=='mine'){notify({k:'demande',st:q.st,txt:'Quelqu’un demande si la station « '+st.name+' » est fonctionnelle. Si vous y êtes, répondez.'});ringBell();toast('Demande essence : '+st.name)}}});
+   if(!mine(q)&&st&&fWanted(q.st)){notify({k:'demande',st:q.st,txt:'Quelqu’un demande si la station « '+st.name+' » est fonctionnelle. Si vous y êtes, répondez.'});ringBell();toast('Demande essence : '+st.name)}}});
   ffirst=false;FREQ=snap.docs.map(function(d){return d.data()});render()},function(){})}).catch(function(){});
  window.claude.use('user').then(function(u){if(!u)return;u.canEdit().then(function(b){ADMIN=b;render()})}).catch(function(){})}catch(e){}})();
 function fuelV(){var c=[0,0,0],all=STN.map(function(s){var k=fstat(s.id);if(k<3)c[k]++;return {s:s,k:k}});
@@ -1203,7 +1208,7 @@ function fuelV(){var c=[0,0,0],all=STN.map(function(s){var k=fstat(s.id);if(k<3)
    '<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.fz===z)+'" onclick="setFz(\''+z+'\')">'+z+'</button>'}).join('')+'</div>';
   var cards=list.map(function(x){var s=x.s,k=x.k,nm=esc(s.name),ji=jid(s.id);
     var pk=pendSt(s.id),sk=pk>=0?pk:k,oq=fopenReq(s.id),gk=geoCheck('st',s.id),gd=(gk&&!gk.ok)?' disabled':'';return '<div class="seg'+(S.freply===s.id?' pin':'')+'" id="st'+s.id+'"><div class="bar '+FLV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b" style="padding-right:12px"><h3>'+nm+'</h3><div class="mute">'+esc(s.zone)+'</div><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+FLV[sk].i+' '+FLV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+voteRow('st',s.id)+(oq?'<div><span class="pill">Quelqu’un demande</span></div>':'')+(S.freply===s.id?'<div class="mute">Touchez l’état de la station ci-dessous pour répondre.</div>':'')+
-    (gd?'<div class="mute">📍 Vous devez être à proximité pour signaler'+(gk.acc>GEO_ACC?' (position trop imprécise).':' (vous êtes à environ '+fmtD(gk.d)+').')+'</div>':'')+'<div class="fb"><button class="l0"'+gd+' aria-label="Signaler '+nm+' : fonctionnelle" onclick="fReport('+ji+',0)">● Ouverte</button><button class="l1"'+gd+' aria-label="Signaler '+nm+' : limitée" onclick="fReport('+ji+',1)">▲ Limitée</button><button class="l2"'+gd+' aria-label="Signaler '+nm+' : non fonctionnelle" onclick="fReport('+ji+',2)">■ Fermée</button></div><div style="margin-top:8px"><button class="alt" style="width:100%" aria-label="Demander si '+nm+' est fonctionnelle" onclick="fAsk('+ji+')">Demander si elle est fonctionnelle</button></div></div></div>'}).join('');
+    (gd?'<div class="mute">📍 Vous devez être à proximité pour signaler'+(gk.acc>GEO_ACC?' (position trop imprécise).':' (vous êtes à environ '+fmtD(gk.d)+').')+'</div>':'')+'<div class="fb"><button class="l0"'+gd+' aria-label="Signaler '+nm+' : fonctionnelle" onclick="fReport('+ji+',0)">● Ouverte</button><button class="l1"'+gd+' aria-label="Signaler '+nm+' : limitée" onclick="fReport('+ji+',1)">▲ Limitée</button><button class="l2"'+gd+' aria-label="Signaler '+nm+' : non fonctionnelle" onclick="fReport('+ji+',2)">■ Fermée</button></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="alt" style="flex:1 1 180px" aria-label="Demander si '+nm+' est fonctionnelle" onclick="fAsk('+ji+')">Demander si elle est fonctionnelle</button><button class="alt" aria-pressed="'+(S.fwatch.indexOf(String(s.id))>=0)+'" aria-label="'+(S.fwatch.indexOf(String(s.id))>=0?'Ne plus suivre ':'Suivre ')+nm+'" onclick="toggleSt('+ji+')">'+(S.fwatch.indexOf(String(s.id))>=0?'Suivie':'Suivre')+'</button></div></div></div>'}).join('');
   var admin=(ADMIN&&PND.length)?'<div class="card"><b>À valider ('+PND.length+')</b>'+PND.map(function(p){return '<div class="al" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div>'+esc(p.name)+'<div class="mute">'+esc(p.zone)+'</div></div><div style="display:flex;gap:6px"><button onclick="approveStation('+jid(p.id)+')">Approuver</button><button class="alt" onclick="rejectStation('+jid(p.id)+')">Rejeter</button></div></div>'}).join('')+'</div>':''
   var empty=!STN.length?'<div class="card mute">Aucune station dans la liste pour le moment. Ajoutez la première avec le formulaire ci-dessous, puis chacun pourra signaler son état.</div>':(!list.length?'<div class="card mute">Aucune station ne correspond à ce filtre.</div>':'');
   var form='<h2>Une station manque ?</h2><div class="card">'+loginNote()+'<label for="fn">Nom ou repère</label><input id="fn" maxlength="80" placeholder="Ex. Station près de Delmas 33"><label for="fzone">Zone</label><select id="fzone">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><button class="alt" style="width:100%;margin-top:12px" onclick="addStation()">Ajouter cette station</button></div>';
