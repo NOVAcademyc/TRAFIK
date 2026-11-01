@@ -228,7 +228,7 @@ nav{left:50%;right:auto;width:100%;max-width:var(--w);transform:translateX(-50%)
 .top .btn.xs{min-height:34px;padding:0 10px;font-size:12.5px;border-width:1.5px;border-radius:10px}
 @media (max-width:420px){.top-in.lo h1{display:none}}
 button.dng{background:#C93C3C;color:#fff}
-button.dng:disabled{opacity:.45;cursor:not-allowed}
+button:disabled{opacity:.45;cursor:not-allowed}
 
 /* arrière-plan néon : noir bleuté lumineux, lueurs bleue et rouge, traits nets en diagonale */
 body{background:transparent}
@@ -251,6 +251,24 @@ nav button{color:#9FB2D9}
 nav button[aria-current="page"]{color:#fff}
 nav button[aria-current="page"]::before{background:linear-gradient(90deg,#2F6BFF,#FF2D3F);box-shadow:0 0 10px rgba(255,45,63,.7)}
 nav button[aria-current="page"] svg{filter:drop-shadow(0 0 5px rgba(80,140,255,.9))}
+/* tirer pour actualiser, mode hors ligne */
+html,body{overscroll-behavior-y:contain}
+.live.off{background:#F2B91F;box-shadow:0 0 0 3px rgba(242,185,31,.25)}
+.offbar{margin:12px 0 0;padding:10px 14px;border-radius:14px;background:rgba(242,185,31,.14);border:1px solid rgba(242,185,31,.55);color:var(--ink);font-size:13.5px;line-height:1.35}
+#ptr{position:fixed;left:50%;top:0;z-index:15;width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);display:grid;place-items:center;opacity:0;pointer-events:none;transform:translate(-50%,-60px);transition:transform .22s ease,opacity .22s ease}
+#ptr.drag{transition:none}
+#ptr svg{width:22px;height:22px;stroke:var(--acc);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#ptr.rdy svg{stroke:var(--g)}
+#ptr.spin svg{animation:ptrspin .8s linear infinite}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#ptr{transition:none}#ptr.spin svg{animation:none}}
+/* états « en attente de confirmation » : visibles mais atténués (rayures, contour pointillé), jamais comptés comme validés */
+.offl{margin:10px 0 0;padding:6px 12px;border-radius:10px;background:rgba(242,185,31,.14);color:var(--ink);font-size:13px;text-align:center}
+.bar.pd{opacity:.5;background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.4) 0 4px,transparent 4px 8px)}
+.dot.pd{opacity:.5}
+.chip.pd.l0,.chip.pd.l1,.chip.pd.l2{background:transparent;color:var(--ink);border:1.5px dashed var(--mute)}
+.st.pd{font-style:italic}
+.pdn{font-weight:600;font-size:12.5px;opacity:.85}
 </style>
 </head>
 <body>
@@ -260,6 +278,7 @@ nav button[aria-current="page"] svg{filter:drop-shadow(0 0 5px rgba(80,140,255,.
 </div>
 <nav><div id="tabs"></div></nav>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 /* ===== Connexion à la base Supabase TRAFIK =====
@@ -272,14 +291,30 @@ if(!sb)return;
 window.sbClient=sb;
 window.sbRpc=function(n,a){return sb.rpc(n,a).then(function(r){if(r.error)throw r.error;return r})};
 function iso(ms){return new Date(ms).toISOString()}
+/* ===== Cache local (mode hors ligne) =====
+   Le dernier état connu de chaque table publique est gardé dans localStorage (500 lignes max par table).
+   Au démarrage il s'affiche tout de suite, avec l'indicateur « hors ligne » si le réseau ne répond pas ; la base reprend la main dès qu'elle répond.
+   Jamais mis en cache : segment_requests et station_requests (propositions privées, visibles par leur auteur et les administrateurs). */
+var CK='trafik-c1:',CACHEABLE={segments:1,reports:1,requests:1,stations:1,fuel:1,fuel_requests:1,votes:1},PULLS=[];
+function cacheGet(k){try{var o=JSON.parse(localStorage.getItem(k));return o&&o.rows!==undefined?o:null}catch(e){return null}}
+function cachePut(k,rows){try{localStorage.setItem(k,JSON.stringify({at:Date.now(),rows:Array.isArray(rows)?rows.slice(-500):rows}))}catch(e){}}
+var NET={ok:null,at:0};try{NET.at=Number(localStorage.getItem(CK+'ok'))||0}catch(e){}
+window.NET=NET;
+function netState(ok){var ch=NET.ok!==ok;NET.ok=ok;
+ if(ok&&Date.now()-NET.at>15000){NET.at=Date.now();try{localStorage.setItem(CK+'ok',String(NET.at))}catch(e){}}
+ if(ch)try{window.dispatchEvent(new Event('trafik-net'))}catch(e){}}
+/* actualisation manuelle : relance toutes les lectures en cours (tirer pour actualiser, menu, retour de connexion) */
+window.sbRefresh=function(){return Promise.all(PULLS.map(function(p){return Promise.resolve().then(p).catch(function(){})})).then(function(){return NET.ok})};
+window.sbCacheClear=function(){try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&k.indexOf(CK)===0)localStorage.removeItem(k)}}catch(e){}};
 var T={
  segment_requests:{table:'segment_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
- segments:{table:'segments',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {id:Number(r.id),name:r.name,zone:r.zone}}},
+ segments:{table:'segments',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {id:Number(r.id),name:r.name,zone:r.zone,geo:r.geo}}},
  reports:{table:'reports',to:function(d){return {segment_id:d.seg,level:d.lvl}},from:function(r){return {seg:Number(r.segment_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}},
  requests:{table:'requests',to:function(d){return {segment_id:d.seg}},from:function(r){return {seg:Number(r.segment_id),t:Date.parse(r.created_at),u:r.user_id}}},
  stations:{table:'stations',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone}}},
  station_requests:{table:'station_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
  fuel:{table:'fuel',to:function(d){return {station_id:d.st,level:d.lvl}},from:function(r){return {st:Number(r.station_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}},
+ votes:{table:'votes',to:function(d){return d},from:function(r){return {k:r.kind,id:Number(r.target_id),lvl:r.level,val:r.value,u:r.user_id,t:Date.parse(r.created_at)}}},
  fuel_requests:{table:'fuel_requests',to:function(d){return {station_id:d.st}},from:function(r){return {st:Number(r.station_id),t:Date.parse(r.created_at),u:r.user_id}}}
 };
 function user(){return sb.auth.getSession().then(function(r){return r.data&&r.data.session?r.data.session.user:null})}
@@ -289,27 +324,45 @@ function Q(name,win){
   where:function(f,op,v){return Q(name,Date.now()-v)},
   add:function(d){return user().then(function(u){
     if(!u)throw new Error('login');
+    /* signalements : envoyés avec la position, vérifiée par le serveur (la position n'est pas enregistrée) */
+    if(name==='reports'||name==='fuel'||name==='votes'){var gp=window.S&&window.S.pos;
+     /* mode test (administrateur seulement) : aucune position envoyée ; le serveur n'accepte cela que d'un administrateur */
+     if(window.S&&window.S.test&&window.ADMIN)gp={la:null,ln:null,acc:null,t:Date.now()};
+     if(!gp||Date.now()-gp.t>180000)throw {code:'P0001',message:'Position GPS requise pour signaler.'};
+     if(name==='votes'){return sb.rpc('submit_vote',{p_kind:d.kind,p_id:d.id,p_level:d.lvl,p_value:d.val,p_lat:gp.la,p_lng:gp.ln,p_acc:gp.acc}).then(function(r){if(r.error)throw r.error;return r})}
+     var a=name==='reports'?{p_segment_id:d.seg,p_level:d.lvl}:{p_station_id:d.st,p_level:d.lvl};
+     a.p_lat=gp.la;a.p_lng=gp.ln;a.p_acc=gp.acc;
+     return sb.rpc(name==='reports'?'submit_report':'submit_fuel',a).then(function(r){if(r.error)throw r.error;return r})}
     return sb.from(c.table).insert(c.to(d)).then(function(r){if(r.error)throw r.error;return r})})},
   doc:function(id){return {delete:function(){return user().then(function(u){
     if(!u)throw new Error('login');
     return sb.from(c.table).delete().eq('id',id).select().then(function(r){
       if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error('refusé');return r})})}}},
   onSnapshot:function(cb,eb){
-   var seen={},busy=false,again=false;
+   var seen={},busy=false,again=false,ck=CK+name+':'+(win?Math.round(win/60000):0);
+   /* cache local : le dernier état connu s'affiche tout de suite, puis la base prend le relais (voir plus haut) */
+   var hit=CACHEABLE[name]?cacheGet(ck):null;
+   if(hit&&Array.isArray(hit.rows)){var cd=hit.rows.map(function(x){return {id:x.id,data:function(){return x.d}}});
+    /* les données trop anciennes pour la fenêtre de cette lecture (45 min, 3 h…) ne sont jamais réaffichées */
+    if(win)cd=cd.filter(function(d){var t=d.data().t;return typeof t!=='number'||t>Date.now()-win});
+    try{cb({docs:cd,docChanges:function(){return []},fromCache:true,cachedAt:hit.at})}catch(e){}}
    function pull(){
-    if(busy){again=true;return}busy=true;
+    if(busy){again=true;return Promise.resolve()}busy=true;
     var q=sb.from(c.table).select('*').order('id',{ascending:true}).limit(2000);
     if(win)q=q.gt('created_at',iso(Date.now()-win));
-    q.then(function(r){
+    return q.then(function(r){
       busy=false;
-      if(r.error){if(eb)eb(r.error);return}
+      if(r.error){netState(false);if(eb)eb(r.error);return}
+      netState(true);
       var docs=r.data.map(function(row){var id=Number(row.id),data=c.from(row);return {id:id,data:function(){return data}}});
+      if(CACHEABLE[name])cachePut(ck,docs.map(function(d){return {id:d.id,d:d.data()}}));
       var ch=[];docs.forEach(function(d){if(!seen[d.id])ch.push({type:'added',doc:d})});
       seen={};docs.forEach(function(d){seen[d.id]=1});
       cb({docs:docs,docChanges:function(){return ch}});
       if(again){again=false;pull()}
-    },function(e){busy=false;if(eb)eb(e)});
+    },function(e){busy=false;netState(false);if(eb)eb(e)});
    }
+   PULLS.push(pull);
    pull();
    try{sb.channel('rt-'+name+'-'+Math.random().toString(36).slice(2)).on('postgres_changes',{event:'*',schema:'public',table:c.table},pull).subscribe()}catch(e){}
    setInterval(pull,60000);
@@ -319,10 +372,14 @@ function Q(name,win){
 window.claude={use:function(n){
  if(n==='db')return Promise.resolve({collection:function(name){return Q(name,0)},
   doc:function(path){return {onSnapshot:function(cb,eb){
-   var id=String(path).split('/').pop();
-   function pull(){sb.from('situation').select('data').eq('id',id).maybeSingle().then(function(r){
-    if(r.error){if(eb)eb(r.error);return}
-    cb({exists:!!r.data,data:function(){return r.data?r.data.data:null}})},function(e){if(eb)eb(e)})}
+   var id=String(path).split('/').pop(),ck=CK+'situation:'+id,hit=cacheGet(ck);
+   if(hit&&hit.rows&&hit.rows.d)try{cb({exists:true,data:function(){return hit.rows.d},fromCache:true,cachedAt:hit.at})}catch(e){}
+   function pull(){return sb.from('situation').select('data').eq('id',id).maybeSingle().then(function(r){
+    if(r.error){netState(false);if(eb)eb(r.error);return}
+    netState(true);
+    if(r.data&&r.data.data)cachePut(ck,{d:r.data.data});
+    cb({exists:!!r.data,data:function(){return r.data?r.data.data:null}})},function(e){netState(false);if(eb)eb(e)})}
+   PULLS.push(pull);
    pull();
    try{sb.channel('rt-situation-'+Math.random().toString(36).slice(2)).on('postgres_changes',{event:'*',schema:'public',table:'situation'},pull).subscribe()}catch(e){}
    setInterval(pull,300000);
@@ -341,6 +398,8 @@ bar();sb.auth.onAuthStateChange(function(){bar()});
 </script>
 <script>
 var KEY='trafik-v1',MIN=60000;
+/* tracés des tronçons : source unique = la base (segments.geo, calculés sur la vraie route). Le téléphone et le serveur utilisent donc exactement le même tracé. */
+var SGEO={};
 var SEG=[
  [1,'Boulevard Jean-Jacques Dessalines (Grand-Rue)','Centre'],
  [2,'Champ de Mars','Centre'],
@@ -389,6 +448,7 @@ function addSeg(){var n=document.getElementById('sn').value.trim(),z=document.ge
    toast(e&&e.code==='23505'?'Ce tronçon existe déjà':(e&&e.code==='P0001'?e.message:(e&&e.code==='42501'?'Compte suspendu':'Échec de l’ajout : réessayez plus tard')))})},'ajouter un tronçon')}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;
  db.collection('segments').onSnapshot(function(snap){snap.docs.forEach(function(d){var x=d.data();
+  if(typeof x.id==='number'&&Array.isArray(x.geo)&&x.geo.length>=2&&x.geo.every(function(p){return Array.isArray(p)&&typeof p[0]==='number'&&typeof p[1]==='number'})){SGEO[x.id]=x.geo;if(typeof lApplyGeo==='function')lApplyGeo(x.id)}
   if(typeof x.id==='number'&&typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!SEG.some(function(s){return s[0]===x.id}))SEG.push([x.id,esc(x.name.slice(0,80)),x.zone])});render()},function(){})}).catch(function(){})}catch(e){}})();
 var LV=[{n:'Fluide',i:'●',c:'l0'},{n:'Ralenti',i:'▲',c:'l1'},{n:'Bloqué',i:'■',c:'l2'},{n:'Pas d’info',i:'–',c:'l3'}];
 var S={reports:[],watch:[],alerts:[],live:true,tab:'home',view:'list',zone:'Tous'};
@@ -396,9 +456,22 @@ try{var p=JSON.parse(localStorage.getItem(KEY));if(p){S.watch=p.watch||[];S.live
 try{var pa=JSON.parse(localStorage.getItem('trafik-alerts'));if(Array.isArray(pa))S.alerts=pa.slice(0,30)}catch(e){}
 function saveAlerts(){try{localStorage.setItem('trafik-alerts',JSON.stringify(S.alerts))}catch(e){}}
 var SWR=null;
-try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').then(function(r){SWR=r}).catch(function(){})}catch(e){}
+try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
+/* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
+   Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
+var BUILD='2026-11-01-b';
+(function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
+ function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
+ function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
+  (function go(){if(typing()){setTimeout(go,20000);return}location.reload()})()}
+ function check(){if(busy||navigator.onLine===false||location.protocol==='file:')return;busy=true;
+  try{if(SWR&&SWR.update)SWR.update().catch(function(){})}catch(e){}
+  fetch('index.html?_b='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){var m=RX.exec(t||'');if(m&&m[1]&&m[1]!==BUILD)reload(m[1])}).catch(function(){}).then(function(){busy=false})}
+ window.addEventListener('online',check);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden)check()});
+ setTimeout(check,2500);setInterval(check,600000)})();
 /* trois types, jamais mélangés : demande (quelqu’un demande), suivi (une route suivie change), reception (signalement reçu d’un autre) */
-var KN={demande:'Demande d’état',suivi:'Changement sur une route',reception:'Signalement'};
+var KN={demande:'Demande d’état',suivi:'Changement sur une route',reception:'Signalement',valide:'État validé par vote'};
 function notify(a){try{
  if(!('Notification' in window)||Notification.permission!=='granted'||!document.hidden)return;
  var k=a.k||'suivi',ti='Trafik · '+(k==='demande'?(a.st?'Demande essence':'Demande route'):KN[k]),txt=String(a.txt).replace(/<[^>]*>/g,''),o={body:txt,tag:'trafik-'+k+(a.seg?'-'+a.seg:(a.st?'-st-'+a.st:'')),renotify:true};
@@ -422,8 +495,9 @@ function delReq(k){DIS[k]=Date.now();saveDis();render()}
 function clearKind(k){if(k==='demande')reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});else if(k==='essence')freqList().forEach(function(q){DIS['f'+q.st+':'+q.t]=Date.now()});else S.alerts=S.alerts.filter(function(a){return (a.k||'suivi')!==k});saveAlerts();saveDis();render()}
 function clearAlerts(){S.alerts=[];saveAlerts();reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});freqList().forEach(function(q){DIS['f'+q.st+':'+q.t]=Date.now()});saveDis();render()}
 /* ===== Préférences, sonnerie, cloche d'alertes, menu déroulant et fenêtres ===== */
-var PR={sound:true,tone:'cloche',vol:0.7,vib:true,req:'all'};
-try{var _p=JSON.parse(localStorage.getItem('trafik-prefs'));if(_p&&typeof _p==='object'){if(typeof _p.sound==='boolean')PR.sound=_p.sound;if(typeof _p.vib==='boolean')PR.vib=_p.vib;if(_p.req==='mine')PR.req='mine';if(typeof _p.vol==='number')PR.vol=Math.max(0,Math.min(1,_p.vol));if(typeof _p.tone==='string')PR.tone=_p.tone}}catch(e){}
+/* alertes : par défaut seulement les routes suivies ; « toute la ville » est une option (rqSet = choix fait volontairement par la personne) */
+var PR={sound:true,tone:'cloche',vol:0.7,vib:true,req:'mine',rqSet:false};
+try{var _p=JSON.parse(localStorage.getItem('trafik-prefs'));if(_p&&typeof _p==='object'){if(typeof _p.sound==='boolean')PR.sound=_p.sound;if(typeof _p.vib==='boolean')PR.vib=_p.vib;if(_p.rqSet===true&&(_p.req==='mine'||_p.req==='all')){PR.req=_p.req;PR.rqSet=true}if(typeof _p.vol==='number')PR.vol=Math.max(0,Math.min(1,_p.vol));if(typeof _p.tone==='string')PR.tone=_p.tone}}catch(e){}
 function savePR(){try{localStorage.setItem('trafik-prefs',JSON.stringify(PR))}catch(e){}}
 var AC=null;
 function audio(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
@@ -451,6 +525,7 @@ var MI={
  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
  ring:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
  route:'<path d="M6 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM9 16h6a3 3 0 0 0 0-6h-3"/>',
+ refresh:'<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>',
  dl:'<path d="M12 3v12M7 10l5 5 5-5M5 20h14"/>',
  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
@@ -468,6 +543,7 @@ function buildMenu(){var u=window.CURU,m=document.getElementById('menu'),h='';
   mi('gear','Paramètres','openSettings()','Notifications, vibration')+
   mi('ring','Sonnerie','openRing()',PR.sound?TONES[PR.tone].n:'Désactivée')+
   mi('route','Mes routes suivies','setTab(\'alerts\')',S.watch.length+' route'+(S.watch.length>1?'s':''))+
+  mi('refresh','Actualiser','refreshAll()','Signalements, états, essence')+
   '<div class="msep"></div>'+
   (isStandalone()?'':mi('dl','Installer l’app','installApp()'))+
   mi('share','Partager l’app','shareApp()')+
@@ -489,14 +565,16 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
  var pt=perm==='denied'?'Bloquées dans les réglages du navigateur':(PUSHON?'Actives, même app fermée':'Désactivées');
  openSheet('Paramètres',
   srow('Notifications',pt,sw(PUSHON,'togglePush()','Notifications'))+
-  srow('Demandes d’état',PR.req==='mine'?'Seulement les tronçons que vous suivez (bouton Suivre)':'Tous les tronçons et stations. Activez pour ne garder que vos tronçons suivis (bouton Suivre)',sw(PR.req==='mine','toggleReq()','Demandes seulement pour mes tronçons suivis'))+
+  srow('Demandes d’état',PR.req==='mine'?'Seulement les tronçons que vous suivez (bouton Suivre). Désactivez pour recevoir aussi les alertes de toute la ville et des stations-service.':'Toute la ville, stations-service comprises. Activez pour ne garder que vos tronçons suivis (bouton Suivre).',sw(PR.req==='mine','toggleReq()','Demandes seulement pour mes tronçons suivis'))+
+  (window.ADMIN?srow('Mode test (administrateur)','Désactive la vérification GPS pour tester de chez vous. Revient à la normale au rechargement de la page.',sw(!!S.test,'toggleTest()','Mode test')):'')+
   srow('Vibration','Quand une alerte arrive',sw(PR.vib,'togglePR(\'vib\')','Vibration'))+
   srow('Sonnerie',PR.sound?TONES[PR.tone].n:'Désactivée','<button type="button" class="alt" onclick="openRing()">Choisir</button>')+
   srow('Alertes','Effacer toutes les alertes et demandes','<button type="button" class="alt" onclick="clearAlerts();toast(\'Alertes effacées\')">Effacer</button>')+
   srow('Données de cet appareil','Routes suivies, préférences, délais','<button type="button" class="alt" onclick="wipeLocal()">Réinitialiser</button>')+
   (window.CURU?srow('Supprimer mon compte','Efface définitivement votre compte et vos données','<button type="button" class="dng" onclick="openDelete()">Supprimer</button>'):'')+
   '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p>')}
-function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';savePR();pushPrefs();render();openSettings()}
+function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
+function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
 function togglePush(){
  if(PUSHON){window.pushOff().then(function(){PUSHON=false;openSettings();render()});return}
@@ -505,7 +583,7 @@ function togglePush(){
  Notification.requestPermission().then(function(p){if(p!=='granted'){toast('Notifications refusées');openSettings();return}
   pushOn().then(function(){toast('Notifications activées, même app fermée');openSettings();render()}).catch(function(){toast('Activées seulement quand l’app est ouverte');openSettings()})})}
 function wipeLocal(){if(!confirm('Effacer les données de cet appareil (routes suivies, alertes, préférences) ?'))return;
- ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});location.reload()}
+ ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});if(window.sbCacheClear)window.sbCacheClear();location.reload()}
 function openRing(){
  var list=Object.keys(TONES).map(function(k){var on=PR.tone===k;return srow(TONES[k].n,'','<button type="button" class="alt" aria-label="Écouter '+TONES[k].n+'" onclick="playTone(\''+k+'\')">▶</button><button type="button" class="'+(on?'on':'alt')+'" aria-pressed="'+on+'" style="margin-left:6px" onclick="pickTone(\''+k+'\')">'+(on?'Choisie':'Choisir')+'</button>')}).join('');
  openSheet('Sonnerie',srow('Son des alertes','Une cloche sonne quand une alerte arrive',sw(PR.sound,'setSound()','Son des alertes'))+
@@ -529,8 +607,8 @@ function doDelete(){var b=document.getElementById('delb');if(b){b.disabled=true;
   toast(e&&e.code==='P0001'&&e.message?e.message:'Échec de la suppression : réessayez');if(b){b.disabled=false;b.textContent='Supprimer définitivement'}})}
 function openAbout(){openSheet('Aide et à propos',
  '<p style="margin:0 0 10px">Trafik montre l’état de la circulation et des stations-service de Port-au-Prince, d’après les signalements de la communauté.</p>'+
- '<div class="srow"><div><b>Comment ça marche</b><div class="mute">● Fluide, ▲ Ralenti, ■ Bloqué. Un état s’affiche quand au moins '+QUORUM+' personnes différentes ont signalé le même tronçon ou la même station.</div></div></div>'+
- '<div class="srow"><div><b>Règles</b><div class="mute">Un signalement par tronçon ou station toutes les '+COOL+' minutes, 10 par heure au maximum. Un signalement compte 45 minutes (3 heures pour les stations).</div></div></div>'+
+ '<div class="srow"><div><b>Comment ça marche</b><div class="mute">● Fluide, ▲ Ralenti, ■ Bloqué. Un état s’affiche quand au moins '+QUORUM+' personnes différentes le confirment (un signalement compte pour un vote positif ; « Confirmer » et « Contester » sont réservés aux personnes à proximité). Si les votes négatifs dépassent les positifs, ou en cas d’égalité, l’état repasse à « Pas d’info ».</div></div></div>'+
+ '<div class="srow"><div><b>Règles</b><div class="mute">Un signalement par tronçon ou station toutes les '+COOL+' minutes, 10 par heure au maximum. Un signalement compte 45 minutes (3 heures pour les stations). Vous devez être à proximité (environ 1 km) du tronçon ou de la station pour signaler ; votre position est vérifiée à l’envoi du signalement (téléphone et serveur) et n’est pas enregistrée.</div></div></div>'+
  '<div class="srow"><div><b>Alertes</b><div class="mute">Suivez un tronçon pour être prévenu quand son état change. La cloche sépare les demandes d’état des autres utilisateurs, les changements sur vos routes suivies et les signalements reçus.</div></div></div>'+
  '<div class="srow"><div><b>Données enregistrées</b><div class="mute">Votre e-mail, nom, prénom et téléphone, vos signalements, vos routes suivies et, si vous les activez, vos abonnements aux notifications.</div></div></div>'+
  '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p><p class="mute" style="margin:10px 0 0">🚫 Pas de téléphone en conduisant. En danger, suivez les consignes des autorités.</p>')}
@@ -578,15 +656,33 @@ function seg(id){return SEG.filter(function(s){return s[0]===id})[0]}
 /* aucune donnée inventée : les états viennent uniquement des signalements */
 var CTX='<div class="card"><b>Situation générale (sources publiques)</b><div class="al mute">Les axes nationaux RN1, RN2 et RN3 reliant Port-au-Prince aux provinces restent bloqués à différents endroits (Logistics Cluster, avril 2026). Le port de Port-au-Prince fonctionne, mais les vols commerciaux internationaux étaient suspendus (juin 2026).</div><div class="al mute">La PNH mène des opérations pour rouvrir la circulation entre Tabarre et Carrefour Marassa, dans des zones contrôlées par la coalition Viv Ansanm (Le Nouvelliste).</div><div class="al mute">La chaussée est très dégradée à plusieurs endroits, par exemple la route de Bourdon et la rue Grégoire (Le Nouvelliste, 2025).</div><div class="mute">Ce ne sont pas des états en temps réel : seuls les signalements colorent les tronçons.</div></div>';
 /* fiabilité : un seul avis par personne (le plus récent) et au moins QUORUM personnes différentes avant d'afficher un état */
-var QUORUM=1;
+var QUORUM=2;
 function recentRep(id){var now=Date.now(),m={};S.reports.forEach(function(r){if(r.seg===id&&(now-r.t)/MIN<45){var k=r.u||'local';if(!m[k]||r.t>m[k].t)m[k]=r}});return Object.keys(m).map(function(k){return m[k]})}
-function status(id){var now=Date.now(),sw=0,sl=0,rs=recentRep(id);
-  if(rs.length<QUORUM)return 3;
+/* états proposés par les signalements ; ils ne s'affichent qu'une fois validés par les votes (voir tally) */
+function cand(id){var now=Date.now(),sw=0,sl=0,rs=recentRep(id);
+  if(!rs.length)return -1;
   rs.forEach(function(r){var a=(now-r.t)/MIN,w=1/(1+a/10);sw+=w;sl+=w*r.lvl});
   var v=sl/sw;return v<0.5?0:v<1.4?1:2}
-function info(id){var rs=recentRep(id);
+/* votes : chaque signalement compte pour un vote positif de son auteur ; « Confirmer » = positif, « Contester » = négatif.
+   Un seul avis par personne (le plus récent) sur la durée de vie de l'état (45 min tronçons, 3 h stations). */
+var VOTES=[];
+function tally(kind,id,lvl,win){var now=Date.now(),m={},p=0,n=0;
+ function add(u,t,l,pos){var k=u||'local';if(!m[k]||t>m[k].t)m[k]={t:t,l:l,pos:pos}}
+ (kind==='seg'?S.reports:FREP).forEach(function(r){if((kind==='seg'?r.seg:r.st)===id&&now-r.t<win)add(r.u,r.t,r.lvl,true)});
+ VOTES.forEach(function(v){if(v.k===kind&&v.id===id&&now-v.t<win)add(v.u,v.t,v.lvl,v.val>0)});
+ Object.keys(m).forEach(function(k){if(m[k].l!==lvl)return;m[k].pos?p++:n++});
+ return {p:p,n:n}}
+/* validé : au moins 2 votes positifs et plus de positifs que de négatifs ; égalité = vote nul ; plus de négatifs = retour à « Pas d’info » */
+function valid(t){return t.p>=QUORUM&&t.p>t.n}
+function voteNote(t){return t.p<QUORUM?'en attente de confirmation ('+t.p+'/'+QUORUM+' votes positifs'+(t.n?', '+t.n+' négatif'+(t.n>1?'s':''):'')+')':t.n>t.p?'contesté : '+t.n+' votes négatifs contre '+t.p+' positifs, retour à « Pas d’info »':t.n===t.p?'vote nul ('+t.p+' pour, '+t.n+' contre) : non confirmé':''}
+function status(id){var k=cand(id);if(k<0)return 3;return valid(tally('seg',id,k,45*MIN))?k:3}
+/* état proposé mais pas encore validé : au moins un vote positif et plus de positifs que de négatifs (-1 = rien en attente) ; un état contesté ou à égalité n’est pas montré */
+function pendSeg(id){if(status(id)!==3)return -1;var k=cand(id);if(k<0)return -1;var t=tally('seg',id,k,45*MIN);return (!valid(t)&&t.p>t.n)?k:-1}
+function pendSt(id){if(fstat(id)!==3)return -1;var k=fcand(id);if(k<0)return -1;var t=tally('st',id,k,FMIN*MIN);return (!valid(t)&&t.p>t.n)?k:-1}
+function info(id){var rs=recentRep(id),k=cand(id);
   if(!rs.length)return 'Aucun signalement récent';
-  if(rs.length<QUORUM)return 'En attente de confirmation ('+rs.length+'/'+QUORUM+' personnes)';
+  var tl=tally('seg',id,k,45*MIN);
+  if(!valid(tl))return LV[k].n+' signalé : '+voteNote(tl);
   var last=Math.max.apply(null,rs.map(function(r){return r.t})),m=Math.max(0,Math.round((Date.now()-last)/MIN));
   var c=[0,0,0];rs.forEach(function(r){c[r.lvl]++});
   return (m<1?'à l’instant':'il y a '+m+' min')+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fluide, '+c[1]+' ralenti, '+c[2]+' bloqué)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
@@ -601,7 +697,51 @@ function coolLoad(){try{var o=JSON.parse(localStorage.getItem(CKEY))||{},n=Date.
 function coolLeft(k){var o=coolLoad();return o[k]?Math.max(1,Math.ceil((COOL*MIN-(Date.now()-o[k]))/MIN)):0}
 function coolMark(k){try{var o=coolLoad();o[k]=Date.now();localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}}
 function coolCheck(k,what){var m=coolLeft(k);if(m){toast('Vous avez déjà signalé '+what+'. Réessayez dans '+m+' min.');return false}coolMark(k);return true}
-function report(id,lvl){S.reply=null;if(!coolCheck('seg:'+id,'ce tronçon'))return;var b=status(id),r={seg:id,lvl:lvl,t:Date.now()};
+/* ===== Validation par géolocalisation =====
+   Un signalement n'est accepté que si le GPS place la personne près de la route (≤ 1 km du tracé) ou de la station (≤ 1 km, ou le rayon indiqué
+   quand les coordonnées sont approximatives). La position est envoyée avec le signalement pour être revérifiée par le serveur (fonctions submit_report / submit_fuel), puis elle n'est pas conservée. */
+var GEO_R=1000,GEO_ACC=1500;
+/* centres de zone : repli pour les tronçons/stations ajoutés par les utilisateurs (sans coordonnées) [lat,lng,rayon m] */
+var ZC={'Centre':[18.5430,-72.3370,3500],'Delmas':[18.5590,-72.3050,4500],'Tabarre':[18.5800,-72.2600,5000],'Est':[18.5750,-72.2100,7000],'Pétion-Ville':[18.5120,-72.2880,4500],'Montagne':[18.4700,-72.2800,8000],'Sud':[18.5250,-72.4300,15000],'Nord':[18.7300,-72.4200,25000]};
+/* coordonnées approximatives des stations (id : [lat,lng,rayon m]) : à corriger avec les vraies positions GPS dès que possible */
+var STC={1:[18.5425,-72.3305],2:[18.5440,-72.3290],3:[18.5420,-72.3390],4:[18.5455,-72.3395],5:[18.5415,-72.3290],
+6:[18.5655,-72.2965],7:[18.5605,-72.3085],8:[18.5675,-72.2930],9:[18.5620,-72.3060],10:[18.5675,-72.2930],11:[18.5645,-72.2995],12:[18.5575,-72.3150],13:[18.5605,-72.3085],14:[18.5652,-72.2975],15:[18.5600,-72.3090,3000],16:[18.5628,-72.3040],17:[18.5870,-72.3390,2000],
+18:[18.5880,-72.2520,2500],19:[18.5885,-72.2490,2500],20:[18.5890,-72.2450,2500],21:[18.5750,-72.2750,2500],22:[18.5890,-72.2430,2500],
+23:[18.5775,-72.2230,3000],24:[18.5775,-72.2230,3000],25:[18.5775,-72.2230,3000],26:[18.5775,-72.2230,3000],27:[18.5900,-72.2380,2500],28:[18.5775,-72.2230,3000],29:[18.5780,-72.2200,3000],30:[18.5750,-72.2100,3500],
+31:[18.5128,-72.2872,1500],32:[18.5128,-72.2872,1500],33:[18.5200,-72.2950,2000],34:[18.5110,-72.2860,1500],35:[18.5100,-72.2800,1500],36:[18.5120,-72.2850,1500],37:[18.5230,-72.3040,1500],38:[18.5120,-72.2880,1500],39:[18.5135,-72.2830,1500],40:[18.5230,-72.3040,1500],
+41:[18.5262,-72.3450,3000],42:[18.5215,-72.4100,3500],
+43:[18.6000,-72.3500,6000],44:[18.6200,-72.3600,6000],45:[18.6400,-72.3600,6000],46:[18.6600,-72.3600,6000],47:[18.7340,-72.4170,3000],48:[18.7340,-72.4170,3000],49:[18.7340,-72.4170,3000]};
+function dpt(p,a,b){var k=Math.cos(p[0]*Math.PI/180),ax=(a[1]-p[1])*k,ay=a[0]-p[0],bx=(b[1]-p[1])*k,by=b[0]-p[0],dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/l)):0;return Math.hypot(ax+t*dx,ay+t*dy)*111320}
+function dline(p,ll){var m=1e12;for(var i=0;i<ll.length-1;i++)m=Math.min(m,dpt(p,ll[i],ll[i+1]));return ll.length<2?hav(p,ll[0]):m}
+/* distance de la personne à la cible et rayon accepté ; null = cible inconnue (on ne peut pas vérifier) */
+function geoDist(kind,id,p){var z,c;
+ if(kind==='seg'){var ll=SGEO[id]||(window.LGEO&&LGEO[id])||LLG[id];if(ll&&ll.length)return {d:dline(p,ll),r:GEO_R};var sg=seg(id);z=sg&&sg[2]}
+ else{c=STC[id];if(c)return {d:hav(p,[c[0],c[1]]),r:c[2]||GEO_R};var st=STN.filter(function(x){return x.id===id})[0];z=st&&st.zone}
+ c=ZC[z];return c?{d:hav(p,[c[0],c[1]]),r:c[2]}:null}
+/* null = position pas encore connue ; sinon {ok,d,r} */
+function geoCheck(kind,id){if(S.test&&window.ADMIN)return {ok:true,test:true};var p=S.pos;if(!p||Date.now()-p.t>120000)return null;var g=geoDist(kind,id,[p.la,p.ln]);if(!g)return {ok:true};return {ok:g.d<=g.r&&p.acc<=GEO_ACC,d:g.d,r:g.r,acc:p.acc}}
+function fmtD(m){return m<950?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km'}
+function geoNote(kind,id){var c=geoCheck(kind,id);
+ if(c&&c.test)return '<p class="mute" style="margin:8px 0 0">🧪 Mode test administrateur : votre position n’est pas vérifiée.</p>';
+ if(!c)return '<p class="mute" style="margin:8px 0 0">📍 Votre position est vérifiée avant chaque signalement : vous devez être à proximité.</p>';
+ if(!c.ok)return '<div class="offbar" role="status">📍 <b>Vous devez être à proximité pour signaler.</b>'+(c.acc>GEO_ACC?' Position trop imprécise (±'+fmtD(c.acc)+') : activez le GPS.':' Vous êtes à environ '+fmtD(c.d)+'.')+'</div>';
+ return '<p class="mute" style="margin:8px 0 0">📍 Vous êtes à proximité : vous pouvez signaler.</p>'}
+var GW=null,GRT=0;
+function geoSet(p){S.pos={la:p.coords.latitude,ln:p.coords.longitude,acc:p.coords.accuracy,t:Date.now()}}
+function geoStart(){if(GW!==null||!navigator.geolocation)return;
+ try{GW=navigator.geolocation.watchPosition(function(p){geoSet(p);if((S.tab==='report'||S.tab==='fuel')&&Date.now()-GRT>15000){GRT=Date.now();render()}},function(){},{enableHighAccuracy:true,maximumAge:30000,timeout:20000})}catch(e){}}
+/* si la localisation est déjà autorisée, on suit la position en silence pour griser les boutons trop éloignés ; sinon la demande ne se fait qu'au premier signalement */
+function geoAuto(){if(GW!==null||!navigator.geolocation||!navigator.permissions||!navigator.permissions.query)return;
+ navigator.permissions.query({name:'geolocation'}).then(function(r){if(r.state==='granted')geoStart()}).catch(function(){})}
+function geoGate(kind,id,go){
+ if(S.test&&window.ADMIN)return go();
+ if(!navigator.geolocation)return toast('Position GPS indisponible : vous devez être à proximité pour signaler.');
+ toast('Vérification de votre position…');
+ navigator.geolocation.getCurrentPosition(function(p){geoSet(p);geoStart();var c=geoCheck(kind,id);
+  if(c&&!c.ok){toast(p.coords.accuracy>GEO_ACC?'Position trop imprécise. Activez le GPS et réessayez.':'Vous devez être à proximité pour signaler.');render();return}
+  go()},function(e){toast(e&&e.code===1?'Autorisez la localisation : vous devez être à proximité pour signaler.':'Position introuvable : réessayez à l’extérieur.')},{enableHighAccuracy:true,maximumAge:20000,timeout:12000})}
+function report(id,lvl){geoGate('seg',id,function(){doReport(id,lvl)})}
+function doReport(id,lvl){S.reply=null;if(!coolCheck('seg:'+id,'ce tronçon'))return;var b=status(id),r={seg:id,lvl:lvl,t:Date.now()};
   function loc(){LOCAL.push(r);S.reports.push(r);change(id,b,status(id));render()}
   if(DB){DB.collection('reports').add(r).then(function(){toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase())}).catch(function(e){if(e&&e.code==='P0001')return toast(e.message);loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
   else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
@@ -625,6 +765,8 @@ function setLive(){S.live=!S.live;save();render()}
 var DB=null,SHARED=false,LOCAL=[];
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;DB=db;
  db.collection('reports').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
+  /* données enregistrées : affichage seulement, sans alertes ni sons (la vraie réponse de la base reste la « première ») */
+  if(snap.fromCache){S.reports=snap.docs.map(function(d){return d.data()}).concat(LOCAL);CACHED=true;render();return}
   var bf={};SEG.forEach(function(s){bf[s[0]]=status(s[0])});
   var got=snap.docs.map(function(d){return d.data()});S.reports=got.concat(LOCAL);SHARED=true;recvCheck(got);
   SEG.forEach(function(s){change(s[0],bf[s[0]],status(s[0]))});render()},function(){})}).catch(function(){})}catch(e){}})();
@@ -650,12 +792,40 @@ function ask(id){if(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN)return toast('Dem
   if(DB){DB.collection('requests').add(q).then(function(){toast('Demande envoyée : les personnes concernées sont prévenues')}).catch(function(e){if(e&&e.code==='P0001')return toast(e.message);loc()})}else loc()}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;var first=true;
  db.collection('requests').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
+  if(snap.fromCache){REQ=snap.docs.map(function(d){return d.data()});render();return}
   if(!first)snap.docChanges().forEach(function(c){if(c.type==='added'){var q=c.doc.data();if(!mine(q)&&seg(q.seg)&&reqWanted(q.seg)){notify({k:'demande',seg:q.seg,txt:'Quelqu’un demande l’état de la route : '+seg(q.seg)[1]+'. Si vous y êtes, répondez.'});ringBell();toast('Demande : '+seg(q.seg)[1])}}});
   first=false;REQ=snap.docs.map(function(d){return d.data()});render()},function(){})}).catch(function(){})}catch(e){}})();
 
 var IC={"home": "<path d=\"M3 11 12 3l9 8v10h-6v-6H9v6H3z\"/>","state": "<path d=\"M4 6h16M4 12h16M4 18h10\"/>", "map": "<path d=\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14\"/>", "report": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v8M8 12h8\"/>", "fuel": "<path d=\"M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h14M15 9h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h6\"/>", "sec": "<path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z\"/>", "alerts": "<path d=\"M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0\"/>"};
+/* état de la connexion et des données affichées */
+var CACHED=false;
+function hhmm(t){return new Date(t).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+/* hors ligne = le téléphone n’a vraiment plus de réseau ; une lecture qui échoue (droits, serveur) ne suffit pas */
+function isOff(){return navigator.onLine===false}
+function lvLabel(){
+ if(isOff())return '<span class="live off"></span>hors ligne'+(window.NET&&window.NET.at?' · données de '+hhmm(window.NET.at):'');
+ if(SHARED)return '<span class="live"></span>signalements partagés';
+ if(CACHED)return '<span class="live off"></span>données enregistrées · mise à jour…';
+ return 'signalements sur cet appareil'}
+function offBanner(){if(!isOff())return '';var a=window.NET&&window.NET.at;
+ return '<div class="offl" role="status">Hors ligne'+(a?' · dernière mise à jour à '+hhmm(a):'')+'</div>'}
+/* cloche : un état validé par les votes (au moins 2 positifs, plus de positifs que de négatifs) est signalé une fois.
+   La première lecture des données sert de point de départ (aucune alerte), les routes suivies sont déjà couvertes par « Changements sur mes routes ». */
+var PVS=null,PVF=null,FLOADED=false;
+function valCheck(){
+ if(SHARED){var cur={};SEG.forEach(function(s){cur[s[0]]=status(s[0])});
+  if(PVS)SEG.forEach(function(s){var id=s[0],k=cur[id];
+   if(k<3&&PVS[id]!==undefined&&PVS[id]!==k&&S.watch.indexOf(id)<0&&reqWanted(id)){var t=tally('seg',id,k,45*MIN),txt=s[1]+' : '+LV[k].n.toLowerCase()+' validé par vote ('+t.p+' pour, '+t.n+' contre)';
+    pushAlert({t:hhmm(Date.now()),txt:txt,l:k,k:'valide',seg:id});toast('Validé · '+txt)}});
+  PVS=cur}
+ if(FLOADED){var cf={};STN.forEach(function(s){cf[s.id]=fstat(s.id)});
+  if(PVF&&PR.req!=='mine')STN.forEach(function(s){var k=cf[s.id];
+   if(k<3&&PVF[s.id]!==undefined&&PVF[s.id]!==k){var t=tally('st',s.id,k,FMIN*MIN),txt='Station '+esc(s.name)+' : '+FLV[k].n.toLowerCase()+' validée par vote ('+t.p+' pour, '+t.n+' contre)';
+    pushAlert({t:hhmm(Date.now()),txt:txt,l:k,k:'valide',st:s.id});toast('Validé · station '+s.name)}});
+  PVF=cf}}
 function render(){
-  document.getElementById('lv').innerHTML=SHARED?'<span class="live"></span>signalements partagés':'signalements sur cet appareil';
+  valCheck();
+  document.getElementById('lv').innerHTML=lvLabel();
   var T=[['home','Accueil'],['state','Trafic'],['report','Signaler'],['fuel','Essence'],['sec','Sécurité']];
   document.getElementById('tabs').innerHTML=T.map(function(t){return '<button '+(S.tab===t[0]?'aria-current="page" ':'')+'onclick="setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+IC[t[0]]+'</svg>'+t[1]+'</button>'}).join('');
   bellUpdate();
@@ -663,10 +833,10 @@ function render(){
   /* garde ce que la personne est en train de saisir quand la page se rafraîchit */
   ['sn','sz','fn','fzone'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
   try{ap=ae.selectionStart||0}catch(e){}
-  v.innerHTML=({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV})[S.tab]();
+  v.innerHTML=offBanner()+({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV})[S.tab]();
   Object.keys(kv).forEach(function(i){var e=document.getElementById(i);if(e)e.value=kv[i]});
   if(af&&kv[af]!==undefined){var f=document.getElementById(af);if(f){f.focus();try{f.setSelectionRange(ap,ap)}catch(e){}}}
-  if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='state'&&S.view==='map'){bindMap();lMount()}if(S.tab==='home')adInit()}
+  if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='state'&&S.view==='map'){bindMap();lMount()}if(S.tab==='home')adInit();if(S.tab==='report'||S.tab==='fuel')geoAuto()}
 
 /* carte schématique : chaque tronçon est une ligne colorée selon son état */
 var GEO={1:[[100,215],[108,258],[100,300]],2:[[110,260],[135,268]],3:[[135,268],[170,278]],4:[[145,240],[195,215]],5:[[195,215],[235,195]],6:[[240,165],[285,145]],7:[[235,195],[240,165]],8:[[285,145],[300,120]],9:[[190,295],[245,318]],10:[[245,318],[262,328]],11:[[262,328],[295,345]],12:[[295,345],[320,405]],13:[[108,258],[128,238]],14:[[82,205],[90,250],[95,290]],15:[[128,238],[150,225]],16:[[108,258],[125,285]],17:[[125,285],[150,300]],18:[[128,238],[135,215]],19:[[170,278],[185,262]],20:[[170,278],[190,295]],21:[[150,225],[165,198]],22:[[135,215],[150,190]],23:[[235,195],[270,215]],24:[[195,215],[205,232]],25:[[300,120],[335,105]],26:[[285,145],[300,168]],27:[[285,145],[335,160]],28:[[335,160],[350,215]],29:[[245,318],[250,295]],30:[[262,328],[285,315]],31:[[262,328],[270,352]],32:[[245,318],[225,340]],33:[[295,345],[330,360]],34:[[250,295],[285,280]],35:[[320,405],[345,390]],36:[[320,405],[335,438]],37:[[88,330],[78,360]],38:[[88,330],[125,350]],39:[[100,300],[88,330]],40:[[78,360],[65,385]],41:[[65,385],[55,425]],42:[[55,425],[35,480]],43:[[100,215],[112,160],[130,115]],44:[[130,115],[118,70]],45:[[118,70],[100,40]],46:[[100,40],[92,12]]};
@@ -698,9 +868,9 @@ window.addEventListener('pointermove',function(e){var p=PT[e.pointerId],m=docume
 function endPt(e){delete PT[e.pointerId];LASTD=0;setTimeout(function(){DRAGGED=false},60)}
 window.addEventListener('pointerup',endPt);window.addEventListener('pointercancel',endPt);
 function mapSvg(){var sel=S.sel,u='',v='',h='';
- SEG.forEach(function(s){var g=GEO[s[0]];if(!g)return;var k=status(s[0]),p=g.map(function(q){return q.join(',')}).join(' ');
+ SEG.forEach(function(s){var g=GEO[s[0]];if(!g)return;var k=status(s[0]),pk=pendSeg(s[0]),p=g.map(function(q){return q.join(',')}).join(' ');
   if(sel===s[0])u='<polyline points="'+p+'" fill="none" stroke="var(--ink)" stroke-width="12" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>';
-  v+='<polyline points="'+p+'" fill="none" stroke="'+COL[k]+'" stroke-width="7" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="'+(k===1?'12 6':k===3?'2 8':'none')+'"/>';
+  v+='<polyline points="'+p+'" fill="none" stroke="'+COL[pk>=0?pk:k]+'" stroke-opacity="'+(pk>=0?'.5':'1')+'" stroke-width="7" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="'+(pk>=0?'3 7':k===1?'12 6':k===3?'2 8':'none')+'"/>';
   h+='<polyline points="'+p+'" fill="none" stroke="transparent" stroke-width="24" vector-effect="non-scaling-stroke" stroke-linecap="round" tabindex="0" role="button" aria-label="'+s[1]+' : '+LV[k].n+'" onclick="pick('+s[0]+')" onkeydown="if(event.key===\'Enter\')pick('+s[0]+')" style="cursor:pointer"/>'});
  var t=LBL.map(function(l){return '<text x="'+l[1]+'" y="'+l[2]+'" font-size="11" fill="var(--mute)">'+l[0]+'</text>'}).join('');
  var cap='<div class="card mute">Touchez un tronçon.</div>';
@@ -726,31 +896,38 @@ function lActive(){return !!(LMAP&&LOK===true&&document.getElementById('lwrap'))
 function lInit(){if(LMAP)return;
  var cache={};try{cache=JSON.parse(localStorage.getItem(LK))||{}}catch(e){}
  Object.keys(LLG).forEach(function(id){LGEO[id]=cache[id]||LLG[id]});
+ Object.keys(SGEO).forEach(function(id){LGEO[id]=SGEO[id]});/* le tracé du serveur l’emporte toujours */
  LEL=document.createElement('div');LEL.id='lmap';
  LMAP=L.map(LEL,{zoomControl:false,attributionControl:true,minZoom:7,maxZoom:18,maxBounds:[[17.4,-75.2],[20.6,-71.0]]}).setView(LPAP,12);
  LMAP.attributionControl.setPrefix(false);
  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).on('tileload',function(){LTILE.ok++}).on('tileerror',function(){LTILE.err++;if(LTILE.err>=6&&!LTILE.ok){LWHY='Les fonds de carte OpenStreetMap n’ont pas pu se charger : pas d’internet, ou tile.openstreetmap.org bloqué (aperçu restreint, pare-feu).';LOK=false;render()}}).addTo(LMAP);
- Object.keys(LLG).forEach(function(k){var id=Number(k),sg=seg(id),ll=LGEO[id],o={lineCap:'round',lineJoin:'round'};
-  var halo=L.polyline(ll,{color:'#111',weight:13,opacity:0,interactive:false,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
-  var main=L.polyline(ll,{color:'#888',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
-  var hit=L.polyline(ll,{color:'#000',weight:26,opacity:0,lineCap:'round'}).addTo(LMAP);
-  if(sg)hit.bindTooltip(sg[1],{sticky:true});
-  hit.on('click',function(){pick(id)});
-  LPL[id]={halo:halo,main:main,hit:hit}});
+ Object.keys(LGEO).forEach(function(k){lMk(Number(k))});
  lRoutes()}
+/* dessine un tronçon sur la carte (et le crée s’il vient d’arriver du serveur, comme les tronçons ajoutés par les utilisateurs) */
+function lMk(id){if(!LMAP||LPL[id]||!LGEO[id])return;var sg=seg(id),ll=LGEO[id];
+ var halo=L.polyline(ll,{color:'#111',weight:13,opacity:0,interactive:false,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
+ var main=L.polyline(ll,{color:'#888',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
+ var hit=L.polyline(ll,{color:'#000',weight:26,opacity:0,lineCap:'round'}).addTo(LMAP);
+ if(sg)hit.bindTooltip(sg[1],{sticky:true});
+ hit.on('click',function(){pick(id)});
+ LPL[id]={halo:halo,main:main,hit:hit}}
+function lApplyGeo(id){LGEO[id]=SGEO[id];if(!LMAP)return;
+ if(LPL[id])['halo','main','hit'].forEach(function(n){LPL[id][n].setLatLngs(SGEO[id])});else lMk(id)}
 /* tracé exact sur la vraie route (OSRM), une seule fois par tronçon ; ensuite gardé sur l’appareil */
 function hav(a,b){var R=6371000,r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)*Math.sin(dg/2);return 2*R*Math.asin(Math.sqrt(x))}
 function lRoutes(){if(LQ)return;LQ=true;var cache={};try{cache=JSON.parse(localStorage.getItem(LK))||{}}catch(e){}
- var todo=Object.keys(LLG).filter(function(id){return !cache[id]});
- (function next(){var id=todo.shift();if(!id||LOK===false)return;var a=LLG[id][0],b=LLG[id][1];
+ /* plus d’appel OSRM depuis le téléphone : le serveur a déjà calculé les tracés. Repli seulement pour un tronçon que le serveur n’a pas. */
+ var todo=Object.keys(LLG).filter(function(id){return !cache[id]&&!SGEO[id]});
+ (function next(){var id=todo.shift();if(!id||LOK===false)return;if(SGEO[id])return next();var a=LLG[id][0],b=LLG[id][1];
   fetch('https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson').then(function(r){return r.json()}).then(function(d){
-   var rt=d&&d.routes&&d.routes[0];if(!rt)return;
+   var rt=d&&d.routes&&d.routes[0];if(!rt||SGEO[id])return;
    if(rt.distance>2.2*hav(a,b)+400)return;/* détour trop long : on garde la ligne droite */
    var ll=rt.geometry.coordinates.map(function(c){return [c[1],c[0]]});
    LGEO[id]=ll;cache[id]=ll;LPL[id]&&['halo','main','hit'].forEach(function(n){LPL[id][n].setLatLngs(ll)});
    try{localStorage.setItem(LK,JSON.stringify(cache))}catch(e){}}).catch(function(){}).then(function(){setTimeout(next,450)})})()}
 function lUpdate(){var sel=S.sel;Object.keys(LPL).forEach(function(k){var id=Number(k),st=status(id),p=LPL[k];
- p.main.setStyle({color:rc(COL[st]),dashArray:st===1?'12 7':st===3?'2 9':null});
+ var pk=pendSeg(id);
+ p.main.setStyle({color:rc(COL[pk>=0?pk:st]),opacity:pk>=0?.5:.95,dashArray:pk>=0?'3 9':st===1?'12 7':st===3?'2 9':null});
  p.halo.setStyle({opacity:sel===id?.9:0});if(sel===id){p.halo.bringToFront();p.main.bringToFront();p.hit.bringToFront()}})}
 function lFocus(){if(S.sel===LSELD)return;LSELD=S.sel;var g=S.sel&&LGEO[S.sel];if(g)LMAP.fitBounds(L.latLngBounds(g),{maxZoom:16,padding:[50,50]})}
 function lAttach(){var w=document.getElementById('lwrap');if(!w||LOK===false)return;
@@ -794,12 +971,12 @@ function secV(){var r=recent(),age=Math.floor((Date.now()-new Date(BUL.u).getTim
  (r.length?r.map(secItem).join(''):'<div class="card mute">Aucune alerte vérifiée. Restez prudent.</div>')+
  '<p class="mute">Sources publiques. En cas de danger, suivez les consignes des autorités.</p>'}
 function listV(){
-  var list=SEG.filter(function(s){return S.zone==='Tous'||s[2]===S.zone}).sort(function(a,b){return status(b[0])-status(a[0])||0});
+  var list=SEG.filter(function(s){return S.zone==='Tous'||s[2]===S.zone}).sort(function(a,b){return status(b[0])-status(a[0])||((pendSeg(b[0])>=0)-(pendSeg(a[0])>=0))});
   var fs=S.focus&&seg(S.focus);if(fs)list=[fs].concat(list.filter(function(s){return s[0]!==S.focus}));
   var fb=fs?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Alerte de sécurité</b><div class="mute">Tronçon concerné en tête de liste</div></div><button class="alt" onclick="S.focus=null;render()">Toute la liste</button></div>':'';
   return fb+'<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
-  '<div class="list">'+list.map(function(s){var k=status(s[0]),w=S.watch.indexOf(s[0])>=0;
-    return '<div class="seg'+(S.focus===s[0]?' pin':'')+'" id="seg'+s[0]+'"><div class="bar '+LV[k].c+'"></div><div class="b"><h3>'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(s[0])+'</div>'+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
+  '<div class="list">'+list.map(function(s){var k=status(s[0]),pk=pendSeg(s[0]),w=S.watch.indexOf(s[0])>=0,sk=pk>=0?pk:k;
+    return '<div class="seg'+(S.focus===s[0]?' pin':'')+'" id="seg'+s[0]+'"><div class="bar '+LV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b"><h3>'+s[1]+'</h3><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+LV[sk].i+' '+LV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+info(s[0])+'</div>'+voteRow('seg',s[0])+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
     '<div class="a" style="flex-direction:column;gap:6px;justify-content:center"><button onclick="SEL='+s[0]+';setTab(\'report\')">Signaler</button><button class="'+(w?'on':'alt')+'" aria-pressed="'+w+'" onclick="toggle('+s[0]+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+s[0]+')">Demander</button></div></div>'}).join('')+'</div>'}
 
 function setView(v){S.view=v;render()}
@@ -842,8 +1019,8 @@ function installApp(){
  w.addEventListener('click',function(e){if(e.target===w)closeSheet()});document.body.appendChild(w)}
 function instBtn(){return isStandalone()?'':'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="alt inst" onclick="installApp()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Installer l’app</button></div>'}
 function lastRep(id){var t=0;S.reports.forEach(function(r){if(r.seg===id&&r.t>t&&Date.now()-r.t<45*MIN)t=r.t});return t}
-function miniSeg(id,red){var sg=seg(id);if(!sg)return '';var k=status(id),t=lastRep(id);
- return '<div class="row" role="button" tabindex="0" onclick="S.sel='+id+';S.view=\'map\';setTab(\'state\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}"><span class="dot '+LV[k].c+'"></span><div class="nm">'+esc(sg[1])+'<div class="mute">'+(t?ago(t):'Aucun signalement récent')+'</div>'+'</div>'+(red?'<span class="chip r" role="button" tabindex="0" style="background:var(--r);color:#fff;cursor:pointer" onclick="event.stopPropagation();goSeg('+id+')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();event.preventDefault();goSeg('+id+')}">⚠ Alerte de sécurité</span>':'<span class="chip '+LV[k].c+'">'+LV[k].n+'</span>')+'</div>'}
+function miniSeg(id,red){var sg=seg(id);if(!sg)return '';var k=status(id),pk=pendSeg(id),sk=pk>=0?pk:k,pc=pk>=0?' pd':'',t=lastRep(id);
+ return '<div class="row" role="button" tabindex="0" onclick="S.sel='+id+';S.view=\'map\';setTab(\'state\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}"><span class="dot '+LV[sk].c+pc+'"></span><div class="nm">'+esc(sg[1])+'<div class="mute">'+(t?ago(t):'Aucun signalement récent')+'</div>'+'</div>'+(red?'<span class="chip r" role="button" tabindex="0" style="background:var(--r);color:#fff;cursor:pointer" onclick="event.stopPropagation();goSeg('+id+')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();event.preventDefault();goSeg('+id+')}">⚠ Alerte de sécurité</span>':'<span class="chip '+LV[sk].c+pc+'">'+LV[sk].n+(pk>=0?' · en attente':'')+'</span>')+'</div>'}
 /* liste déroulante : l’état ouvert/fermé est gardé quand la page se rafraîchit */
 S.dd={};
 function dropPanel(key,t,n,body,act){return '<details class="panel dd"'+(S.dd[key]?' open':'')+' ontoggle="S.dd[\''+key+'\']=this.open"><summary><span>'+t+'<span class="cnt">'+n+'</span></span><svg class="cv" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'+body+(act?'<div class="ddf">'+act+'</div>':'')+'</details>'}
@@ -853,7 +1030,9 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  var r=recent();
  var sgs=secSegs(),bad=SEG.filter(function(s){return sgs.indexOf(s[0])>=0}).sort(function(a,b){return status(b[0])-status(a[0])||lastRep(b[0])-lastRep(a[0])});
  var ic=function(n){return IC[n==='Carte'?'map':n==='Trafic'?'state':n==='Essence'?'fuel':'sec']};
+ var np=SEG.filter(function(s){return pendSeg(s[0])>=0}).length;
  return instBtn()+'<div class="sum" style="margin-top:8px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
+ (np?'<div class="mute" style="margin-top:8px;text-align:center">+ '+np+' état'+(np>1?'s':'')+' en attente de confirmation (voir Trafic)</div>':'')+
  '<div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
  '<div class="sep"><span>En direct</span></div>'+
  (r.length?secItem(r[0]).replace('class="card"','class="card" style="margin-top:0"'):'')+
@@ -861,11 +1040,11 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  dropPanel('mine','Mes routes',S.watch.length,S.watch.length?S.watch.map(function(id){return miniSeg(id)}).join(''):'<div class="row mute" style="cursor:default">Aucune route suivie</div>',alertN()?'<button class="lnk" onclick="setTab(\'alerts\')">Alertes ('+alertN()+')</button>':'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
  '<button class="cta" onclick="setTab(\'report\')"><b>Vous êtes sur la route ?</b><span>Signalez en 1 touche</span></button>'+adsHtml()
 }
-function reportV(){var pend=SEG.filter(function(s){return openReq(s[0])});var rp=(S.reply&&S.reply===SEL&&seg(SEL))?'<div class="card"><b>Vous répondez à une demande</b><div class="al">'+esc(seg(SEL)[1])+'</div><div class="mute">Le tronçon est déjà choisi : touchez simplement son état ci-dessous.</div></div>':'';return rp+(pend.length?'<div class="card"><b>On attend votre réponse</b>'+pend.map(function(s){return '<div class="al">'+s[1]+'</div>'}).join('')+'</div>':'')+heroCta('Signalez en 1 touche')+
-  '<div class="card"><label for="sg">Tronçon</label><select id="sg" onchange="SEL=+this.value">'+SEG.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===SEL?' selected':'')+'>'+s[1]+'</option>'}).join('')+'</select>'+
-  '<div class="big"><button class="l0" onclick="report(+sg.value,0)"><b>●</b> Fluide : ça roule bien</button>'+
-  '<button class="l1" onclick="report(+sg.value,1)"><b>▲</b> Ralenti : ça avance lentement</button>'+
-  '<button class="l2" onclick="report(+sg.value,2)"><b>■</b> Bloqué : embouteillage ou barrage</button></div></div>'+
+function reportV(){var gk=geoCheck('seg',SEL),gd=(gk&&!gk.ok)?' disabled':'',pend=SEG.filter(function(s){return openReq(s[0])});var rp=(S.reply&&S.reply===SEL&&seg(SEL))?'<div class="card"><b>Vous répondez à une demande</b><div class="al">'+esc(seg(SEL)[1])+'</div><div class="mute">Le tronçon est déjà choisi : touchez simplement son état ci-dessous.</div></div>':'';return rp+(pend.length?'<div class="card"><b>On attend votre réponse</b>'+pend.map(function(s){return '<div class="al">'+s[1]+'</div>'}).join('')+'</div>':'')+heroCta('Signalez en 1 touche')+
+  '<div class="card"><label for="sg">Tronçon</label><select id="sg" onchange="SEL=+this.value;render()">'+SEG.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===SEL?' selected':'')+'>'+s[1]+'</option>'}).join('')+'</select>'+geoNote('seg',SEL)+
+  '<div class="big"><button class="l0"'+gd+' onclick="report(+sg.value,0)"><b>●</b> Fluide : ça roule bien</button>'+
+  '<button class="l1"'+gd+' onclick="report(+sg.value,1)"><b>▲</b> Ralenti : ça avance lentement</button>'+
+  '<button class="l2"'+gd+' onclick="report(+sg.value,2)"><b>■</b> Bloqué : embouteillage ou barrage</button></div></div>'+
   '<p class="mute">🚫 Pas de téléphone en conduisant.</p>'+
   segAdmin()+'<h2>Une route manque ?</h2><div class="card">'+loginNote()+'<label for="sn">Nom de la route</label><input id="sn" placeholder="Ex. Rue Saint-Honoré"><label for="sz">Zone</label><select id="sz">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><button class="alt" style="width:100%;margin-top:12px" onclick="addSeg()">Ajouter ce tronçon</button></div>'}
 
@@ -877,12 +1056,13 @@ function alertsV(){
   var rq=reqList().map(function(q){var sg=seg(q.seg);return '<div class="row" style="cursor:default"><span class="dot l3"></span><div class="nm">Quelqu’un demande l’état de la route : '+esc(sg?sg[1]:'')+'<div class="mute">'+ago(q.t)+'</div></div><button type="button" class="alt" style="margin-right:4px" onclick="openReply('+q.seg+')">Répondre</button>'+X('delReq(\''+q.seg+':'+q.t+'\')')+'</div>'});
   var fq=freqList().map(function(q){var s=(window.STN||[]).filter(function(x){return x.id===q.st})[0];return '<div class="row" style="cursor:default"><span class="dot l3"></span><div class="nm">Quelqu’un demande si la station est fonctionnelle : '+esc(s?s.name:'')+'<div class="mute">'+ago(q.t)+'</div></div><button type="button" class="alt" style="margin-right:4px" onclick="openFuelReply('+q.st+')">Répondre</button>'+X('delReq(\'f'+q.st+':'+q.t+'\')')+'</div>'});
   var item=function(o){var a=o.a;return '<div class="row" style="cursor:default"><span class="dot '+LV[a.l].c+'"></span><div class="nm">'+a.txt+'<div class="mute">'+esc(a.t)+'</div></div>'+X('delAlert('+o.i+')')+'</div>'};
-  var su=alKind('suivi').map(item),rc=alKind('reception').map(item);
+  var su=alKind('suivi').map(item),rc=alKind('reception').map(item),va=alKind('valide').map(item);
   var clr=function(k,n){return n?'<button class="lnk" onclick="clearKind(\''+k+'\')">Tout effacer</button>':''};
   return nb+
    panel('Routes suivies',S.watch.length?S.watch.map(miniSeg).join(''):EMPTY('Aucune route suivie'),'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
    panel('Demandes d’état des routes'+(rq.length?' ('+rq.length+')':''),rq.length?rq.join(''):EMPTY('Personne ne demande l’état d’une route'),clr('demande',rq.length))+
    panel('Changements sur mes routes'+(su.length?' ('+su.length+')':''),su.length?su.join(''):EMPTY('Aucun changement sur vos routes suivies'),clr('suivi',su.length))+
+   panel('États validés par vote'+(va.length?' ('+va.length+')':''),va.length?va.join(''):EMPTY('Aucun état validé récemment'),clr('valide',va.length))+
    panel('Signalements'+(rc.length?' ('+rc.length+')':''),rc.length?rc.join(''):EMPTY('Aucun signalement reçu'),clr('reception',rc.length))+
    panel('Demandes d’essence'+(fq.length?' ('+fq.length+')':''),fq.length?fq.join(''):EMPTY('Personne ne demande si une station est fonctionnelle'),clr('essence',fq.length))+
    (window.LOGGED?'':'<p class="mute" style="margin-top:12px">Connectez-vous pour retrouver vos routes suivies sur tous vos appareils.</p>')}
@@ -944,15 +1124,17 @@ S.fz='Tous';S.fs='T';
 function ago(t){var m=Math.max(0,Math.round((Date.now()-t)/MIN));return m<1?'à l’instant':m<60?'il y a '+m+' min':'il y a '+Math.floor(m/60)+' h'}
 /* la majorité des signalements récents l'emporte (les plus récents comptent davantage) ; égalité ouverte/fermée = Limitée */
 function frecent(id){var now=Date.now(),m={};FREP.forEach(function(r){if(r.st===id&&(now-r.t)/MIN<FMIN){var k=r.u||'local';if(!m[k]||r.t>m[k].t)m[k]=r}});return Object.keys(m).map(function(k){return m[k]})}
-function fstat(id){var now=Date.now(),w=[0,0,0],rs=frecent(id);
-  if(rs.length<QUORUM)return 3;
+function fcand(id){var now=Date.now(),w=[0,0,0],rs=frecent(id);
+  if(!rs.length)return -1;
   rs.forEach(function(r){var a=(now-r.t)/MIN;w[r.lvl]+=1/(1+a/45)});
-  if(!w[0]&&!w[1]&&!w[2])return 3;
+  if(!w[0]&&!w[1]&&!w[2])return -1;
   var m=Math.max(w[0],w[1],w[2]),top=[0,1,2].filter(function(i){return Math.abs(w[i]-m)<1e-9});
   return top.length===1?top[0]:(top.indexOf(0)>=0&&top.indexOf(2)>=0?1:Math.max.apply(null,top))}
-function finfo(id){var rs=frecent(id);
+function fstat(id){var k=fcand(id);if(k<0)return 3;return valid(tally('st',id,k,FMIN*MIN))?k:3}
+function finfo(id){var rs=frecent(id),k=fcand(id);
   if(!rs.length)return 'Aucun signalement récent (3 h)';
-  if(rs.length<QUORUM)return 'En attente de confirmation ('+rs.length+'/'+QUORUM+' personnes)';
+  var tl=tally('st',id,k,FMIN*MIN);
+  if(!valid(tl))return FLV[k].n+' signalée : '+voteNote(tl);
   var last=Math.max.apply(null,rs.map(function(r){return r.t})),c=[0,0,0];rs.forEach(function(r){c[r.lvl]++});
   return ago(last)+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fonctionnelle, '+c[1]+' limitée, '+c[2]+' non fonctionnelle)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
 var FREQ=[],lastFAsk={};
@@ -968,7 +1150,8 @@ function openFuelReply(id){id=+id;var s=(window.STN||[]).filter(function(x){retu
   c.auth.getSession().then(function(r){if(r.data&&r.data.session)return;
     try{localStorage.setItem('trafik-reply','f'+id)}catch(e){}
     toast('Connectez-vous pour répondre');setTimeout(function(){location.href='auth.html'},1200)}).catch(function(){})}
-function fReport(id,lvl){S.freply=null;
+function fReport(id,lvl){geoGate('st',id,function(){doFReport(id,lvl)})}
+function doFReport(id,lvl){S.freply=null;
   if(!coolCheck('st:'+id,'cette station'))return;
   lastFuel[id]=Date.now();var r={st:id,lvl:lvl,t:Date.now()};
   function loc(){FLOC.push(r);FREP.push(r);render()}
@@ -978,6 +1161,14 @@ function addStation(){var n=document.getElementById('fn').value.trim().slice(0,8
   if(n.length<3)return toast('Entrez le nom ou le repère de la station');
   if(STN.some(function(s){return s.name.toLowerCase()===n.toLowerCase()&&s.zone===z}))return toast('Cette station existe déjà dans cette zone');
   needLogin(function(){DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){toast('Merci ! Station envoyée : visible après validation')}).catch(function(e){toast(e&&e.message==='login'?'Connectez-vous pour proposer une station':(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard'))})},'proposer une station')}
+function vote(kind,id,val){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return toast('Aucun signalement récent à confirmer');
+ var ck='v:'+kind+':'+id,m=coolLeft(ck);if(m)return toast('Vous avez déjà voté ici. Réessayez dans '+m+' min.');
+ needLogin(function(){geoGate(kind,id,function(){
+  if(!DB)return toast('Connexion indisponible : réessayez dans un instant');
+  DB.collection('votes').add({kind:kind,id:id,lvl:k,val:val}).then(function(){coolMark(ck);VOTES.push({k:kind,id:id,lvl:k,val:val,u:window.UID,t:Date.now()});render();toast(val>0?'Merci ! Vote positif enregistré':'Merci ! Vote négatif enregistré')}).catch(function(e){toast(e&&e.code==='P0001'?e.message:'Échec du vote : réessayez plus tard')})})},'voter')}
+function voteRow(kind,id){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return '';
+ var gk=geoCheck(kind,id),gd=(gk&&!gk.ok)?' disabled':'',t=tally(kind,id,k,kind==='seg'?45*MIN:FMIN*MIN),j=jid(id);
+ return (gd?'<div class="mute">📍 Vous devez être à proximité pour voter.</div>':'')+'<div class="fb"><button class="alt"'+gd+' aria-label="Confirmer cet état" onclick="vote(\''+kind+'\','+j+',1)">👍 Confirmer ('+t.p+')</button><button class="alt"'+gd+' aria-label="Contester cet état" onclick="vote(\''+kind+'\','+j+',-1)">👎 Contester ('+t.n+')</button></div>'}
 function setFz(z){S.fz=z;render()}
 function setFs(t){S.fs=t;render()}
 function jid(v){return typeof v==='number'?v:"'"+String(v).replace(/'/g,'')+"'"}
@@ -995,26 +1186,71 @@ function segAdmin(){return (ADMIN&&PNDS.length)?'<div class="card"><b>Tronçons 
   if(typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!STN.some(function(s){return s.id===d.id}))STN.push({id:d.id,name:x.name.slice(0,80),zone:x.zone})});render()},function(){});
  db.collection('station_requests').onSnapshot(function(snap){PND=snap.docs.map(function(d){var x=d.data();return{id:d.id,name:typeof x.name==='string'?x.name.slice(0,80):'',zone:ZONES.indexOf(x.zone)>0?x.zone:'Centre'}}).filter(function(p){return p.name});render()},function(){});
  db.collection('fuel').where('t','>',Date.now()-FMIN*MIN).onSnapshot(function(snap){
-  FREP=snap.docs.map(function(d){return d.data()}).filter(function(r){return(typeof r.st==='number'||typeof r.st==='string')&&typeof r.t==='number'&&(r.lvl===0||r.lvl===1||r.lvl===2)}).concat(FLOC);render()},function(){});
+  FREP=snap.docs.map(function(d){return d.data()}).filter(function(r){return(typeof r.st==='number'||typeof r.st==='string')&&typeof r.t==='number'&&(r.lvl===0||r.lvl===1||r.lvl===2)}).concat(FLOC);FLOADED=true;render()},function(){});
+ db.collection('votes').where('t','>',Date.now()-FMIN*MIN).onSnapshot(function(snap){VOTES=snap.docs.map(function(d){return d.data()}).filter(function(v){return (v.k==='seg'||v.k==='st')&&(v.val===1||v.val===-1)});render()},function(){});
  var ffirst=true;
  db.collection('fuel_requests').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
+  if(snap.fromCache){FREQ=snap.docs.map(function(d){return d.data()});render();return}
   if(!ffirst)snap.docChanges().forEach(function(c){if(c.type==='added'){var q=c.doc.data(),st=STN.filter(function(x){return x.id===q.st})[0];
    if(!mine(q)&&st&&PR.req!=='mine'){notify({k:'demande',st:q.st,txt:'Quelqu’un demande si la station « '+st.name+' » est fonctionnelle. Si vous y êtes, répondez.'});ringBell();toast('Demande essence : '+st.name)}}});
   ffirst=false;FREQ=snap.docs.map(function(d){return d.data()});render()},function(){})}).catch(function(){});
  window.claude.use('user').then(function(u){if(!u)return;u.canEdit().then(function(b){ADMIN=b;render()})}).catch(function(){})}catch(e){}})();
 function fuelV(){var c=[0,0,0],all=STN.map(function(s){var k=fstat(s.id);if(k<3)c[k]++;return {s:s,k:k}});
-  var list=all.filter(function(x){return (S.fz==='Tous'||x.s.zone===S.fz)&&(S.fs==='T'||x.k===+S.fs)}).sort(function(a,b){return a.k-b.k});
+  var list=all.filter(function(x){return (S.fz==='Tous'||x.s.zone===S.fz)&&(S.fs==='T'||x.k===+S.fs)}).sort(function(a,b){return a.k-b.k||((pendSt(b.s.id)>=0)-(pendSt(a.s.id)>=0))});
   var FS=[['T','Toutes'],['0','Fonctionnelles'],['1','Limitées'],['2','Non fonctionnelles'],['3','Pas d’info']];
   var sum='<div class="sum">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>';
   var chips='<div class="chips" role="group" aria-label="État">'+FS.map(function(f){return '<button aria-pressed="'+(S.fs===f[0])+'" onclick="setFs(\''+f[0]+'\')">'+f[1]+'</button>'}).join('')+'</div>'+
    '<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.fz===z)+'" onclick="setFz(\''+z+'\')">'+z+'</button>'}).join('')+'</div>';
   var cards=list.map(function(x){var s=x.s,k=x.k,nm=esc(s.name),ji=jid(s.id);
-    var oq=fopenReq(s.id);return '<div class="seg'+(S.freply===s.id?' pin':'')+'" id="st'+s.id+'"><div class="bar '+FLV[k].c+'"></div><div class="b" style="padding-right:12px"><h3>'+nm+'</h3><div class="mute">'+esc(s.zone)+'</div><div><span class="st s'+k+'">'+FLV[k].i+' '+FLV[k].n+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+(oq?'<div><span class="pill">Quelqu’un demande</span></div>':'')+(S.freply===s.id?'<div class="mute">Touchez l’état de la station ci-dessous pour répondre.</div>':'')+
-    '<div class="fb"><button class="l0" aria-label="Signaler '+nm+' : fonctionnelle" onclick="fReport('+ji+',0)">● Ouverte</button><button class="l1" aria-label="Signaler '+nm+' : limitée" onclick="fReport('+ji+',1)">▲ Limitée</button><button class="l2" aria-label="Signaler '+nm+' : non fonctionnelle" onclick="fReport('+ji+',2)">■ Fermée</button></div><div style="margin-top:8px"><button class="alt" style="width:100%" aria-label="Demander si '+nm+' est fonctionnelle" onclick="fAsk('+ji+')">Demander si elle est fonctionnelle</button></div></div></div>'}).join('');
+    var pk=pendSt(s.id),sk=pk>=0?pk:k,oq=fopenReq(s.id),gk=geoCheck('st',s.id),gd=(gk&&!gk.ok)?' disabled':'';return '<div class="seg'+(S.freply===s.id?' pin':'')+'" id="st'+s.id+'"><div class="bar '+FLV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b" style="padding-right:12px"><h3>'+nm+'</h3><div class="mute">'+esc(s.zone)+'</div><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+FLV[sk].i+' '+FLV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+voteRow('st',s.id)+(oq?'<div><span class="pill">Quelqu’un demande</span></div>':'')+(S.freply===s.id?'<div class="mute">Touchez l’état de la station ci-dessous pour répondre.</div>':'')+
+    (gd?'<div class="mute">📍 Vous devez être à proximité pour signaler'+(gk.acc>GEO_ACC?' (position trop imprécise).':' (vous êtes à environ '+fmtD(gk.d)+').')+'</div>':'')+'<div class="fb"><button class="l0"'+gd+' aria-label="Signaler '+nm+' : fonctionnelle" onclick="fReport('+ji+',0)">● Ouverte</button><button class="l1"'+gd+' aria-label="Signaler '+nm+' : limitée" onclick="fReport('+ji+',1)">▲ Limitée</button><button class="l2"'+gd+' aria-label="Signaler '+nm+' : non fonctionnelle" onclick="fReport('+ji+',2)">■ Fermée</button></div><div style="margin-top:8px"><button class="alt" style="width:100%" aria-label="Demander si '+nm+' est fonctionnelle" onclick="fAsk('+ji+')">Demander si elle est fonctionnelle</button></div></div></div>'}).join('');
   var admin=(ADMIN&&PND.length)?'<div class="card"><b>À valider ('+PND.length+')</b>'+PND.map(function(p){return '<div class="al" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div>'+esc(p.name)+'<div class="mute">'+esc(p.zone)+'</div></div><div style="display:flex;gap:6px"><button onclick="approveStation('+jid(p.id)+')">Approuver</button><button class="alt" onclick="rejectStation('+jid(p.id)+')">Rejeter</button></div></div>'}).join('')+'</div>':''
   var empty=!STN.length?'<div class="card mute">Aucune station dans la liste pour le moment. Ajoutez la première avec le formulaire ci-dessous, puis chacun pourra signaler son état.</div>':(!list.length?'<div class="card mute">Aucune station ne correspond à ce filtre.</div>':'');
   var form='<h2>Une station manque ?</h2><div class="card">'+loginNote()+'<label for="fn">Nom ou repère</label><input id="fn" maxlength="80" placeholder="Ex. Station près de Delmas 33"><label for="fzone">Zone</label><select id="fzone">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><button class="alt" style="width:100%;margin-top:12px" onclick="addStation()">Ajouter cette station</button></div>';
   return '<div class="mute" style="margin-top:12px">Selon les signalements des 3 dernières heures</div>'+heroCta('Aidez les autres')+admin+sum+chips+empty+'<div class="list">'+cards+'</div>'+form+'<p class="mute">Signalez seulement ce que vous avez vu.</p>'}
+/* ===== Tirer pour actualiser + retour de connexion =====
+   Glisser vers le bas en haut de page relance toutes les lectures (signalements, demandes, essence, bulletin) et vérifie une nouvelle version de l’app.
+   Même action dans le menu (« Actualiser ») pour le clavier et l’ordinateur. Pas actif sur la carte, dans les champs et dans les fenêtres. */
+var REFRESHING=false,PTR_TH=80;
+function ptrTop(){var h=document.querySelector('.top');return h?h.getBoundingClientRect().bottom:0}
+function ptrEl(){return document.getElementById('ptr')}
+function ptrShow(dy){var el=ptrEl();if(!el)return;var p=Math.min(60,dy*.5),k=Math.min(1,dy/PTR_TH);
+ el.classList.add('drag');el.classList.toggle('rdy',dy>=PTR_TH);
+ el.style.opacity=String(Math.min(1,dy/(PTR_TH*.5)));el.style.transform='translate(-50%,'+(ptrTop()-44+p)+'px)';
+ el.firstElementChild.style.transform='rotate('+Math.round(k*270)+'deg)'}
+function ptrSpin(){var el=ptrEl();if(!el)return;el.classList.remove('drag');el.classList.add('spin');el.firstElementChild.style.transform='';
+ el.style.opacity='1';el.style.transform='translate(-50%,'+(ptrTop()+10)+'px)'}
+function ptrReset(){var el=ptrEl();if(!el)return;el.classList.remove('drag','spin','rdy');el.firstElementChild.style.transform='';
+ el.style.opacity='0';el.style.transform='translate(-50%,'+(ptrTop()-60)+'px)'}
+function refreshAll(silent){
+ if(REFRESHING)return Promise.resolve();REFRESHING=true;if(!silent)ptrSpin();
+ var tasks=[];
+ try{if(window.sbRefresh)tasks.push(window.sbRefresh())}catch(e){}
+ try{if(SWR&&SWR.update)tasks.push(Promise.resolve(SWR.update()).catch(function(){}))}catch(e){}
+ /* l’indicateur reste visible au moins 0,6 s ; sur réseau très lent, on ne bloque jamais plus de 8 s */
+ var min=new Promise(function(r){setTimeout(r,silent?0:600)}),cap=new Promise(function(r){setTimeout(r,8000)});
+ return Promise.race([Promise.all(tasks.concat([min])),cap]).catch(function(){}).then(function(){
+  REFRESHING=false;ptrReset();render();
+  if(!silent)toast(isOff()?'Hors ligne : dernières données enregistrées':'Actualisé')})}
+(function(){
+ var y0=0,x0=0,pull=0,on=false;
+ function blocked(t){return !!(document.getElementById('sheet')||(t&&t.closest&&t.closest('#map,#lwrap,.leaflet-container,input,textarea,select,#menu:not([hidden])')))}
+ document.addEventListener('touchstart',function(e){
+  on=false;pull=0;if(REFRESHING||e.touches.length!==1||window.scrollY>0||blocked(e.target))return;
+  y0=e.touches[0].clientY;x0=e.touches[0].clientX;on=true},{passive:true});
+ document.addEventListener('touchmove',function(e){
+  if(!on)return;var dy=e.touches[0].clientY-y0,dx=e.touches[0].clientX-x0;
+  if(window.scrollY>0||Math.abs(dx)>Math.abs(dy)){on=false;pull=0;ptrReset();return}
+  if(dy<=0){if(pull){pull=0;ptrReset()}return}
+  pull=dy;if(e.cancelable)e.preventDefault();ptrShow(dy)},{passive:false});
+ document.addEventListener('touchend',function(){if(!on)return;on=false;var d=pull;pull=0;if(d>=PTR_TH)refreshAll();else ptrReset()});
+ document.addEventListener('touchcancel',function(){on=false;pull=0;ptrReset()});
+ /* connexion perdue / rétablie, retour sur l’app après une absence : l’état affiché suit et les données se rafraîchissent sans bruit */
+ window.addEventListener('trafik-net',function(){render()});
+ window.addEventListener('offline',function(){render();toast('Hors ligne : dernières données affichées')});
+ window.addEventListener('online',function(){render();toast('Connexion rétablie');refreshAll(true)});
+ var hid=0;document.addEventListener('visibilitychange',function(){if(document.hidden)hid=Date.now();else if(hid&&Date.now()-hid>30000)refreshAll(true)});
+})();
 render();
 </script>
 <aside class="side l" aria-hidden="true">
