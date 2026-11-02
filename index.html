@@ -111,6 +111,9 @@ nav button[aria-current="page"]::before{content:"";position:absolute;top:0;left:
 .ph b{font-size:17px;font-weight:800}
 .seg{scroll-margin-top:90px}
 .seg.pin{outline:3px solid var(--r);outline-offset:-3px;border-radius:var(--rad)}
+.sb{margin-top:12px}.sb input{padding-left:14px}
+.pinb{flex:none;width:auto;min-width:40px;min-height:40px;padding:0 8px;margin:0 12px 0 8px;font-size:16px;line-height:1}
+.pinb[aria-pressed="true"]{background:var(--main);color:var(--on);border-color:var(--main)}
 .lwrap{margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;isolation:isolate;background:var(--soft);min-height:360px}
 #lmap{height:62vh;min-height:360px;width:100%}
 .leaflet-container{font-family:inherit}
@@ -456,15 +459,15 @@ function addSeg(){var n=document.getElementById('sn').value.trim(),z=document.ge
   if(typeof x.id==='number'&&typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!SEG.some(function(s){return s[0]===x.id}))SEG.push([x.id,esc(x.name.slice(0,80)),x.zone])});render()},function(){})}).catch(function(){})}catch(e){}})();
 var LV=[{n:'Fluide',i:'●',c:'l0'},{n:'Ralenti',i:'▲',c:'l1'},{n:'Bloqué',i:'■',c:'l2'},{n:'Pas d’info',i:'–',c:'l3'}];
 var S={reports:[],watch:[],alerts:[],live:true,tab:'home',view:'list',zone:'Tous'};
-S.fwatch=[];
-try{var p=JSON.parse(localStorage.getItem(KEY));if(p){S.watch=p.watch||[];S.live=p.live!==false;if(Array.isArray(p.fwatch))S.fwatch=p.fwatch.filter(function(x){return typeof x==='string'}).slice(0,200)}}catch(e){}
+S.fwatch=[];S.pins=[];S.fpins=[];S.q='';S.fq='';
+try{var p=JSON.parse(localStorage.getItem(KEY));if(p){S.watch=p.watch||[];S.live=p.live!==false;if(Array.isArray(p.fwatch))S.fwatch=p.fwatch.filter(function(x){return typeof x==='string'}).slice(0,200);if(Array.isArray(p.pins))S.pins=p.pins.filter(function(x){return typeof x==='number'}).slice(0,2);if(Array.isArray(p.fpins))S.fpins=p.fpins.filter(function(x){return typeof x==='string'}).slice(0,2)}}catch(e){}
 try{var pa=JSON.parse(localStorage.getItem('trafik-alerts'));if(Array.isArray(pa))S.alerts=pa.slice(0,30)}catch(e){}
 function saveAlerts(){try{localStorage.setItem('trafik-alerts',JSON.stringify(S.alerts))}catch(e){}}
 var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-01-h';
+var BUILD='2026-11-02-b';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -659,7 +662,7 @@ function pendingReply(){try{var v=localStorage.getItem('trafik-reply');localStor
 function hashReply(){var m=/^#repondre-(\d+)$/.exec(location.hash),f=/^#essence-(\d+)$/.exec(location.hash);if(!m&&!f)return;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}if(m)openReply(m[1]);else openFuelReply(f[1])}
 try{if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(ev){if(ev.data&&ev.data.type==='reply')openReply(ev.data.seg);else if(ev.data&&ev.data.type==='fuel')openFuelReply(ev.data.st)})}catch(e){}
 window.addEventListener('hashchange',hashReply);setTimeout(hashReply,400);
-function save(){try{localStorage.setItem(KEY,JSON.stringify({watch:S.watch,fwatch:S.fwatch,live:S.live}))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({watch:S.watch,fwatch:S.fwatch,live:S.live,pins:S.pins,fpins:S.fpins}))}catch(e){}}
 function toast(t){var el=document.getElementById('toast');el.textContent=t;el.className='show';clearTimeout(toast.t);toast.t=setTimeout(function(){el.className=''},3500)}
 function seg(id){return SEG.filter(function(s){return s[0]===id})[0]}
 /* aucune donnée inventée : les états viennent uniquement des signalements */
@@ -768,10 +771,22 @@ function syncWatch(){var c=window.sbClient;if(!c)return;
    if(add.length)return c.from('watched_segments').upsert(add.map(function(id){return {segment_id:id}}),{onConflict:'user_id,segment_id',ignoreDuplicates:true})
   })}).catch(function(){WSYNC=''})}
 window.syncWatch=syncWatch;syncWatch();
-function setTab(t){if(t!=='state'){S.focus=null;S.ts='T'}if(t!=='fuel')S.fs='T';if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;S.tab=t;window.scrollTo(0,0);render()}
+function setTab(t){if(t!=='state'){S.focus=null;S.ts='T';S.q=''}if(t!=='fuel'){S.fs='T';S.fq=''}if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;S.tab=t;window.scrollTo(0,0);render()}
 /* ouvre l’onglet Trafic (liste) directement sur le tronçon : il est placé en tête de liste et mis en évidence */
-function goSeg(id){S.view='list';S.zone='Tous';S.focus=id;setTab('state')}
+function goSeg(id){S.view='list';S.zone='Tous';S.q='';S.ts='T';S.focus=id;setTab('state')}
 function setZone(z){S.focus=null;S.zone=z;render()}
+/* recherche, tri alphabétique et épingles (2 maximum par liste, gardées sur cet appareil) */
+function dec(t){return String(t).replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&')}
+function nrm(t){return dec(t==null?'':t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\u2018\u2019]/g,"'")}
+function mq(qs,name,zone){var q=nrm(qs).trim();if(!q)return true;var h=nrm(name)+' '+nrm(zone);return q.split(/\s+/).every(function(w){return h.indexOf(w)>=0})}
+function segCmp(a,b){return nrm(a[1]).localeCompare(nrm(b[1]),'fr',{numeric:true,sensitivity:'base'})}
+function segSorted(){return SEG.slice().sort(segCmp)}
+function sbox(id,fn,val,ph){return '<div class="sb"><input id="'+id+'" type="search" inputmode="search" autocomplete="off" maxlength="60" placeholder="'+ph+'" aria-label="'+ph+'" value="'+esc(val||'')+'" oninput="'+fn+'(this.value)" onkeydown="if(event.key===&quot;Enter&quot;)this.blur()"></div>'}
+function setQ(v){S.q=String(v).slice(0,60);S.focus=null;render()}
+function setFq(v){S.fq=String(v).slice(0,60);render()}
+function pinBtn(on,fn,id,nm){var t=(on?'Désépingler ':'Épingler ')+nm;return '<button type="button" class="alt pinb" aria-pressed="'+on+'" aria-label="'+t+'" title="'+t+'" onclick="'+fn+'('+id+')">📌</button>'}
+function pinSeg(id){var i=S.pins.indexOf(id);if(i>=0){S.pins.splice(i,1);toast('Tronçon désépinglé')}else{if(S.pins.length>=2)return toast('2 tronçons épinglés au maximum : désépinglez-en un d’abord');S.pins.push(id);toast('Tronçon épinglé en haut de la liste')}save();render()}
+function pinSt(id){id=String(id);var i=S.fpins.indexOf(id);if(i>=0){S.fpins.splice(i,1);toast('Station désépinglée')}else{if(S.fpins.length>=2)return toast('2 stations épinglées au maximum : désépinglez-en une d’abord');S.fpins.push(id);toast('Station épinglée en haut de la liste')}save();render()}
 function setLive(){S.live=!S.live;save();render()}
 /* signalements partagés entre utilisateurs (base de données de la page) */
 var DB=null,SHARED=false,LOCAL=[];
@@ -789,14 +804,22 @@ function mine(q){return !!(q.own||(q.u&&q.u===window.UID))}
 function openReq(id){var rs=REQ.concat(LREQ).filter(function(q){return q.seg===id&&Date.now()-q.t<45*MIN&&!mine(q)});if(!rs.length)return null;var t=Math.max.apply(null,rs.map(function(q){return q.t}));
   return S.reports.some(function(r){return r.seg===id&&r.t>t})?null:t}
 /* réception : tout signalement reçu d’une autre personne sur une route que je suis ou que j’ai demandée */
+var FSEEN={},FSEEN0=false;
+/* essence : alerte dès qu'une autre personne signale une station (sans attendre les votes) */
+function fuelRecv(docs){var fresh=[];
+ docs.forEach(function(r){if(!((typeof r.st==='number'||typeof r.st==='string')&&typeof r.t==='number'&&(r.lvl===0||r.lvl===1||r.lvl===2)))return;var k=r.st+':'+r.t+':'+r.lvl+':'+(r.u||'');if(!FSEEN[k]){FSEEN[k]=1;fresh.push(r)}});
+ if(!FSEEN0){FSEEN0=true;return}
+ fresh.forEach(function(r){if(mine(r)||!fWanted(r.st))return;var st=(window.STN||[]).filter(function(x){return String(x.id)===String(r.st)})[0];if(!st)return;
+  var txt=st.name+' : '+FLV[r.lvl].n.toLowerCase()+' (nouveau signalement)'+(fstat(r.st)===3?' · en attente de confirmation':'');
+  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception'});toast('Signalement · '+txt)})}
 var SEEN={},SEEN0=false;
 function recvCheck(docs){var n=Date.now(),fresh=[];
  docs.forEach(function(r){var k=r.seg+':'+r.t+':'+r.lvl+':'+(r.u||'');if(!SEEN[k]){SEEN[k]=1;fresh.push(r)}});
  if(!SEEN0){SEEN0=true;return}
  fresh.forEach(function(r){if(mine(r)||!seg(r.seg))return;
   var asked=REQ.concat(LREQ).some(function(q){return mine(q)&&q.seg===r.seg&&n-q.t<45*MIN&&r.t>q.t}),w=S.watch.indexOf(r.seg)>=0;
-  if(!asked&&!w)return;
-  var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':' (nouveau signalement)');
+  if(!asked&&!w&&!reqWanted(r.seg))return;
+  var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':' (nouveau signalement)')+(status(r.seg)===3?' · en attente de confirmation':'');
   pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception'});toast('Signalement · '+txt)})}
 function ask(id){if(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN)return toast('Demande déjà envoyée. Patientez quelques minutes.');
   lastAsk[id]=Date.now();var q={seg:id,t:Date.now(),own:1};
@@ -843,7 +866,7 @@ function render(){
   bellUpdate();
   var y=window.scrollY,v=document.getElementById('view'),kv={},ae=document.activeElement,af=ae&&ae.id?ae.id:'',ap=0;
   /* garde ce que la personne est en train de saisir quand la page se rafraîchit */
-  ['sn','sz','fn','fzone'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
+  ['sn','sz','fn','fzone','qs','qf'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
   try{ap=ae.selectionStart||0}catch(e){}
   v.innerHTML=offBanner()+({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV})[S.tab]();
   Object.keys(kv).forEach(function(i){var e=document.getElementById(i);if(e)e.value=kv[i]});
@@ -983,14 +1006,15 @@ function secV(){var r=recent(),age=Math.floor((Date.now()-new Date(BUL.u).getTim
  (r.length?r.map(secItem).join(''):'<div class="card mute">Aucune alerte vérifiée. Restez prudent.</div>')+
  '<p class="mute">Sources publiques. En cas de danger, suivez les consignes des autorités.</p>'}
 function listV(){
-  var list=SEG.filter(function(s){return (S.zone==='Tous'||s[2]===S.zone)&&(S.ts==='T'||status(s[0])===+S.ts)}).sort(function(a,b){return status(b[0])-status(a[0])||((pendSeg(b[0])>=0)-(pendSeg(a[0])>=0))});
+  var base=SEG.filter(function(s){return (S.zone==='Tous'||s[2]===S.zone)&&mq(S.q,s[1],s[2])}),cnt=[0,0,0,0];base.forEach(function(s){cnt[status(s[0])]++});
+  var list=base.filter(function(s){return S.ts==='T'||status(s[0])===+S.ts}).sort(function(a,b){var pa=S.pins.indexOf(a[0]),pb=S.pins.indexOf(b[0]);if((pa>=0)!==(pb>=0))return pa>=0?-1:1;if(pa>=0)return pa-pb;return segCmp(a,b)});
   var fs=S.focus&&seg(S.focus);if(fs)list=[fs].concat(list.filter(function(s){return s[0]!==S.focus}));
   var fb=fs?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>Alerte de sécurité</b><div class="mute">Tronçon concerné en tête de liste</div></div><button class="alt" onclick="S.focus=null;render()">Toute la liste</button></div>':'';
   var TS=[['T','Toutes'],['0','Fluides'],['1','Ralenties'],['2','Bloquées'],['3','Pas d’info']];
-  var tchips='<div class="chips" role="group" aria-label="État">'+TS.map(function(f){return '<button aria-pressed="'+(S.ts===f[0])+'" onclick="setTs(\''+f[0]+'\')">'+f[1]+'</button>'}).join('')+'</div>';
-  return fb+tchips+'<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
-  '<div class="list">'+(list.length?'':'<div class="card mute">Aucun tronçon dans cet état.</div>')+list.map(function(s){var k=status(s[0]),pk=pendSeg(s[0]),w=S.watch.indexOf(s[0])>=0,sk=pk>=0?pk:k;
-    return '<div class="seg'+(S.focus===s[0]?' pin':'')+'" id="seg'+s[0]+'"><div class="bar '+LV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b"><h3>'+s[1]+'</h3><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+LV[sk].i+' '+LV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+info(s[0])+'</div>'+voteRow('seg',s[0])+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
+  var tchips='<div class="chips" role="group" aria-label="État">'+TS.map(function(f){return '<button aria-pressed="'+(S.ts===f[0])+'" onclick="setTs(\''+f[0]+'\')">'+f[1]+' ('+(f[0]==='T'?base.length:cnt[+f[0]])+')</button>'}).join('')+'</div>';
+  return fb+sbox('qs','setQ',S.q,'Rechercher une route ou une zone…')+tchips+'<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.zone===z)+'" onclick="setZone(\''+z+'\')">'+z+'</button>'}).join('')+'</div>'+
+  '<div class="list">'+(list.length?'':'<div class="card mute">Aucun tronçon ne correspond à votre recherche ou à ce filtre.</div>')+list.map(function(s){var k=status(s[0]),pk=pendSeg(s[0]),w=S.watch.indexOf(s[0])>=0,sk=pk>=0?pk:k;
+    return '<div class="seg'+(S.focus===s[0]?' pin':'')+'" id="seg'+s[0]+'"><div class="bar '+LV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><h3>'+s[1]+'</h3>'+pinBtn(S.pins.indexOf(s[0])>=0,'pinSeg',s[0],s[1])+'</div><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+LV[sk].i+' '+LV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+info(s[0])+'</div>'+voteRow('seg',s[0])+(secSegs().indexOf(s[0])>=0?'<div><span class="pill r">⚠ Alerte sécurité</span></div>':'')+(openReq(s[0])?'<div><span class="pill">Quelqu’un demande</span></div>':'')+'</div>'+
     '<div class="a" style="flex-direction:column;gap:6px;justify-content:center"><button onclick="SEL='+s[0]+';setTab(\'report\')">Signaler</button><button class="'+(w?'on':'alt')+'" aria-pressed="'+w+'" onclick="toggle('+s[0]+')">'+(w?'Suivi':'Suivre')+'</button><button class="alt" onclick="ask('+s[0]+')">Demander</button></div></div>'}).join('')+'</div>'}
 
 function setView(v){S.view=v;render()}
@@ -1058,7 +1082,7 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  '<button class="cta" onclick="setTab(\'report\')"><b>Vous êtes sur la route ?</b><span>Signalez en 1 touche</span></button>'+adsHtml()
 }
 function reportV(){var gk=geoCheck('seg',SEL),gd=(gk&&!gk.ok)?' disabled':'',pend=SEG.filter(function(s){return openReq(s[0])});var rp=(S.reply&&S.reply===SEL&&seg(SEL))?'<div class="card"><b>Vous répondez à une demande</b><div class="al">'+esc(seg(SEL)[1])+'</div><div class="mute">Le tronçon est déjà choisi : touchez simplement son état ci-dessous.</div></div>':'';return rp+(pend.length?'<div class="card"><b>On attend votre réponse</b>'+pend.map(function(s){return '<div class="al">'+s[1]+'</div>'}).join('')+'</div>':'')+heroCta('Signalez en 1 touche')+
-  '<div class="card"><label for="sg">Tronçon</label><select id="sg" onchange="SEL=+this.value;render()">'+SEG.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===SEL?' selected':'')+'>'+s[1]+'</option>'}).join('')+'</select>'+geoNote('seg',SEL)+
+  '<div class="card"><label for="sg">Tronçon</label><select id="sg" onchange="SEL=+this.value;render()">'+segSorted().map(function(s){return '<option value="'+s[0]+'"'+(s[0]===SEL?' selected':'')+'>'+s[1]+'</option>'}).join('')+'</select>'+geoNote('seg',SEL)+
   '<div class="big"><button class="l0"'+gd+' onclick="report(+sg.value,0)"><b>●</b> Fluide : ça roule bien</button>'+
   '<button class="l1"'+gd+' onclick="report(+sg.value,1)"><b>▲</b> Ralenti : ça avance lentement</button>'+
   '<button class="l2"'+gd+' onclick="report(+sg.value,2)"><b>■</b> Bloqué : embouteillage ou barrage</button></div></div>'+
@@ -1161,7 +1185,7 @@ function fAsk(id){
     DB.collection('fuel_requests').add({st:id}).then(function(){toast('Demande envoyée : les personnes concernées sont prévenues')}).catch(function(e){lastFAsk[id]=0;toast(e&&e.code==='P0001'?e.message:(e&&e.message==='login'?'Connectez-vous pour faire une demande':'Échec de l’envoi : réessayez plus tard'))})},'faire une demande')}
 /* Répondre à une demande d’essence : onglet Essence, station mise en évidence ; connexion requise pour envoyer */
 function openFuelReply(id){id=+id;var s=(window.STN||[]).filter(function(x){return x.id===id})[0];if(!s)return;
-  S.fz='Tous';S.fs='T';S.freply=id;setTab('fuel');
+  S.fz='Tous';S.fs='T';S.fq='';S.freply=id;setTab('fuel');
   setTimeout(function(){var el=document.getElementById('st'+id);if(el)el.scrollIntoView({block:'center'})},80);
   var c=window.sbClient;if(!c)return;
   c.auth.getSession().then(function(r){if(r.data&&r.data.session)return;
@@ -1204,6 +1228,7 @@ function segAdmin(){return (ADMIN&&PNDS.length)?'<div class="card"><b>Tronçons 
   if(typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!STN.some(function(s){return s.id===d.id}))STN.push({id:d.id,name:x.name.slice(0,80),zone:x.zone})});render()},function(){});
  db.collection('station_requests').onSnapshot(function(snap){PND=snap.docs.map(function(d){var x=d.data();return{id:d.id,name:typeof x.name==='string'?x.name.slice(0,80):'',zone:ZONES.indexOf(x.zone)>0?x.zone:'Centre'}}).filter(function(p){return p.name});render()},function(){});
  db.collection('fuel').where('t','>',Date.now()-FMIN*MIN).onSnapshot(function(snap){
+  if(!snap.fromCache)fuelRecv(snap.docs.map(function(d){return d.data()}));
   FREP=snap.docs.map(function(d){return d.data()}).filter(function(r){return(typeof r.st==='number'||typeof r.st==='string')&&typeof r.t==='number'&&(r.lvl===0||r.lvl===1||r.lvl===2)}).concat(FLOC);FLOADED=true;render()},function(){});
  db.collection('votes').where('t','>',Date.now()-FMIN*MIN).onSnapshot(function(snap){VOTES=snap.docs.map(function(d){return d.data()}).filter(function(v){return (v.k==='seg'||v.k==='st')&&(v.val===1||v.val===-1)});render()},function(){});
  var ffirst=true;
@@ -1214,18 +1239,19 @@ function segAdmin(){return (ADMIN&&PNDS.length)?'<div class="card"><b>Tronçons 
   ffirst=false;FREQ=snap.docs.map(function(d){return d.data()});render()},function(){})}).catch(function(){});
  window.claude.use('user').then(function(u){if(!u)return;u.canEdit().then(function(b){ADMIN=b;render()})}).catch(function(){})}catch(e){}})();
 function fuelV(){var c=[0,0,0],all=STN.map(function(s){var k=fstat(s.id);if(k<3)c[k]++;return {s:s,k:k}});
-  var list=all.filter(function(x){return (S.fz==='Tous'||x.s.zone===S.fz)&&(S.fs==='T'||x.k===+S.fs)}).sort(function(a,b){return a.k-b.k||((pendSt(b.s.id)>=0)-(pendSt(a.s.id)>=0))});
+  var base=all.filter(function(x){return (S.fz==='Tous'||x.s.zone===S.fz)&&mq(S.fq,x.s.name,x.s.zone)}),cnt=[0,0,0,0];base.forEach(function(x){cnt[x.k]++});
+  var list=base.filter(function(x){return S.fs==='T'||x.k===+S.fs}).sort(function(a,b){var pa=S.fpins.indexOf(String(a.s.id)),pb=S.fpins.indexOf(String(b.s.id));if((pa>=0)!==(pb>=0))return pa>=0?-1:1;if(pa>=0)return pa-pb;return a.k-b.k||((pendSt(b.s.id)>=0)-(pendSt(a.s.id)>=0))});
   var FS=[['T','Toutes'],['0','Fonctionnelles'],['1','Limitées'],['2','Non fonctionnelles'],['3','Pas d’info']];
   var sum='<div class="sum">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>';
-  var chips='<div class="chips" role="group" aria-label="État">'+FS.map(function(f){return '<button aria-pressed="'+(S.fs===f[0])+'" onclick="setFs(\''+f[0]+'\')">'+f[1]+'</button>'}).join('')+'</div>'+
+  var chips='<div class="chips" role="group" aria-label="État">'+FS.map(function(f){return '<button aria-pressed="'+(S.fs===f[0])+'" onclick="setFs(\''+f[0]+'\')">'+f[1]+' ('+(f[0]==='T'?base.length:cnt[+f[0]])+')</button>'}).join('')+'</div>'+
    '<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.fz===z)+'" onclick="setFz(\''+z+'\')">'+z+'</button>'}).join('')+'</div>';
-  var cards=list.map(function(x){var s=x.s,k=x.k,nm=esc(s.name),ji=jid(s.id);
-    var pk=pendSt(s.id),sk=pk>=0?pk:k,oq=fopenReq(s.id),gk=geoCheck('st',s.id),gd=(gk&&!gk.ok)?' disabled':'';return '<div class="seg'+(S.freply===s.id?' pin':'')+'" id="st'+s.id+'"><div class="bar '+FLV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b" style="padding-right:12px"><h3>'+nm+'</h3><div class="mute">'+esc(s.zone)+'</div><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+FLV[sk].i+' '+FLV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+voteRow('st',s.id)+(oq?'<div><span class="pill">Quelqu’un demande</span></div>':'')+(S.freply===s.id?'<div class="mute">Touchez l’état de la station ci-dessous pour répondre.</div>':'')+
+  var cards=list.map(function(x){var s=x.s,k=x.k,nm=esc(s.name),ji=jid(s.id),fp=S.fpins.indexOf(String(s.id))>=0;
+    var pk=pendSt(s.id),sk=pk>=0?pk:k,oq=fopenReq(s.id),gk=geoCheck('st',s.id),gd=(gk&&!gk.ok)?' disabled':'';return '<div class="seg'+(S.freply===s.id?' pin':'')+'" id="st'+s.id+'"><div class="bar '+FLV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b" style="padding-right:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><h3>'+nm+'</h3>'+pinBtn(fp,'pinSt',ji,nm)+'</div><div class="mute">'+esc(s.zone)+'</div><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+FLV[sk].i+' '+FLV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+voteRow('st',s.id)+(oq?'<div><span class="pill">Quelqu’un demande</span></div>':'')+(S.freply===s.id?'<div class="mute">Touchez l’état de la station ci-dessous pour répondre.</div>':'')+
     (gd?'<div class="mute">📍 Vous devez être à proximité pour signaler'+(gk.acc>GEO_ACC?' (position trop imprécise).':' (vous êtes à environ '+fmtD(gk.d)+').')+'</div>':'')+'<div class="fb"><button class="l0"'+gd+' aria-label="Signaler '+nm+' : fonctionnelle" onclick="fReport('+ji+',0)">● Ouverte</button><button class="l1"'+gd+' aria-label="Signaler '+nm+' : limitée" onclick="fReport('+ji+',1)">▲ Limitée</button><button class="l2"'+gd+' aria-label="Signaler '+nm+' : non fonctionnelle" onclick="fReport('+ji+',2)">■ Fermée</button></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="alt" style="flex:1 1 180px" aria-label="Demander si '+nm+' est fonctionnelle" onclick="fAsk('+ji+')">Demander si elle est fonctionnelle</button><button class="alt" aria-pressed="'+(S.fwatch.indexOf(String(s.id))>=0)+'" aria-label="'+(S.fwatch.indexOf(String(s.id))>=0?'Ne plus suivre ':'Suivre ')+nm+'" onclick="toggleSt('+ji+')">'+(S.fwatch.indexOf(String(s.id))>=0?'Suivie':'Suivre')+'</button></div></div></div>'}).join('');
   var admin=(ADMIN&&PND.length)?'<div class="card"><b>À valider ('+PND.length+')</b>'+PND.map(function(p){return '<div class="al" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div>'+esc(p.name)+'<div class="mute">'+esc(p.zone)+'</div></div><div style="display:flex;gap:6px"><button onclick="approveStation('+jid(p.id)+')">Approuver</button><button class="alt" onclick="rejectStation('+jid(p.id)+')">Rejeter</button></div></div>'}).join('')+'</div>':''
-  var empty=!STN.length?'<div class="card mute">Aucune station dans la liste pour le moment. Ajoutez la première avec le formulaire ci-dessous, puis chacun pourra signaler son état.</div>':(!list.length?'<div class="card mute">Aucune station ne correspond à ce filtre.</div>':'');
+  var empty=!STN.length?'<div class="card mute">Aucune station dans la liste pour le moment. Ajoutez la première avec le formulaire ci-dessous, puis chacun pourra signaler son état.</div>':(!list.length?'<div class="card mute">Aucune station ne correspond à votre recherche ou à ce filtre.</div>':'');
   var form='<h2>Une station manque ?</h2><div class="card">'+loginNote()+'<label for="fn">Nom ou repère</label><input id="fn" maxlength="80" placeholder="Ex. Station près de Delmas 33"><label for="fzone">Zone</label><select id="fzone">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><button class="alt" style="width:100%;margin-top:12px" onclick="addStation()">Ajouter cette station</button></div>';
-  return '<div class="mute" style="margin-top:12px">Selon les signalements des 3 dernières heures</div>'+heroCta('Aidez les autres')+admin+sum+chips+empty+'<div class="list">'+cards+'</div>'+form+'<p class="mute">Signalez seulement ce que vous avez vu.</p>'}
+  return '<div class="mute" style="margin-top:12px">Selon les signalements des 3 dernières heures</div>'+heroCta('Aidez les autres')+admin+sum+sbox('qf','setFq',S.fq,'Rechercher une station ou une zone…')+chips+empty+'<div class="list">'+cards+'</div>'+form+'<p class="mute">Signalez seulement ce que vous avez vu.</p>'}
 /* ===== Tirer pour actualiser + retour de connexion =====
    Glisser vers le bas en haut de page relance toutes les lectures (signalements, demandes, essence, bulletin) et vérifie une nouvelle version de l’app.
    Même action dans le menu (« Actualiser ») pour le clavier et l’ordinateur. Pas actif sur la carte, dans les champs et dans les fenêtres. */
