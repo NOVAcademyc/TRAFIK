@@ -486,7 +486,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-02-ac';
+var BUILD='2026-11-02-ad';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -607,12 +607,15 @@ function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.
 function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();pushPrefs();render();openSettings()}
 function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
+var PUSHBUSY=false;
 function togglePush(){
- if(PUSHON){window.pushOff().then(function(){PUSHON=false;openSettings();render()});return}
+ if(PUSHBUSY)return;
+ if(PUSHON){PUSHON=false;PUSHBUSY=true;openSettings();render();toast('Notifications désactivées');window.pushOff().then(function(){PUSHBUSY=false},function(){PUSHBUSY=false});return}
  if(!('Notification' in window)){toast('Notifications non disponibles sur cet appareil');return}
  if(Notification.permission==='denied'){toast('Autorisez les notifications dans les réglages du navigateur');return}
  Notification.requestPermission().then(function(p){if(p!=='granted'){toast('Notifications refusées');openSettings();return}
-  pushOn().then(function(){toast('Notifications activées, même app fermée');openSettings();render()}).catch(function(){toast('Activées seulement quand l’app est ouverte');openSettings()})})}
+  PUSHON=true;PUSHBUSY=true;openSettings();render();toast('Notifications activées, même app fermée');
+  pushOn().then(function(){PUSHBUSY=false}).catch(function(){PUSHBUSY=false;PUSHON=false;openSettings();render();toast('Activation impossible sur cet appareil : réessayez')})})}
 function wipeLocal(){if(!confirm('Effacer les données de cet appareil (routes suivies, alertes, préférences) ?'))return;
  ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});if(window.sbCacheClear)window.sbCacheClear();location.reload()}
 function openRing(){
@@ -666,10 +669,12 @@ function pushOn(){return pushReg().then(function(reg){if(!reg.pushManager)throw 
 function pushCheck(){if(!('Notification' in window)||Notification.permission!=='granted')return;
  pushReg().then(function(reg){return reg.pushManager&&reg.pushManager.getSubscription()}).then(function(sub){PUSHON=!!sub;if(sub&&window.sbClient)pushSave(sub).catch(function(){});render()}).catch(function(){})}
 window.pushOff=function(){return pushReg().then(function(reg){return reg.pushManager.getSubscription()}).then(function(sub){if(!sub)return;
- var ep=sub.endpoint,c=window.sbClient;return c.rpc('unregister_push',{p_endpoint:ep}).then(function(r){if(r.error)return c.from('push_subscriptions').delete().eq('endpoint',ep)}).then(function(){return sub.unsubscribe()})}).catch(function(){})};
+ var ep=sub.endpoint,c=window.sbClient;var srv=c.rpc('unregister_push',{p_endpoint:ep}).then(function(r){if(r.error)return c.from('push_subscriptions').delete().eq('endpoint',ep)}).catch(function(){});
+ return Promise.all([sub.unsubscribe().catch(function(){}),srv])}).catch(function(){})};
 function askNotif(){if(!('Notification' in window))return toast('Notifications non disponibles sur cet appareil');
  Notification.requestPermission().then(function(p){if(p!=='granted'){toast('Notifications refusées');render();return}
-  pushOn().then(function(){toast('Notifications activées, même app fermée');render()}).catch(function(){toast('Activées seulement quand l’app est ouverte');render()})})}
+  PUSHON=true;toast('Notifications activées, même app fermée');render();
+  pushOn().catch(function(){PUSHON=false;toast('Activation impossible sur cet appareil : réessayez');render()})})}
 setTimeout(pushCheck,1500);
 /* Répondre : ouvre l’onglet Signaler avec le tronçon déjà choisi. Se connecter est nécessaire pour envoyer la réponse. */
 function openReply(id){id=+id;if(!seg(id))return;SEL=id;S.reply=id;setTab('report');
