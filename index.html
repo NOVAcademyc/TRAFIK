@@ -289,8 +289,14 @@ html,body{overscroll-behavior-y:contain}
   #060A1C}
 /* icônes de l'écran de bienvenue : illustrations en couleurs */
 svg.ti{width:62px;height:62px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
+/* listes : une seule colonne (les cartes en 2 colonnes étaient trop étroites : les boutons se chevauchaient) */
+.list{grid-template-columns:1fr!important}
+.seg .a{flex:none}
+.seg .b>div:first-child{flex-wrap:nowrap;align-items:flex-start}
+.seg .b>div:first-child h3{flex:1 1 auto;min-width:0}
+.seg .b>div:first-child .pinb{flex:none;margin:0 0 0 4px!important}
 </style>
-<meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"></head>
+<meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
 <header class="top"><div class="top-in" id="topin"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik</h1><div class="sub"><span id="lv"></span></div></div></div><button id="bell" class="ibtn" type="button" aria-label="Alertes" onclick="setTab('alerts')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg><b id="bellb" class="bdg" style="display:none"></b></button><div id="auth" class="authbar"><div id="lbtns"><a class="btn ghost xs" href="auth.html">Connexion</a><a class="btn primary xs" href="auth.html#signup">S’inscrire</a></div><button id="mbtn" class="ibtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu(event)"><span id="mav"></span></button><div id="menu" class="menu" role="menu" hidden></div></div></div></header>
 <div id="app">
@@ -480,7 +486,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-02-z';
+var BUILD='2026-11-02-ac';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
