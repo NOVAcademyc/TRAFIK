@@ -531,7 +531,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-07-av';
+var BUILD='2026-11-07-av2';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -612,11 +612,15 @@ var MI={
 };
 function mi(ic,txt,fn,sub,cls){return '<button type="button" class="mi'+(cls?' '+cls:'')+'" role="menuitem" onclick="closeMenu();'+fn+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+MI[ic]+'</svg><span>'+txt+(sub?'<small>'+sub+'</small>':'')+'</span></button>'}
 function userName(u){var md=(u&&u.user_metadata)||{};return ((md.prenom||'')+' '+(md.nom||'')).trim()||(u&&u.email)||''}
+/* petit avatar rond (en-tête et menu) : photo de profil si elle existe, sinon initiale */
+function avSmall(nm,px){var d=avGet(),st='width:'+px+'px;height:'+px+'px;margin:0;border-radius:50%;overflow:hidden;flex:none';
+ return d?'<span class="av" style="'+st+';background:none"><img alt="" src="'+d+'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'
+         :'<span class="av" style="'+st+'">'+esc(String(nm).charAt(0).toUpperCase())+'</span>'}
 function menuBtn(){var e=document.getElementById('mav');if(!e)return;var u=window.CURU,ti=document.getElementById('topin');if(ti)ti.classList.toggle('lo',u===null);
- if(u){var md=u.user_metadata||{},nm=String(md.prenom||u.email||'?');e.innerHTML='<span class="av" style="width:36px;height:36px">'+esc(nm.charAt(0).toUpperCase())+'</span>'}
+ if(u){var md=u.user_metadata||{},nm=String(md.prenom||u.email||'?');e.innerHTML=avSmall(nm,38);avFetch()}
  else e.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'}
 function buildMenu(){var u=window.CURU,m=document.getElementById('menu'),h='';
- if(u)h+='<div class="mhead"><span class="av">'+esc(String(((u.user_metadata||{}).prenom||u.email||'?')).charAt(0).toUpperCase())+'</span><div><b>'+esc(userName(u))+'</b><small>'+esc(u.email||'')+'</small></div></div>';
+ if(u)h+='<div class="mhead">'+avSmall(String((u.user_metadata||{}).prenom||u.email||'?'),42)+'<div><b>'+esc(userName(u))+'</b><small>'+esc(u.email||'')+'</small></div></div>';
  else h+='<div class="mhead"><div><b>Bienvenue</b><small>Connectez-vous pour signaler et suivre des routes</small></div></div>';
  h+=(u?mi('user','Profil','openProfile()','Nom, téléphone'):'')+
   (u?mi('trophy','Points et classement','openBoard()',ME?esc(ME.level.name)+' · '+ME.points+' pt'+(ME.points>1?'s':''):'Niveau, badges, zones'):'')+
@@ -692,15 +696,18 @@ function setSound(){PR.sound=!PR.sound;savePR();if(PR.sound)playTone();openRing(
    Coche à côté du cercle : bleue au niveau Légende (5), grise au niveau juste avant (4), aucune pour les autres. */
 function avKey(){return 'trafik-avatar-'+(window.CURU?window.CURU.id:'')}
 function avGet(){try{return localStorage.getItem(avKey())}catch(e){return null}}
-function avSet(v){try{if(v)localStorage.setItem(avKey(),v);else localStorage.removeItem(avKey())}catch(e){}}
+var AVTRY='';
+function avSet(v){try{if(v)localStorage.setItem(avKey(),v);else localStorage.removeItem(avKey())}catch(e){}if(window.CURU)menuBtn()}
 function vBadge(){var n=ME&&ME.level?ME.level.n:0;if(n<4)return '';var leg=n>=5;return '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="'+(leg?'Niveau Légende':'Niveau '+esc(ME.level.name))+'"><circle cx="12" cy="12" r="11" fill="'+(leg?'#1877F2':'#8A949B')+'" stroke="var(--card)" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 function avInner(){var d=avGet(),pick='document.getElementById(\'avf\').click()';
  return '<div class="av"><button type="button" class="avc'+(d?' has':'')+'" aria-label="'+(d?'Changer':'Ajouter')+' la photo de profil" onclick="'+pick+'">'+(d?'<img alt="" src="'+d+'">':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>')+'</button>'+vBadge()+'</div>'+
   '<div style="text-align:center;margin-bottom:6px"><button type="button" class="lnk" onclick="'+pick+'">'+(d?'Changer la photo':'Ajouter une photo (facultatif)')+'</button>'+(d?' · <button type="button" class="lnk" onclick="avRemove()">Retirer</button>':'')+'</div><input type="file" id="avf" accept="image/*" hidden onchange="avPick(this)">'}
 function avHtml(){return '<div id="avw">'+avInner()+'</div>'}
 function avUpdate(){var e=document.getElementById('avw');if(e)e.innerHTML=avInner()}
-function avFetch(){var u=window.CURU;if(!u||avGet()||!window.sbClient||!window.sbClient.storage)return;
- window.sbClient.storage.from('avatars').download(u.id+'/avatar.jpg').then(function(r){if(r.error||!r.data)return;var fr=new FileReader();fr.onload=function(){avSet(String(fr.result));avUpdate()};fr.readAsDataURL(r.data)},function(){})}
+function avFetch(){var u=window.CURU;if(!u||avGet()||AVTRY===u.id||!window.sbClient||!window.sbClient.storage)return;AVTRY=u.id;
+ window.sbClient.storage.from('avatars').download(u.id+'/avatar.jpg').then(function(r){
+  if(r.error||!r.data){if(r.error&&!/not.?found|404/i.test(String(r.error.message||r.error.statusCode||'')))AVTRY='';return}
+  var fr=new FileReader();fr.onload=function(){avSet(String(fr.result));avUpdate()};fr.readAsDataURL(r.data)},function(){AVTRY=''})}
 function avPick(inp){var f=inp.files&&inp.files[0],u=window.CURU;if(!f||!u)return;if(!/^image\//.test(f.type)){toast('Choisissez une image');return}
  var im=new Image(),url=URL.createObjectURL(f);
  im.onload=function(){URL.revokeObjectURL(url);var SZ=256,c=document.createElement('canvas');c.width=c.height=SZ;var m=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,SZ,SZ);
