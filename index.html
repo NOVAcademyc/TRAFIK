@@ -328,6 +328,12 @@ svg.ti{width:62px;height:62px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
 .rc .stars .starb{font-size:28px;min-width:40px;min-height:36px;padding:0 4px}
 .sum.st div{background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:26px;padding:12px 8px}
 .sum.st span{color:var(--mute)}
+.av{position:relative;width:88px;height:88px;margin:4px auto 6px}
+.av .avc{width:88px;height:88px;min-height:0;border-radius:50%;padding:0;border:2px dashed var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;box-shadow:none}
+.av .avc.has{border-style:solid}
+.av .avc img{width:100%;height:100%;object-fit:cover;display:block}
+.av .avc svg{width:34px;height:34px;stroke:var(--mute);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.av .vb{position:absolute;right:-4px;bottom:0;width:28px;height:28px}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
@@ -525,7 +531,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-07-hl';
+var BUILD='2026-11-07-av';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -675,26 +681,47 @@ function togglePush(){
   PUSHON=true;PUSHBUSY=true;openSettings();render();toast('Notifications activées, même app fermée');
   pushOn().then(function(){PUSHBUSY=false}).catch(function(){PUSHBUSY=false;PUSHON=false;openSettings();render();toast('Activation impossible sur cet appareil : réessayez')})})}
 function wipeLocal(){if(!confirm('Effacer les données de cet appareil (routes suivies, alertes, préférences) ?'))return;
- ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});if(window.sbCacheClear)window.sbCacheClear();location.reload()}
+ ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs',avKey()].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});if(window.sbCacheClear)window.sbCacheClear();location.reload()}
 function openRing(){
  var list=Object.keys(TONES).map(function(k){var on=PR.tone===k;return srow(TONES[k].n,'','<button type="button" class="alt" aria-label="Écouter '+TONES[k].n+'" onclick="playTone(\''+k+'\')">▶</button><button type="button" class="'+(on?'on':'alt')+'" aria-pressed="'+on+'" style="margin-left:6px" onclick="pickTone(\''+k+'\')">'+(on?'Choisie':'Choisir')+'</button>')}).join('');
  openSheet('Sonnerie',srow('Son des alertes','Une cloche sonne quand une alerte arrive',sw(PR.sound,'setSound()','Son des alertes'))+
   '<div class="srow" style="display:block"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="100" value="'+Math.round(PR.vol*100)+'" oninput="PR.vol=this.value/100" onchange="savePR();playTone()" style="width:100%;padding:0"></div>'+list)}
 function pickTone(k){if(!TONES[k])return;PR.tone=k;PR.sound=true;savePR();playTone(k);openRing()}
 function setSound(){PR.sound=!PR.sound;savePR();if(PR.sound)playTone();openRing()}
+/* photo de profil : recadrée en carré et réduite à 256 px sur l’appareil, stockée dans le bucket privé « avatars » (une image par compte, visible seulement par son propriétaire), avec une copie locale pour l’affichage immédiat.
+   Coche à côté du cercle : bleue au niveau Légende (5), grise au niveau juste avant (4), aucune pour les autres. */
+function avKey(){return 'trafik-avatar-'+(window.CURU?window.CURU.id:'')}
+function avGet(){try{return localStorage.getItem(avKey())}catch(e){return null}}
+function avSet(v){try{if(v)localStorage.setItem(avKey(),v);else localStorage.removeItem(avKey())}catch(e){}}
+function vBadge(){var n=ME&&ME.level?ME.level.n:0;if(n<4)return '';var leg=n>=5;return '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="'+(leg?'Niveau Légende':'Niveau '+esc(ME.level.name))+'"><circle cx="12" cy="12" r="11" fill="'+(leg?'#1877F2':'#8A949B')+'" stroke="var(--card)" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function avInner(){var d=avGet(),pick='document.getElementById(\'avf\').click()';
+ return '<div class="av"><button type="button" class="avc'+(d?' has':'')+'" aria-label="'+(d?'Changer':'Ajouter')+' la photo de profil" onclick="'+pick+'">'+(d?'<img alt="" src="'+d+'">':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>')+'</button>'+vBadge()+'</div>'+
+  '<div style="text-align:center;margin-bottom:6px"><button type="button" class="lnk" onclick="'+pick+'">'+(d?'Changer la photo':'Ajouter une photo (facultatif)')+'</button>'+(d?' · <button type="button" class="lnk" onclick="avRemove()">Retirer</button>':'')+'</div><input type="file" id="avf" accept="image/*" hidden onchange="avPick(this)">'}
+function avHtml(){return '<div id="avw">'+avInner()+'</div>'}
+function avUpdate(){var e=document.getElementById('avw');if(e)e.innerHTML=avInner()}
+function avFetch(){var u=window.CURU;if(!u||avGet()||!window.sbClient||!window.sbClient.storage)return;
+ window.sbClient.storage.from('avatars').download(u.id+'/avatar.jpg').then(function(r){if(r.error||!r.data)return;var fr=new FileReader();fr.onload=function(){avSet(String(fr.result));avUpdate()};fr.readAsDataURL(r.data)},function(){})}
+function avPick(inp){var f=inp.files&&inp.files[0],u=window.CURU;if(!f||!u)return;if(!/^image\//.test(f.type)){toast('Choisissez une image');return}
+ var im=new Image(),url=URL.createObjectURL(f);
+ im.onload=function(){URL.revokeObjectURL(url);var SZ=256,c=document.createElement('canvas');c.width=c.height=SZ;var m=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,SZ,SZ);
+  var data=c.toDataURL('image/jpeg',.85);
+  c.toBlob(function(b){if(!b)return toast('Image illisible : essayez une autre photo');toast('Envoi de la photo…');
+   window.sbClient.storage.from('avatars').upload(u.id+'/avatar.jpg',b,{upsert:true,contentType:'image/jpeg',cacheControl:'3600'}).then(function(r){if(r.error)throw r.error;avSet(data);avUpdate();toast('Photo enregistrée')}).catch(function(){toast('Échec de l’envoi de la photo : réessayez')})},'image/jpeg',.85)};
+ im.onerror=function(){URL.revokeObjectURL(url);toast('Image non prise en charge : choisissez une photo JPEG ou PNG')};im.src=url}
+function avRemove(){var u=window.CURU;if(!u)return;window.sbClient.storage.from('avatars').remove([u.id+'/avatar.jpg']).then(function(r){if(r.error)throw r.error;avSet(null);avUpdate();toast('Photo retirée')}).catch(function(){toast('Échec : réessayez')})}
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
- openSheet('Profil','<div class="mute" style="margin-bottom:6px">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
- try{window.sbClient.from('profiles').select('prenom,nom,telephone').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]})})}catch(e){}}
+ openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
+ avFetch();try{window.sbClient.from('profiles').select('prenom,nom,telephone').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]})})}catch(e){}}
 function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
  var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30)};
  window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}toast('Profil enregistré');closeSheet()}).catch(function(){toast('Échec de l’enregistrement : réessayez')})}
 
 function openDelete(){if(!window.CURU)return;
- openSheet('Supprimer mon compte','<p style="margin:0 0 10px">Cette action est <b>définitive</b>. Seront effacés : votre compte, votre profil (nom, prénom, téléphone), vos signalements, vos demandes, vos routes suivies et vos notifications.</p><p class="mute" style="margin:0 0 6px">Pour confirmer, écrivez <b>SUPPRIMER</b> ci-dessous.</p><input id="delc" autocomplete="off" autocapitalize="characters" placeholder="SUPPRIMER" oninput="document.getElementById(\'delb\').disabled=this.value.trim().toUpperCase()!==\'SUPPRIMER\'"><button type="button" id="delb" class="dng" style="width:100%;margin-top:14px" disabled onclick="doDelete()">Supprimer définitivement</button><button type="button" class="alt" style="width:100%;margin-top:8px" onclick="closeSheet()">Annuler</button>')}
+ openSheet('Supprimer mon compte','<p style="margin:0 0 10px">Cette action est <b>définitive</b>. Seront effacés : votre compte, votre profil (nom, prénom, téléphone, photo), vos signalements, vos demandes, vos routes suivies et vos notifications.</p><p class="mute" style="margin:0 0 6px">Pour confirmer, écrivez <b>SUPPRIMER</b> ci-dessous.</p><input id="delc" autocomplete="off" autocapitalize="characters" placeholder="SUPPRIMER" oninput="document.getElementById(\'delb\').disabled=this.value.trim().toUpperCase()!==\'SUPPRIMER\'"><button type="button" id="delb" class="dng" style="width:100%;margin-top:14px" disabled onclick="doDelete()">Supprimer définitivement</button><button type="button" class="alt" style="width:100%;margin-top:8px" onclick="closeSheet()">Annuler</button>')}
 function doDelete(){var b=document.getElementById('delb');if(b){b.disabled=true;b.textContent='Suppression…'}
- (window.pushOff?window.pushOff():Promise.resolve()).then(function(){return window.sbRpc('delete_my_account')}).then(function(){
-  ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});
+ (window.pushOff?window.pushOff():Promise.resolve()).then(function(){try{return window.sbClient.storage.from('avatars').remove([window.CURU.id+'/avatar.jpg']).then(function(){},function(){})}catch(e){}}).then(function(){return window.sbRpc('delete_my_account')}).then(function(){
+  ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs',avKey()].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});
   return window.sbClient.auth.signOut({scope:'local'}).catch(function(){})}).then(function(){toast('Compte supprimé');setTimeout(function(){location.reload()},900)}).catch(function(e){
   toast(e&&e.code==='P0001'&&e.message?e.message:'Échec de la suppression : réessayez');if(b){b.disabled=false;b.textContent='Supprimer définitivement'}})}
 /* ===== Points, niveaux, badges et classement des zones =====
