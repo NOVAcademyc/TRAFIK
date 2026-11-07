@@ -1,5 +1,5 @@
 /* Service worker Trafik : mode hors ligne (cache de l'app) + notifications système, y compris app fermée (push serveur). */
-var VER='trafik-sw-v24',SHELL_CACHE=VER+'-shell',LIB_CACHE=VER+'-lib',SCOPE=self.registration.scope;
+var VER='trafik-sw-v25',SHELL_CACHE=VER+'-shell',LIB_CACHE=VER+'-lib',SCOPE=self.registration.scope;
 /* fichiers de l'app gardés pour le hors ligne ; chacun est ajouté séparément : s'il en manque un (ex. vendor/leaflet), l'installation continue */
 var SHELL=['index.html','manifest.json','icon-192.png','apple-touch-icon.png','vendor/leaflet/leaflet.js','vendor/leaflet/leaflet.css'];
 /* bibliothèques externes à version fixe : gardées une fois pour toutes (économise les données mobiles) */
