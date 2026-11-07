@@ -334,10 +334,22 @@ svg.ti{width:62px;height:62px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
 .av .avc img{width:100%;height:100%;object-fit:cover;display:block}
 .av .avc svg{width:34px;height:34px;stroke:var(--mute);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .av .vb{position:absolute;right:-4px;bottom:0;width:28px;height:28px}
+/* en-tête : marque à gauche ; Communauté, cloche et menu groupés à droite */
+.top-in,.top-in.lo{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap}
+.top-in .brand{flex:1 1 auto;min-width:0}
+.hr{display:flex;align-items:center;gap:8px;flex:none}
+.ibtn.cb{width:auto;padding:0 14px;gap:7px;display:inline-flex;align-items:center;border-radius:22px;font-size:13.5px;font-weight:700;white-space:nowrap}
+.ibtn.cb[hidden]{display:none}
+.ibtn.cb svg{width:20px;height:20px}
+@media (max-width:420px){.ibtn.cb{width:44px;padding:0;justify-content:center}.ibtn.cb .cl{display:none}}
+/* Communauté */
+.cav{width:44px;height:44px;border-radius:50%;flex:none;overflow:hidden;background:var(--acc);color:#2b2000;display:grid;place-items:center;font-weight:800;font-size:18px}
+.cav img{width:100%;height:100%;object-fit:cover;display:block}
+.panel>.row:first-child{border-top:0}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
-<header class="top"><div class="top-in" id="topin"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik</h1><div class="sub"><span id="lv"></span></div></div></div><button id="bell" class="ibtn" type="button" aria-label="Alertes" onclick="setTab('alerts')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg><b id="bellb" class="bdg" style="display:none"></b></button><div id="auth" class="authbar"><div id="lbtns"><a class="btn ghost xs" href="auth.html">Connexion</a><a class="btn primary xs" href="auth.html#signup">S’inscrire</a></div><button id="mbtn" class="ibtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu(event)"><span id="mav"></span></button><div id="menu" class="menu" role="menu" hidden></div></div></div></header>
+<header class="top"><div class="top-in" id="topin"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik</h1><div class="sub"><span id="lv"></span></div></div></div><div class="hr"><button id="cbtn" class="ibtn cb" type="button" hidden aria-label="Communauté" title="Communauté" onclick="setTab('community')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 4.7a3.2 3.2 0 0 1 0 6.1M18 20a6 6 0 0 0-3-5.2"/></svg><span class="cl">Communauté</span></button><button id="bell" class="ibtn" type="button" aria-label="Alertes" onclick="setTab('alerts')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg><b id="bellb" class="bdg" style="display:none"></b></button><div id="auth" class="authbar"><div id="lbtns"><a class="btn ghost xs" href="auth.html">Connexion</a><a class="btn primary xs" href="auth.html#signup">S’inscrire</a></div><button id="mbtn" class="ibtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu(event)"><span id="mav"></span></button><div id="menu" class="menu" role="menu" hidden></div></div></div></div></header>
 <div id="app">
   <main id="view"></main>
 </div>
@@ -531,7 +543,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-07-av2';
+var BUILD='2026-11-07-co2';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -595,6 +607,7 @@ function playTone(name){var ac=audio();if(!ac)return;var t=TONES[name]||TONES[PR
 function ringBell(){var b=document.getElementById('bell');if(b){b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring')}if(PR.sound&&!document.hidden)playTone()}
 function bellUpdate(){var n=alertN(),b=document.getElementById('bellb'),bell=document.getElementById('bell');
  if(b){b.textContent=n>99?'99+':String(n);b.style.display=n?'grid':'none'}
+ var cb2=document.getElementById('cbtn');if(cb2)cb2.classList.toggle('on',S.tab==='community');
  if(bell){bell.classList.toggle('on',S.tab==='alerts');bell.setAttribute('aria-label',n?'Alertes : '+n+' non effacée'+(n>1?'s':''):'Alertes')}}
 
 /* menu déroulant (en haut à droite) */
@@ -616,7 +629,7 @@ function userName(u){var md=(u&&u.user_metadata)||{};return ((md.prenom||'')+' '
 function avSmall(nm,px){var d=avGet(),st='width:'+px+'px;height:'+px+'px;margin:0;border-radius:50%;overflow:hidden;flex:none';
  return d?'<span class="av" style="'+st+';background:none"><img alt="" src="'+d+'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'
          :'<span class="av" style="'+st+'">'+esc(String(nm).charAt(0).toUpperCase())+'</span>'}
-function menuBtn(){var e=document.getElementById('mav');if(!e)return;var u=window.CURU,ti=document.getElementById('topin');if(ti)ti.classList.toggle('lo',u===null);
+function menuBtn(){var e=document.getElementById('mav');if(!e)return;var u=window.CURU,ti=document.getElementById('topin'),cb=document.getElementById('cbtn');if(cb)cb.hidden=!u;if(ti)ti.classList.toggle('lo',u===null);
  if(u){var md=u.user_metadata||{},nm=String(md.prenom||u.email||'?');e.innerHTML=avSmall(nm,38);avFetch()}
  else e.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'}
 function buildMenu(){var u=window.CURU,m=document.getElementById('menu'),h='';
@@ -683,7 +696,7 @@ function togglePush(){
  if(Notification.permission==='denied'){toast('Autorisez les notifications dans les réglages du navigateur');return}
  Notification.requestPermission().then(function(p){if(p!=='granted'){toast('Notifications refusées');openSettings();return}
   PUSHON=true;PUSHBUSY=true;openSettings();render();toast('Notifications activées, même app fermée');
-  pushOn().then(function(){PUSHBUSY=false}).catch(function(){PUSHBUSY=false;PUSHON=false;openSettings();render();toast('Activation impossible sur cet appareil : réessayez')})})}
+  pushOn().then(function(){PUSHBUSY=false}).catch(function(e){PUSHBUSY=false;PUSHON=false;openSettings();render();toast(e&&e.code==='P0001'&&e.message?e.message:'Activation impossible sur cet appareil : réessayez')})})}
 function wipeLocal(){if(!confirm('Effacer les données de cet appareil (routes suivies, alertes, préférences) ?'))return;
  ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs',avKey()].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});if(window.sbCacheClear)window.sbCacheClear();location.reload()}
 function openRing(){
@@ -718,11 +731,50 @@ function avPick(inp){var f=inp.files&&inp.files[0],u=window.CURU;if(!f||!u)retur
 function avRemove(){var u=window.CURU;if(!u)return;window.sbClient.storage.from('avatars').remove([u.id+'/avatar.jpg']).then(function(r){if(r.error)throw r.error;avSet(null);avUpdate();toast('Photo retirée')}).catch(function(){toast('Échec : réessayez')})}
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
- openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
- avFetch();try{window.sbClient.from('profiles').select('prenom,nom,telephone').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]})})}catch(e){}}
-function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
- var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30)};
- window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}toast('Profil enregistré');closeSheet()}).catch(function(){toast('Échec de l’enregistrement : réessayez')})}
+ openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+
+  '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Gardien et Légende.</div>'+
+  srow('Photo visible par la communauté','Les membres connectés peuvent voir votre photo dans la Communauté. Désactivé par défaut.',sw(false,'pfPub(this)','Photo visible par la communauté').replace('<button ','<button id="pfpub" '))+
+  '<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
+ avFetch();try{window.sbClient.from('profiles').select('prenom,nom,telephone,pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone],['pfs',d.pseudo]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]});var pb=document.getElementById('pfpub');if(pb&&!pb.dataset.t)pb.setAttribute('aria-checked',String(!!d.photo_public));MYP={pseudo:d.pseudo||'',pub:!!d.photo_public}})}catch(e){}}
+function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()},pb=document.getElementById('pfpub');
+ var ps=v('pfs').toLowerCase();
+ if(ps&&!pseudoOk(ps))return toast('Pseudonyme : 5 caractères maximum, lettres minuscules (au moins une) et chiffres');
+ var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30),pseudo:ps||null,photo_public:!!(pb&&pb.getAttribute('aria-checked')==='true')};
+ window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}
+  MYP={pseudo:d.pseudo||'',pub:d.photo_public};CM.t=0;if(S.tab==='community')cmLoad(true);toast('Profil enregistré');closeSheet()}).catch(function(e){
+  toast(e&&e.code==='23505'?'Ce pseudonyme est déjà pris : choisissez-en un autre':e&&e.code==='23514'?'Pseudonyme refusé : choisissez-en un autre':'Échec de l’enregistrement : réessayez')})}
+/* ===== Communauté : pseudonymes des niveaux Gardien (4) et Légende (5) =====
+   La liste vient de la fonction get_community (aucun identifiant, point ni nom renvoyé). Les photos passent par des liens signés d'une heure,
+   délivrés seulement pour les comptes qui ont rendu leur photo publique. */
+var CM={rows:null,urls:{},t:0,busy:false,err:false,tab:'5'},MYP=null;
+function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);el.dataset.t=1}
+function pfPub(b){b.dataset.t=1;b.setAttribute('aria-checked',String(b.getAttribute('aria-checked')!=='true'))}
+function pseudoOk(p){return /^[a-z0-9]{1,5}$/.test(p)&&/[a-z]/.test(p)}
+function cmLoad(force){if(!window.sbRpc||!window.UID||CM.busy||(!force&&CM.rows&&Date.now()-CM.t<60000))return Promise.resolve();
+ CM.busy=true;CM.err=false;
+ var mine=window.sbClient.from('profiles').select('pseudo,photo_public').eq('id',window.UID).maybeSingle().then(function(r){if(r&&r.data)MYP={pseudo:r.data.pseudo||'',pub:!!r.data.photo_public}},function(){});
+ var list=window.sbRpc('get_community').then(function(r){var rows=Array.isArray(r.data)?r.data:[],paths=rows.map(function(x){return x.o_photo}).filter(Boolean);
+  if(!paths.length){CM.urls={};return rows}
+  return window.sbClient.storage.from('avatars').createSignedUrls(paths,3600).then(function(q){var m={};((q&&q.data)||[]).forEach(function(x){if(x&&x.signedUrl&&!x.error)m[x.path]=x.signedUrl});CM.urls=m;return rows},function(){CM.urls={};return rows})});
+ return Promise.all([mine,list]).then(function(a){CM.rows=a[1];CM.t=Date.now()}).catch(function(){CM.err=true}).then(function(){CM.busy=false;if(S.tab==='community')render()})}
+function cmChk(n,px){return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="'+(n>=5?'Niveau Légende':'Niveau Gardien')+'" style="flex:none"><circle cx="12" cy="12" r="11" fill="'+(n>=5?'#1877F2':'#8A949B')+'"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function cmAv(x){var u=x.o_photo&&CM.urls[x.o_photo];return '<span class="cav" aria-hidden="true">'+(u?'<img alt="" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo).charAt(0).toUpperCase()))+'</span>'}
+function setCm(t){CM.tab=t;render()}
+function communityV(){
+ var head='<h2>Communauté</h2><div class="mute" style="margin-top:4px">Les membres des niveaux Gardien et Légende, par pseudonyme.</div>';
+ if(window.LOGGED===false)return head+'<div class="card"><b>Connexion requise</b><div class="mute">Connectez-vous pour voir la Communauté.</div><a class="btn primary" style="margin-top:10px" href="auth.html">Se connecter</a></div>';
+ var rows=CM.rows,all=rows||[],n5='Légende',n4='Gardien';
+ all.forEach(function(x){if(x.o_level>=5)n5=x.o_level_name||n5;else n4=x.o_level_name||n4});
+ var l5=all.filter(function(x){return x.o_level>=5}),l4=all.filter(function(x){return x.o_level===4});
+ var tog='<div class="tog" role="group" aria-label="Niveau"><button type="button" aria-pressed="'+(CM.tab==='5')+'" onclick="setCm(\'5\')">'+esc(n5)+(rows?' ('+l5.length+')':'')+'</button><button type="button" aria-pressed="'+(CM.tab==='4')+'" onclick="setCm(\'4\')">'+esc(n4)+(rows?' ('+l4.length+')':'')+'</button></div>';
+ var lv=ME&&ME.level?ME.level.n:0,me=MYP&&MYP.pseudo,note='';
+ if(lv>=4&&MYP&&!MYP.pseudo)note='<div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>Choisissez un pseudonyme</b><div class="mute">Vous avez le niveau '+esc(ME.level.name)+' : un pseudonyme vous fait apparaître ici.</div></div><button type="button" onclick="openProfile()">Ouvrir le profil</button></div>';
+ else if(lv>0&&lv<4)note='<div class="card mute">'+(lv===3&&ME.level.next_min?'Il vous manque '+(ME.level.next_min-ME.points)+' point'+(ME.level.next_min-ME.points>1?'s':'')+' pour devenir '+esc(n4)+', premier niveau de la Communauté.':'Atteignez le niveau '+esc(n4)+' pour rejoindre la Communauté.')+'</div>';
+ var cur=CM.tab==='4'?l4:l5,body;
+ if(!rows)body='<div class="row mute" style="cursor:default">'+(CM.err?'Impossible de charger la Communauté. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
+ else if(!cur.length)body='<div class="row mute" style="cursor:default">Aucun membre '+esc(CM.tab==='4'?n4:n5)+' pour le moment.</div>';
+ else body=cur.map(function(x){return '<div class="row" style="cursor:default">'+cmAv(x)+'<div class="nm">'+esc(x.o_pseudo)+(me&&x.o_pseudo===me?' <span class="pill" style="margin:0 0 0 6px">Vous</span>':'')+'<div class="mute">'+esc(x.o_level_name)+'</div></div>'+cmChk(x.o_level,22)+'</div>'}).join('');
+ return head+tog+note+'<section class="panel" aria-live="polite">'+body+'</section>'}
 
 function openDelete(){if(!window.CURU)return;
  openSheet('Supprimer mon compte','<p style="margin:0 0 10px">Cette action est <b>définitive</b>. Seront effacés : votre compte, votre profil (nom, prénom, téléphone, photo), vos signalements, vos demandes, vos routes suivies et vos notifications.</p><p class="mute" style="margin:0 0 6px">Pour confirmer, écrivez <b>SUPPRIMER</b> ci-dessous.</p><input id="delc" autocomplete="off" autocapitalize="characters" placeholder="SUPPRIMER" oninput="document.getElementById(\'delb\').disabled=this.value.trim().toUpperCase()!==\'SUPPRIMER\'"><button type="button" id="delb" class="dng" style="width:100%;margin-top:14px" disabled onclick="doDelete()">Supprimer définitivement</button><button type="button" class="alt" style="width:100%;margin-top:8px" onclick="closeSheet()">Annuler</button>')}
@@ -803,7 +855,7 @@ function pushPrefs(){var c=window.sbClient;if(!c||!('serviceWorker' in navigator
  pushReg().then(function(reg){return reg.pushManager&&reg.pushManager.getSubscription()}).then(function(sub){if(!sub)return;
   return c.rpc('set_push_prefs',{p_endpoint:sub.endpoint,p_all:PR.req!=='mine',p_segments:S.watch.slice(0,200),p_all_stations:PR.fuel!==false,p_stations:S.fwatch.map(Number).filter(function(n){return isFinite(n)}).slice(0,200)})}).catch(function(){})}
 function pushSave(sub){var j=sub.toJSON(),c=window.sbClient;
- return c.rpc('register_push',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth}).then(function(r){if(!r.error)return;
+ return c.rpc('register_push',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth}).then(function(r){if(!r.error)return;if(r.error.code==='P0001')throw r.error;
   return c.from('push_subscriptions').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'}).then(function(r2){if(r2.error)throw r2.error})}).then(function(){pushPrefs()})}
 function pushOn(){return pushReg().then(function(reg){if(!reg.pushManager)throw new Error('push');
  return reg.pushManager.getSubscription().then(function(sub){return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)})})}).then(function(sub){return pushSave(sub)}).then(function(){PUSHON=true})}
@@ -815,7 +867,7 @@ window.pushOff=function(){return pushReg().then(function(reg){return reg.pushMan
 function askNotif(){if(!('Notification' in window))return toast('Notifications non disponibles sur cet appareil');
  Notification.requestPermission().then(function(p){if(p!=='granted'){toast('Notifications refusées');render();return}
   PUSHON=true;toast('Notifications activées, même app fermée');render();
-  pushOn().catch(function(){PUSHON=false;toast('Activation impossible sur cet appareil : réessayez');render()})})}
+  pushOn().catch(function(e){PUSHON=false;toast(e&&e.code==='P0001'&&e.message?e.message:'Activation impossible sur cet appareil : réessayez');render()})})}
 setTimeout(pushCheck,1500);
 /* Répondre : ouvre l’onglet Signaler avec le tronçon déjà choisi. Se connecter est nécessaire pour envoyer la réponse. */
 function openReply(id){id=+id;if(!seg(id))return;SEL=id;S.reply=id;setTab('report');
@@ -943,7 +995,7 @@ function syncWatch(){var c=window.sbClient;if(!c)return;
    if(add.length)return c.from('watched_segments').upsert(add.map(function(id){return {segment_id:id}}),{onConflict:'user_id,segment_id',ignoreDuplicates:true})
   })}).catch(function(){WSYNC=''})}
 window.syncWatch=syncWatch;syncWatch();
-function setTab(t){if(t!=='state'){S.focus=null;S.ts='T';S.q=''}if(t!=='fuel'){S.fs='T';S.fq=''}if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;if(t==='report'&&!setTab.w){setTab.w=1;setTimeout(function(){toast('🚫 Pas de téléphone en conduisant')},400)}S.tab=t;window.scrollTo(0,0);render()}
+function setTab(t){if(t!=='state'){S.focus=null;S.ts='T';S.q=''}if(t!=='fuel'){S.fs='T';S.fq=''}if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;if(t==='report'&&!setTab.w){setTab.w=1;setTimeout(function(){toast('🚫 Pas de téléphone en conduisant')},400)}S.tab=t;if(t==='community')cmLoad();window.scrollTo(0,0);render()}
 /* ouvre l’onglet Trafic (liste) directement sur le tronçon : il est placé en tête de liste et mis en évidence */
 function goSeg(id){S.view='list';S.zone='Tous';S.q='';S.ts='T';S.focus=id;setTab('state')}
 function setZone(z){S.focus=null;S.zone=z;render()}
@@ -1081,7 +1133,7 @@ function render(){
   /* garde ce que la personne est en train de saisir quand la page se rafraîchit */
   ['sn','sz','fn','fzone','qs','qf'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
   try{ap=ae.selectionStart||0}catch(e){}
-  v.innerHTML=offBanner()+({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV})[S.tab]();
+  v.innerHTML=offBanner()+({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV,community:communityV})[S.tab]();
   Object.keys(kv).forEach(function(i){var e=document.getElementById(i);if(e)e.value=kv[i]});
   if(af&&kv[af]!==undefined){var f=document.getElementById(af);if(f){f.focus();try{f.setSelectionRange(ap,ap)}catch(e){}}}
   if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='state'&&S.view==='map'){bindMap();lMount()}if(S.tab==='home')adInit();if(S.tab==='report'||S.tab==='fuel')geoAuto();secFit()}
@@ -1630,6 +1682,7 @@ function refreshAll(silent){
  if(REFRESHING)return Promise.resolve();REFRESHING=true;if(!silent)ptrSpin();
  var tasks=[];
  try{if(window.sbRefresh)tasks.push(window.sbRefresh())}catch(e){}
+ try{if(S.tab==='community')tasks.push(cmLoad(true))}catch(e){}
  try{if(SWR&&SWR.update)tasks.push(Promise.resolve(SWR.update()).catch(function(){}))}catch(e){}
  /* l’indicateur reste visible au moins 0,6 s ; sur réseau très lent, on ne bloque jamais plus de 8 s */
  var min=new Promise(function(r){setTimeout(r,silent?0:600)}),cap=new Promise(function(r){setTimeout(r,8000)});
