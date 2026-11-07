@@ -319,6 +319,15 @@ svg.ti{width:62px;height:62px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
 .zr .pt{font-weight:800;font-size:17px;flex:none}
 @media (max-width:340px){.bgs{grid-template-columns:1fr}.bst div{font-size:19px}}
 @media (prefers-reduced-motion:reduce){.lvb i,.zr .zbar i{transition:none}}
+.stars{display:flex;justify-content:center;gap:2px;margin-top:6px}
+.stars .starb{background:transparent;border:0;box-shadow:none;color:var(--mute);font-size:36px;line-height:1;padding:2px 6px;min-width:46px;min-height:46px;cursor:pointer;transition:transform .12s ease,color .12s ease}
+.stars .starb.on{color:var(--acc,#F2B91F)}
+.stars .starb:active{transform:scale(.88)}
+.rc{padding:10px 14px}
+.rc .stars{margin-top:2px}
+.rc .stars .starb{font-size:28px;min-width:40px;min-height:36px;padding:0 4px}
+.sum.st div{background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:26px;padding:12px 8px}
+.sum.st span{color:var(--mute)}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
@@ -516,7 +525,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-06-pt';
+var BUILD='2026-11-07-hl';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -633,12 +642,24 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
   srow('Alertes de tous les tronçons',PR.req!=='mine'?'Vous recevez les alertes de toute la ville. Désactivez pour ne garder que les tronçons que vous suivez (bouton Suivre).':'Seulement les tronçons que vous suivez (bouton Suivre). Activez pour recevoir toute la ville.',sw(PR.req!=='mine','toggleReq()','Alertes de tous les tronçons'))+
   srow('Alertes de toutes les stations',PR.fuel?'Vous recevez les alertes de toutes les stations. Désactivez pour ne garder que celles que vous suivez (bouton Suivre, onglet Essence).':'Seulement les stations que vous suivez (bouton Suivre, onglet Essence). Activez pour recevoir toutes les stations.',sw(PR.fuel,'toggleFuel()','Alertes de toutes les stations'))+
   (window.ADMIN?srow('Mode test (administrateur)','Désactive la vérification GPS pour tester de chez vous. Revient à la normale au rechargement de la page.',sw(!!S.test,'toggleTest()','Mode test')):'')+
+  (window.ADMIN?srow('Évaluations de l’app','Moyenne et nombre de notes reçues','<button type="button" class="alt" onclick="openRatings()">Voir</button>'):'')+
   srow('Vibration','Quand une alerte arrive',sw(PR.vib,'togglePR(\'vib\')','Vibration'))+
   srow('Sonnerie',PR.sound?TONES[PR.tone].n:'Désactivée','<button type="button" class="alt" onclick="openRing()">Choisir</button>')+
   srow('Alertes','Effacer toutes les alertes et demandes','<button type="button" class="alt" onclick="clearAlerts();toast(\'Alertes effacées\')">Effacer</button>')+
   srow('Données de cet appareil','Routes suivies, préférences, délais','<button type="button" class="alt" onclick="wipeLocal()">Réinitialiser</button>')+
   (window.CURU?srow('Supprimer mon compte','Efface définitivement votre compte et vos données','<button type="button" class="dng" onclick="openDelete()">Supprimer</button>'):'')+
   '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p>')}
+/* administrateur : notes (étoiles) envoyées par les utilisateurs, lues dans la table app_ratings (accès réservé par is_admin()) */
+function openRatings(){var c=window.sbClient;if(!window.ADMIN||!c)return;openSheet('Évaluations de l’app','<div id="rtc" class="mute" aria-live="polite">Chargement…</div>');
+ c.from('app_ratings').select('stars,created_at').order('created_at',{ascending:false}).limit(1000).then(function(r){var el=document.getElementById('rtc');if(!el)return;
+  if(r.error){el.textContent='Impossible de charger les notes.';return}
+  var d=r.data||[],n=d.length;if(!n){el.textContent='Aucune note pour le moment.';return}
+  var cnt=[0,0,0,0,0],sum=0,now=Date.now(),n30=0,s30=0;
+  d.forEach(function(x){var v=+x.stars;if(v<1||v>5)return;cnt[v-1]++;sum+=v;if(now-new Date(x.created_at).getTime()<30*864e5){n30++;s30+=v}});
+  var f1=function(x){return x.toFixed(1).replace('.',',')},rd=Math.round(sum/n),st='';for(var k=1;k<=5;k++)st+=k<=rd?'★':'☆';
+  var h='<div style="text-align:center"><div style="font-size:42px;font-weight:800;line-height:1">'+f1(sum/n)+'<span style="font-size:20px"> / 5</span></div><div style="color:var(--acc,#F2B91F);font-size:24px;margin-top:4px" aria-hidden="true">'+st+'</div><div class="mute">'+n+' note'+(n>1?'s':'')+(n===1000?' (les 1 000 plus récentes)':'')+(n30?' · 30 derniers jours : '+f1(s30/n30)+' ('+n30+')':'')+'</div></div>';
+  for(var j=5;j>=1;j--){var pc=Math.round(cnt[j-1]*100/n);h+='<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="width:30px">'+j+' ★</span><div style="flex:1;height:10px;border-radius:5px;background:var(--soft)"><div style="width:'+pc+'%;height:100%;border-radius:5px;background:var(--acc,#F2B91F)"></div></div><span class="mute" style="width:78px;text-align:right">'+cnt[j-1]+' ('+pc+' %)</span></div>'}
+  el.className='';el.innerHTML=h},function(){var el=document.getElementById('rtc');if(el)el.textContent='Impossible de charger les notes.'})}
 function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
 function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();pushPrefs();render()}
 function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();pushPrefs();render();openSettings()}
@@ -663,7 +684,7 @@ function pickTone(k){if(!TONES[k])return;PR.tone=k;PR.sound=true;savePR();playTo
 function setSound(){PR.sound=!PR.sound;savePR();if(PR.sound)playTone();openRing()}
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
- openSheet('Profil','<div class="mute" style="margin-bottom:6px">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+LVL_ICO[ME.level.n-1]+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
+ openSheet('Profil','<div class="mute" style="margin-bottom:6px">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
  try{window.sbClient.from('profiles').select('prenom,nom,telephone').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]})})}catch(e){}}
 function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
  var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30)};
@@ -703,7 +724,7 @@ function zrLoad(){if(!window.sbRpc||!window.UID)return Promise.resolve();
 setInterval(function(){if(window.UID&&!document.hidden)meLoad()},120000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&window.UID)meLoad()});
 function meCard(){if(!ME||!window.LOGGED)return '';var l=ME.level,p=ME.points;
- return '<div class="card" role="button" tabindex="0" aria-label="Ouvrir mes points, mon niveau et le classement des zones" onclick="openBoard()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:28px;line-height:1" aria-hidden="true">'+LVL_ICO[l.n-1]+'</span><div style="flex:1;min-width:0"><b>'+esc(l.name)+'</b><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+(p?'':'<div class="mute">Vos signalements rapportent des points quand d’autres personnes les confirment.</div>')+'</div>'}
+ return '<div class="card" role="button" tabindex="0" aria-label="Ouvrir mes points, mon niveau et le classement des zones" onclick="openBoard()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:28px;line-height:1" aria-hidden="true">'+lvIcon(l.n)+'</span><div style="flex:1;min-width:0"><b>'+esc(l.name)+'</b><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+(p?'':'<div class="mute">Vos signalements rapportent des points quand d’autres personnes les confirment.</div>')+'</div>'}
 function openBoard(tab){if(!window.CURU)return askLogin('voir vos points et le classement des zones');
  if(tab)BD.tab=tab;
  openSheet('Points et classement','<div id="bdc" aria-live="polite"></div>');
@@ -713,7 +734,7 @@ function bdFill(){var e=document.getElementById('bdc');if(!e)return;
  e.innerHTML='<div class="tog" role="group" aria-label="Affichage"><button type="button" aria-pressed="'+(BD.tab==='me')+'" onclick="bdSet(\'me\')">Mon niveau</button><button type="button" aria-pressed="'+(BD.tab==='zones')+'" onclick="bdSet(\'zones\')">Zones</button></div>'+(BD.tab==='zones'?zonesHtml():meHtml())}
 function meHtml(){if(!ME)return '<div class="mute" style="padding:20px 0;text-align:center">Chargement…</div>';
  var l=ME.level,p=ME.points,z=ME.zones||{},zk=Object.keys(z),got=ME.badges.filter(function(b){return b.earned}).length;
- return '<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span style="font-size:38px;line-height:1" aria-hidden="true">'+LVL_ICO[l.n-1]+'</span><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800">'+esc(l.name)+'</div><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+
+ return '<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span style="font-size:38px;line-height:1" aria-hidden="true">'+lvIcon(l.n)+'</span><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800">'+esc(l.name)+'</div><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+
   (ME.admin?'<div class="offl" style="margin:8px 0 0">Compte administrateur : vous ne gagnez pas de points.</div>':'')+
   '<div class="bst"><div>'+ME.week+'<span>Cette semaine</span></div><div>'+ME.validated+'<span>Validés</span></div><div>'+ME.votes+'<span>Votes</span></div></div>'+
   '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande). Chaque vote donne 1 point (10 par jour au maximum) ; une route ou une station que vous proposez, une fois publiée, rapporte 20 points.</div>'+
@@ -933,7 +954,7 @@ function welcome(){try{if(window.__wlOpen)return;window.__wlOpen=1;
  function draw(){var l=i>=n-1;dt.innerHTML=st.map(function(x,j){return '<span style="width:'+(j===i?22:8)+'px;height:8px;border-radius:4px;background:currentColor;opacity:'+(j===i?1:.35)+';transition:.2s"></span>'}).join('');
   nx.textContent=l?'Commencer':'Suivant';
   nx.style.cssText=l?'min-width:240px;min-height:52px;font-size:18px;font-weight:800;background:var(--acc,#F2B91F);color:#1b1400;border-color:transparent;animation:wlpop .45s ease-out':'min-width:200px'}
- function done(){window.__wlOpen=0;o.remove()}
+ function done(){window.__wlOpen=0;o.remove();setTimeout(ratePrompt,1500)}
  function snap(to,D){to=Math.max(0,Math.min(n-1,to));if(to!==i){i=to;draw()}go(to,D)}
  nx.onclick=function(){if(i>=n-1)done();else snap(i+1)};
  function live(){q=0;place(pos);var r=Math.max(0,Math.min(n-1,Math.round(pos)));if(r!==i){i=r;draw()}}
@@ -1344,6 +1365,32 @@ var TI={
 'Sécurité':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8fe0"/><stop offset=".55" stop-color="#2a56b5"/><stop offset="1" stop-color="#16306b"/></linearGradient></defs><path d="M32 3L55 11V30C55 44 46 55 32 61C18 55 9 44 9 30V11Z" fill="url(#tiS)" stroke="#d3dce8" stroke-width="3" stroke-linejoin="round"/><path d="M32 3L55 11V30C55 44 46 55 32 61Z" fill="#000" opacity=".2"/><path d="M32 9L49 15V30C49 41 42 49 32 54C22 49 15 41 15 30V15Z" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.500"/><path d="M32 18l3.500 7.500 8 1-5.900 5.600 1.600 8L32 36l-7.200 4.100 1.600-8-5.900-5.600 8-1z" fill="#f6c431" stroke="#a87a0b" stroke-width="1" stroke-linejoin="round"/></svg>',
 'Cloche':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiB" x1="0" x2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".45" stop-color="#f2b91f"/><stop offset="1" stop-color="#a86f06"/></linearGradient></defs><path d="M32 5a3.500 3.500 0 0 1 3.500 3.500v1.800C42.500 12 47 18 47 26v10l6 8v3H11v-3l6-8V26c0-8 4.500-14 11.500-15.700V8.500A3.500 3.500 0 0 1 32 5z" fill="url(#tiB)" stroke="#8a5a05" stroke-width="1.200"/><path d="M22 27c0-5 3-9 7-10.500" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.500" stroke-linecap="round"/><path d="M24 49a8 8 0 0 0 16 0z" fill="#b57c0b" stroke="#7a5004" stroke-width="1"/><circle cx="48" cy="14" r="8" fill="#e5303a" stroke="#fff" stroke-width="2"/><rect x="47" y="9.500" width="2" height="6" rx="1" fill="#fff"/><circle cx="48" cy="18" r="1.200" fill="#fff"/></svg>',
 'WhatsApp':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiW" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5cf08a"/><stop offset="1" stop-color="#119c4a"/></linearGradient></defs><path d="M32 4a27 27 0 0 0-23.300 40.600L5 60l15.800-3.600A27 27 0 1 0 32 4z" fill="url(#tiW)" stroke="#0d7a39" stroke-width="1.500"/><path d="M23.500 18.500c-1.300 0-2.700 1.200-3.200 2.800-1 3.100.4 7.300 4.300 11.700 4 4.400 8.600 6.800 12 6.400 1.700-.2 3.100-1.700 3.300-3.100.1-.5-.1-1-.5-1.200l-4.100-2.100c-.5-.2-1.100-.1-1.400.4l-1.400 1.700c-.3.400-.8.500-1.300.3-2.700-1.200-5.100-3.700-6.400-6.300-.2-.4-.1-.9.2-1.300l1.400-1.600c.3-.4.400-.9.100-1.400l-2.100-3.800c-.2-.4-.6-.6-1.100-.6z" fill="#fff"/></svg>'};
+/* ===== Évaluer l’app : 5 étoiles sur l’Accueil + rappel à l’écran tous les 15 jours après la première utilisation ===== */
+var RK='trafik-rating',RF='trafik-first',RN='trafik-rate-next',RDAYS=15*864e5;
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+(function(){if(!lsGet(RF)){var n=Date.now();lsSet(RF,n);lsSet(RN,n+RDAYS)}})();
+function myRate(){var r=lsGet(RK);return r&&r.v>=1&&r.v<=5?r:null}
+function starsHtml(cur,fn){var h='<div class="stars" role="group" aria-label="Votre note sur 5">';for(var k=1;k<=5;k++)h+='<button type="button" class="starb'+(k<=cur?' on':'')+'" aria-label="'+k+' étoile'+(k>1?'s':'')+' sur 5" aria-pressed="'+(k===cur)+'" onclick="'+fn+'('+k+')">★</button>';return h+'</div>'}
+function rateCard(){var r=myRate();
+ return '<div class="card rc" style="text-align:center"><b>'+(r?'Merci pour votre note !':'Aimez-vous Trafik ? Notez-le')+'</b>'+starsHtml(r?r.v:0,'rateSet')+'</div>'}
+function rateSend(v){try{var c=window.sbClient;if(c&&c.from)c.from('app_ratings').insert({stars:v}).then(function(){},function(){})}catch(e){}}
+function rateSet(v,fromPrompt){lsSet(RK,{v:v,t:Date.now()});lsSet(RN,Date.now()+RDAYS);rateSend(v);if(fromPrompt===true)closeSheet();toast('Merci pour votre note : '+v+'/5');render()}
+function ratePromptSet(v){rateSet(v,true)}
+function ratePrompt(){if(window.__wlOpen||document.getElementById('sheet'))return;var nx=lsGet(RN);if(!nx||Date.now()<nx)return;lsSet(RN,Date.now()+RDAYS);var r=myRate();
+ openSheet('Que pensez-vous de Trafik ?','<div class="mute" style="text-align:center">'+(r?'Vous aviez mis '+r.v+'/5. Votre avis a-t-il changé ?':'Votre avis nous aide à améliorer l’app.')+'</div>'+starsHtml(r?r.v:0,'ratePromptSet')+'<button type="button" class="alt" style="width:100%;margin-top:10px" onclick="closeSheet()">Plus tard</button>')}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(ratePrompt,1500)});
+setInterval(ratePrompt,3600000);
+/* pastille de niveau : anneau + numéro, dans le style des icônes de l’app (remplace les emojis) */
+function lvIcon(n){return '<svg viewBox="0 0 40 40" aria-hidden="true" style="width:1em;height:1em;vertical-align:middle"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--acc,#F2B91F)" stroke-width="2.5"/><text x="20" y="27.5" text-anchor="middle" font-size="22" font-weight="800" fill="var(--acc,#F2B91F)" font-family="inherit">'+n+'</text></svg>'}
+/* visiteur non connecté : invitation à se connecter pour gagner des points */
+function ptsCta(){return '<div class="card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:32px;height:32px;flex:0 0 auto;stroke:var(--acc,#F2B91F);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">'+MI.trophy+'</svg><div style="flex:1;min-width:180px"><b>Gagnez des points en aidant la communauté</b><div class="mute">Signalez, votez et répondez aux demandes !</div></div><a class="btn primary" href="auth.html" style="flex:0 0 auto">Se connecter</a></div>'}
+/* statistiques du jour (heure d’Haïti) : totaux calculés côté serveur par get_daily_stats, sans donnée personnelle */
+var DS={d:null,t:0,busy:0,fail:0};
+function dailyFetch(){if(DS.busy||DS.fail||Date.now()-DS.t<60000||!window.sbRpc)return;DS.busy=1;
+ window.sbRpc('get_daily_stats').then(function(r){var d=r&&r.data;DS.busy=0;DS.t=Date.now();if(!d||typeof d.reports!=='number')return;var ch=JSON.stringify(d)!==JSON.stringify(DS.d);DS.d=d;if(ch&&S.tab==='home')render()},function(){DS.busy=0;DS.t=Date.now();if(!DS.d)DS.fail=1})}
+function dailyHtml(){dailyFetch();if(DS.fail&&!DS.d)return '';var d=DS.d||{},v=function(k){return typeof d[k]==='number'?d[k]:'–'},B=[['reports','Signalements'],['routes','Routes mises à jour'],['stations','Stations mises à jour'],['votes','Votes']];
+ return '<div class="hd" style="margin-top:16px">Aujourd’hui</div><div class="sum st" style="grid-template-columns:repeat(2,1fr);margin-top:6px">'+B.map(function(b){return '<div>'+v(b[0])+'<span>'+b[1]+'</span></div>'}).join('')+'</div>'+(typeof d.people==='number'?'<div class="mute" style="text-align:center;margin-top:8px">'+d.people+' contributeur'+(d.people>1?'s':'')+' aujourd’hui</div>':'')}
 function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3)c[k]++});
  var T=[['state','Trafic','Liste des routes','S.view=\'list\''],['state','Carte','Vue d’ensemble','S.view=\'map\''],['fuel','Essence','Stations ouvertes',''],['sec','Sécurité','Alertes 48 h','']];
  var r=recent();
@@ -1354,12 +1401,12 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  return instBtn()+'<div class="hd" style="margin-top:8px">Circulation</div><div class="sum" style="margin-top:6px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.view=\'list\';S.zone=\'Tous\';S.ts=\''+i+'\';setTab(\'state\')">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
  (np?'<div class="mute" style="margin-top:8px;text-align:center">+ '+np+' état'+(np>1?'s':'')+' en attente de confirmation (voir Trafic)</div>':'')+
  '<div class="hl"></div><div class="hd" style="margin-top:12px">Essence</div><div class="sum" style="margin-top:6px">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.fz=\'Tous\';S.fs=\''+i+'\';setTab(\'fuel\')">'+fc[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
- '<div class="hl"></div><div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
- meCard()+'<div class="sep"><span>En direct</span></div>'+
+ (window.LOGGED===false?ptsCta():meCard())+'<div class="hl"></div><div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
+ dailyHtml()+'<div class="sep"><span>En direct</span></div>'+
  (r.length?secItem(r[0],1).replace('<div class="card" style="','<div class="card" role="button" tabindex="0" aria-label="Ouvrir Sécurité" onclick="setTab(\'sec\')" onkeydown="if(event.key===\'Enter\')this.click()" style="cursor:pointer;'):'')+
  dropPanel('bad','Routes à éviter',bad.length,bad.length?bad.map(function(s){return miniSeg(s[0],1)}).join(''):'<div class="row mute" style="cursor:default">Aucune route avec alerte de sécurité rouge</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Tout voir</button>')+
  dropPanel('mine','Mes routes',S.watch.length,S.watch.length?S.watch.map(function(id){return miniSeg(id)}).join(''):'<div class="row mute" style="cursor:default">Aucune route suivie</div>',alertN()?'<button class="lnk" onclick="setTab(\'alerts\')">Alertes ('+alertN()+')</button>':'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
- '<button class="cta" onclick="setTab(\'report\')"><b>Vous êtes sur la route ?</b><span>Signalez en 1 touche</span></button>'+adsHtml()
+ '<button class="cta" onclick="setTab(\'report\')"><b>Vous êtes sur la route ?</b><span>Signalez en 1 touche</span></button>'+'<div class="hl"></div>'+rateCard()+adsHtml()
 }
 function reportV(){var gd='',pend=SEG.filter(function(s){return openReq(s[0])});var rp=(S.reply&&S.reply===SEL&&seg(SEL))?'<div class="card"><b>Vous répondez à une demande</b><div class="al">'+esc(seg(SEL)[1])+'</div></div>':'';return rp+(pend.length?'<div class="card"><b>On attend votre réponse</b>'+pend.map(function(s){return '<div class="al">'+s[1]+'</div>'}).join('')+'</div>':'')+heroCta('Signalez en 1 touche')+
   '<div class="card"><label for="sg">Tronçon</label><select id="sg" onchange="SEL=+this.value;render()">'+segSorted().map(function(s){return '<option value="'+s[0]+'"'+(s[0]===SEL?' selected':'')+'>'+s[1]+'</option>'}).join('')+'</select>'+geoNote('seg',SEL)+
@@ -1379,7 +1426,7 @@ function alertsV(){
   var su=alKind('suivi').map(item),rc=alKind('reception').map(item),va=alKind('valide').map(item);
   var clr=function(k,n){return n?'<button class="lnk" onclick="clearKind(\''+k+'\')">Tout effacer</button>':''};
   return nb+
-   dropPanel('a_w','Routes suivies',S.watch.length,S.watch.length?S.watch.map(miniSeg).join(''):EMPTY('Aucune route suivie'),'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>',1)+
+   dropPanel('a_w','Routes suivies',S.watch.length,S.watch.length?S.watch.map(function(id){return miniSeg(id)}).join(''):EMPTY('Aucune route suivie'),'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>',1)+
    dropPanel('a_rq','Demandes d’état des routes',rq.length,rq.length?rq.join(''):EMPTY('Personne ne demande l’état d’une route'),clr('demande',rq.length),1)+
    dropPanel('a_su','Changements sur mes routes',su.length,su.length?su.join(''):EMPTY('Aucun changement sur vos routes suivies'),clr('suivi',su.length),1)+
    dropPanel('a_va','États validés par vote',va.length,va.length?va.join(''):EMPTY('Aucun état validé récemment'),clr('valide',va.length),1)+
