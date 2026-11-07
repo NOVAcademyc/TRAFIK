@@ -298,6 +298,27 @@ svg.ti{width:62px;height:62px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
 .seg .b>div:first-child{flex-wrap:nowrap;align-items:flex-start}
 .seg .b>div:first-child h3{flex:1 1 auto;min-width:0}
 .seg .b>div:first-child .pinb{flex:none;margin:0 0 0 4px!important}
+/* points, niveaux, badges et classement des zones */
+.lvb{height:10px;border-radius:999px;background:var(--soft);overflow:hidden;margin:8px 0 6px}
+.lvb i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2F6BFF,#FF2D3F);transition:width .4s ease}
+.bst{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.bst div{background:var(--soft);border-radius:14px;padding:10px 6px;text-align:center;font-weight:800;font-size:22px;line-height:1.1}
+.bst span{display:block;font-size:11.5px;font-weight:600;color:var(--mute);margin-top:3px}
+.bgs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bg{background:var(--soft);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:3px;min-height:96px}
+.bg .ic{font-size:26px;line-height:1}
+.bg b{font-size:13.5px;line-height:1.25}
+.bg small{color:var(--mute);font-size:12px;line-height:1.3}
+.bg.lk{opacity:.5}.bg.lk .ic{filter:grayscale(1)}
+.zr{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.zr .rk{width:30px;flex:none;text-align:center;font-weight:800;font-size:18px}
+.zr .zb{flex:1;min-width:0}
+.zr .zb b{font-size:15px}
+.zr .zbar{height:6px;border-radius:999px;background:var(--soft);overflow:hidden;margin-top:6px}
+.zr .zbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2F6BFF,#FF2D3F);transition:width .4s ease}
+.zr .pt{font-weight:800;font-size:17px;flex:none}
+@media (max-width:340px){.bgs{grid-template-columns:1fr}.bst div{font-size:19px}}
+@media (prefers-reduced-motion:reduce){.lvb i,.zr .zbar i{transition:none}}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
@@ -495,7 +516,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-04-al';
+var BUILD='2026-11-06-pt';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -571,7 +592,8 @@ var MI={
  dl:'<path d="M12 3v12M7 10l5 5 5-5M5 20h14"/>',
  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
- out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
+ out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+ trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'
 };
 function mi(ic,txt,fn,sub,cls){return '<button type="button" class="mi'+(cls?' '+cls:'')+'" role="menuitem" onclick="closeMenu();'+fn+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+MI[ic]+'</svg><span>'+txt+(sub?'<small>'+sub+'</small>':'')+'</span></button>'}
 function userName(u){var md=(u&&u.user_metadata)||{};return ((md.prenom||'')+' '+(md.nom||'')).trim()||(u&&u.email)||''}
@@ -582,6 +604,7 @@ function buildMenu(){var u=window.CURU,m=document.getElementById('menu'),h='';
  if(u)h+='<div class="mhead"><span class="av">'+esc(String(((u.user_metadata||{}).prenom||u.email||'?')).charAt(0).toUpperCase())+'</span><div><b>'+esc(userName(u))+'</b><small>'+esc(u.email||'')+'</small></div></div>';
  else h+='<div class="mhead"><div><b>Bienvenue</b><small>Connectez-vous pour signaler et suivre des routes</small></div></div>';
  h+=(u?mi('user','Profil','openProfile()','Nom, téléphone'):'')+
+  (u?mi('trophy','Points et classement','openBoard()',ME?esc(ME.level.name)+' · '+ME.points+' pt'+(ME.points>1?'s':''):'Niveau, badges, zones'):'')+
   mi('gear','Paramètres','openSettings()','Notifications, vibration')+
   mi('ring','Sonnerie','openRing()',PR.sound?TONES[PR.tone].n:'Désactivée')+
   mi('route','Mes routes suivies','setTab(\'alerts\')',S.watch.length+' route'+(S.watch.length>1?'s':''))+
@@ -640,7 +663,7 @@ function pickTone(k){if(!TONES[k])return;PR.tone=k;PR.sound=true;savePR();playTo
 function setSound(){PR.sound=!PR.sound;savePR();if(PR.sound)playTone();openRing()}
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
- openSheet('Profil','<div class="mute" style="margin-bottom:6px">'+esc(u.email||'')+'</div>'+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
+ openSheet('Profil','<div class="mute" style="margin-bottom:6px">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+LVL_ICO[ME.level.n-1]+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+'<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
  try{window.sbClient.from('profiles').select('prenom,nom,telephone').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]})})}catch(e){}}
 function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
  var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30)};
@@ -653,6 +676,55 @@ function doDelete(){var b=document.getElementById('delb');if(b){b.disabled=true;
   ['trafik-v1','trafik-alerts','trafik-dis','trafik-cool','trafik-prefs'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});
   return window.sbClient.auth.signOut({scope:'local'}).catch(function(){})}).then(function(){toast('Compte supprimé');setTimeout(function(){location.reload()},900)}).catch(function(e){
   toast(e&&e.code==='P0001'&&e.message?e.message:'Échec de la suppression : réessayez');if(b){b.disabled=false;b.textContent='Supprimer définitivement'}})}
+/* ===== Points, niveaux, badges et classement des zones =====
+   Tout est calculé par la base (déclencheurs et fonctions Supabase) : l'app ne fait que lire et afficher.
+   Un signalement rapporte des points seulement quand d'autres personnes le confirment ; la compétition se joue entre zones, sans classement de personnes. */
+var ME=null,ZR=null,BD={tab:'me'},MEK='trafik-pts',LVL_ICO=['🌱','🔦','🛡️','🏅','🏆'];
+function lvPct(l,p){if(!l.next_min)return 100;return Math.max(0,Math.min(100,Math.round((p-l.min)/(l.next_min-l.min)*100)))}
+function lvTxt(l,p){var r=l.next_min-p;return l.next_min?r+' point'+(r>1?'s':'')+' avant '+esc(l.next_name):'Niveau maximum atteint'}
+function lvBar(l,p){var v=lvPct(l,p);return '<div class="lvb" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+v+'" aria-label="Progression vers le niveau suivant"><i style="width:'+v+'%"></i></div>'}
+/* alertes de la cloche quand des points arrivent (même app fermée : on compare à la dernière valeur vue sur cet appareil) */
+function meCompare(d){try{var uid=window.UID,codes=d.badges.filter(function(b){return b.earned}).map(function(b){return b.code}),s=JSON.parse(localStorage.getItem(MEK)||'null');
+ localStorage.setItem(MEK,JSON.stringify({u:uid,p:d.points,v:d.validated,pr:d.proposals,lv:d.level.n,b:codes}));
+ if(!s||s.u!==uid||d.admin)return;
+ var msg=[],gain=d.points-s.p;
+ if(d.validated>s.v)msg.push('Votre signalement a été validé par la communauté (+'+gain+' point'+(gain>1?'s':'')+')');
+ else if(d.proposals>s.pr)msg.push('Votre proposition a été publiée : merci ! (+'+gain+' points)');
+ if(d.level.n>s.lv)msg.push('🏆 Nouveau niveau : '+esc(d.level.name));
+ d.badges.forEach(function(b){if(b.earned&&(s.b||[]).indexOf(b.code)<0)msg.push(esc(b.icon)+' Nouveau badge : '+esc(b.name))});
+ msg.forEach(function(t){pushAlert({t:hhmm(Date.now()),txt:t,l:0,k:'valide'});toast(dec(t))})}catch(e){}}
+function meLoad(){if(!window.sbRpc||!window.UID)return Promise.resolve();
+ return window.sbRpc('get_my_stats').then(function(r){var d=r&&r.data;if(!d||typeof d.points!=='number'||!d.level||!Array.isArray(d.badges))return;
+  var ch=!ME||ME.points!==d.points||ME.week!==d.week;meCompare(d);ME=d;
+  if(document.getElementById('bdc'))bdFill();
+  if(ch&&S.tab==='home')render()}).catch(function(){})}
+function zrLoad(){if(!window.sbRpc||!window.UID)return Promise.resolve();
+ return window.sbRpc('get_zone_ranking').then(function(r){if(r&&Array.isArray(r.data)){ZR=r.data;if(document.getElementById('bdc'))bdFill()}}).catch(function(){})}
+setInterval(function(){if(window.UID&&!document.hidden)meLoad()},120000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&window.UID)meLoad()});
+function meCard(){if(!ME||!window.LOGGED)return '';var l=ME.level,p=ME.points;
+ return '<div class="card" role="button" tabindex="0" aria-label="Ouvrir mes points, mon niveau et le classement des zones" onclick="openBoard()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:28px;line-height:1" aria-hidden="true">'+LVL_ICO[l.n-1]+'</span><div style="flex:1;min-width:0"><b>'+esc(l.name)+'</b><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+(p?'':'<div class="mute">Vos signalements rapportent des points quand d’autres personnes les confirment.</div>')+'</div>'}
+function openBoard(tab){if(!window.CURU)return askLogin('voir vos points et le classement des zones');
+ if(tab)BD.tab=tab;
+ openSheet('Points et classement','<div id="bdc" aria-live="polite"></div>');
+ bdFill();meLoad();zrLoad()}
+function bdSet(t){BD.tab=t;bdFill();if(t==='zones')zrLoad()}
+function bdFill(){var e=document.getElementById('bdc');if(!e)return;
+ e.innerHTML='<div class="tog" role="group" aria-label="Affichage"><button type="button" aria-pressed="'+(BD.tab==='me')+'" onclick="bdSet(\'me\')">Mon niveau</button><button type="button" aria-pressed="'+(BD.tab==='zones')+'" onclick="bdSet(\'zones\')">Zones</button></div>'+(BD.tab==='zones'?zonesHtml():meHtml())}
+function meHtml(){if(!ME)return '<div class="mute" style="padding:20px 0;text-align:center">Chargement…</div>';
+ var l=ME.level,p=ME.points,z=ME.zones||{},zk=Object.keys(z),got=ME.badges.filter(function(b){return b.earned}).length;
+ return '<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span style="font-size:38px;line-height:1" aria-hidden="true">'+LVL_ICO[l.n-1]+'</span><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800">'+esc(l.name)+'</div><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+
+  (ME.admin?'<div class="offl" style="margin:8px 0 0">Compte administrateur : vous ne gagnez pas de points.</div>':'')+
+  '<div class="bst"><div>'+ME.week+'<span>Cette semaine</span></div><div>'+ME.validated+'<span>Validés</span></div><div>'+ME.votes+'<span>Votes</span></div></div>'+
+  '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande). Chaque vote donne 1 point (10 par jour au maximum) ; une route ou une station que vous proposez, une fois publiée, rapporte 20 points.</div>'+
+  (zk.length?'<div class="mute" style="margin-top:10px">Votre contribution cette semaine : '+zk.map(function(k){return '<b>'+esc(k)+'</b> '+z[k]+' pt'+(z[k]>1?'s':'')}).join(' · ')+'</div>':'')+
+  '<h3 style="margin:16px 0 8px;font-size:16px">Badges ('+got+'/'+ME.badges.length+')</h3><div class="bgs">'+ME.badges.map(function(b){return '<div class="bg'+(b.earned?'':' lk')+'" role="group" aria-label="'+esc(b.name)+(b.earned?' : obtenu':' : verrouillé')+'"><span class="ic" aria-hidden="true">'+esc(b.icon)+'</span><b>'+esc(b.name)+'</b><small>'+esc(b.descr)+'</small></div>'}).join('')+'</div>'}
+function zonesHtml(){var h='<div class="mute" style="margin:12px 0 4px">Les zones se disputent la semaine : chaque point gagné compte pour la zone concernée. Remise à zéro chaque lundi.</div>';
+ if(!ZR)return h+'<div class="mute" style="padding:20px 0;text-align:center">Chargement…</div>';
+ var mx=Math.max.apply(null,ZR.map(function(x){return x.o_points}).concat([1])),my=(ME&&ME.zones)||{},tot=ZR.reduce(function(s,x){return s+x.o_points},0);
+ if(!tot)h+='<div class="offl" style="margin:8px 0">Aucun point cette semaine : soyez les premiers à faire gagner votre zone.</div>';
+ return h+ZR.map(function(x){var mine=my[x.o_zone],md=x.o_points&&x.o_rank<=3?['🥇','🥈','🥉'][x.o_rank-1]:(x.o_points?x.o_rank:'–');
+  return '<div class="zr"><span class="rk"'+(x.o_points?' aria-label="Rang '+x.o_rank+'"':'')+'>'+md+'</span><div class="zb"><b>'+esc(x.o_zone)+'</b><div class="mute">'+x.o_valid+' validé'+(x.o_valid>1?'s':'')+' · '+x.o_people+' personne'+(x.o_people>1?'s':'')+(mine?' · vous : '+mine+' pt'+(mine>1?'s':''):'')+'</div><div class="zbar"><i style="width:'+Math.round(x.o_points/mx*100)+'%"></i></div></div><span class="pt">'+x.o_points+'</span></div>'}).join('')}
 function openAbout(){openSheet('Aide et à propos',
  '<p style="margin:0 0 10px">Trafik montre l’état de la circulation et des stations-service de Port-au-Prince, d’après les signalements de la communauté.</p>'+
  '<div class="srow"><div><b>Comment ça marche</b><div class="mute">● Fluide, ▲ Ralenti, ■ Bloqué. Un état s’affiche quand au moins '+QUORUM+' personnes différentes le confirment (un signalement compte pour un vote positif ; « Confirmer » et « Contester » sont réservés aux personnes à proximité). Si les votes négatifs dépassent les positifs, ou en cas d’égalité, l’état repasse à « Pas d’info ».</div></div></div>'+
@@ -809,7 +881,7 @@ function toggle(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toa
  if(window.sbClient&&window.LOGGED){var q=window.sbClient.from('watched_segments');(on?q.upsert({segment_id:id},{onConflict:'user_id,segment_id',ignoreDuplicates:true}):q.delete().eq('segment_id',id)).then(function(){},function(){})}}
 var WSYNC='';
 function syncWatch(){var c=window.sbClient;if(!c)return;
- c.auth.getSession().then(function(r){var u=r.data&&r.data.session&&r.data.session.user;if(u){pendingReply();pushCheck()}if(!u||WSYNC===u.id)return;WSYNC=u.id;
+ c.auth.getSession().then(function(r){var u=r.data&&r.data.session&&r.data.session.user;if(u){pendingReply();pushCheck();meLoad()}if(!u||WSYNC===u.id)return;WSYNC=u.id;
   return c.from('watched_segments').select('segment_id').then(function(r2){if(r2.error)throw r2.error;
    var srv=r2.data.map(function(x){return Number(x.segment_id)}),add=S.watch.filter(function(id){return srv.indexOf(id)<0});
    srv.forEach(function(id){if(S.watch.indexOf(id)<0)S.watch.push(id)});save();render();pushPrefs();
@@ -841,7 +913,7 @@ function digestCheck(){try{var d=new Date(),h=d.getHours(),k=d.toDateString();if
  localStorage.setItem('trafik-dg',k);
  pushAlert({t:d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:'Avant de partir : '+ids.map(function(id){return dec(seg(id)[1])+' '+LV[status(id)].i}).join(' · '),l:Math.max.apply(null,ids.map(function(id){return status(id)})),k:'suivi'})}catch(e){}}
 setTimeout(digestCheck,4000);setInterval(digestCheck,600000);
-function repBump(){try{var n=(+localStorage.getItem('trafik-rep')||0)+1;localStorage.setItem('trafik-rep',n);if([5,10,25,50,100,250].indexOf(n)>=0)setTimeout(function(){toast('🏅 '+n+' signalements : merci pour votre aide !')},2800)}catch(e){}}
+function repBump(){setTimeout(meLoad,1500);try{var n=(+localStorage.getItem('trafik-rep')||0)+1;localStorage.setItem('trafik-rep',n);if([5,10,25,50,100,250].indexOf(n)>=0)setTimeout(function(){toast('🏅 '+n+' signalements : merci pour votre aide !')},2800)}catch(e){}}
 function cylBuild(stg,st,W){var H=W*54/85.6,N=8,n=st.length,R=n*W/(2*Math.PI),sw=2*R*Math.sin(Math.PI/(n*N))+1,cyl=document.createElement('div'),cards=[];
  cyl.style.cssText='position:absolute;left:0;top:0;width:'+W+'px;height:'+H+'px;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;will-change:transform';
  st.forEach(function(x,j){var cd=document.createElement('div'),h='';cd.style.cssText='position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d';
@@ -1283,7 +1355,7 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  (np?'<div class="mute" style="margin-top:8px;text-align:center">+ '+np+' état'+(np>1?'s':'')+' en attente de confirmation (voir Trafic)</div>':'')+
  '<div class="hl"></div><div class="hd" style="margin-top:12px">Essence</div><div class="sum" style="margin-top:6px">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.fz=\'Tous\';S.fs=\''+i+'\';setTab(\'fuel\')">'+fc[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
  '<div class="hl"></div><div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
- '<div class="sep"><span>En direct</span></div>'+
+ meCard()+'<div class="sep"><span>En direct</span></div>'+
  (r.length?secItem(r[0],1).replace('<div class="card" style="','<div class="card" role="button" tabindex="0" aria-label="Ouvrir Sécurité" onclick="setTab(\'sec\')" onkeydown="if(event.key===\'Enter\')this.click()" style="cursor:pointer;'):'')+
  dropPanel('bad','Routes à éviter',bad.length,bad.length?bad.map(function(s){return miniSeg(s[0],1)}).join(''):'<div class="row mute" style="cursor:default">Aucune route avec alerte de sécurité rouge</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Tout voir</button>')+
  dropPanel('mine','Mes routes',S.watch.length,S.watch.length?S.watch.map(function(id){return miniSeg(id)}).join(''):'<div class="row mute" style="cursor:default">Aucune route suivie</div>',alertN()?'<button class="lnk" onclick="setTab(\'alerts\')">Alertes ('+alertN()+')</button>':'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>')+
@@ -1414,7 +1486,7 @@ function vote(kind,id,val){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return t
  var ck='v:'+kind+':'+id,m=coolLeft(ck);if(m)return toast('Vous avez déjà voté ici. Vous pourrez voter à nouveau dans '+m+' min.');
  needLogin(function(){geoGate(kind,id,function(){
   if(!DB)return toast('Connexion indisponible : réessayez dans un instant');
-  DB.collection('votes').add({kind:kind,id:id,lvl:k,val:val}).then(function(){coolMark(ck);VOTES.push({k:kind,id:id,lvl:k,val:val,u:window.UID,t:Date.now()});render();toast(val>0?'Merci ! Vote positif enregistré':'Merci ! Vote négatif enregistré')}).catch(function(e){toast(e&&e.code==='P0001'?e.message:'Échec du vote : réessayez plus tard')})})},'voter',['vote',kind,id,val])}
+  DB.collection('votes').add({kind:kind,id:id,lvl:k,val:val}).then(function(){coolMark(ck);VOTES.push({k:kind,id:id,lvl:k,val:val,u:window.UID,t:Date.now()});render();setTimeout(meLoad,1200);toast(val>0?'Merci ! Vote positif enregistré':'Merci ! Vote négatif enregistré')}).catch(function(e){toast(e&&e.code==='P0001'?e.message:'Échec du vote : réessayez plus tard')})})},'voter',['vote',kind,id,val])}
 function voteRow(kind,id){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return '';
  var gd='',t=tally(kind,id,k,kind==='seg'?45*MIN:FMIN*MIN),j=jid(id);
  return ''+'<div class="fb"><button class="alt"'+gd+' aria-label="Confirmer cet état" onclick="vote(\''+kind+'\','+j+',1)">👍 Confirmer'+(window.ADMIN?' ('+t.p+')':'')+'</button><button class="alt"'+gd+' aria-label="Contester cet état" onclick="vote(\''+kind+'\','+j+',-1)">👎 Contester'+(window.ADMIN?' ('+t.n+')':'')+'</button></div>'}
