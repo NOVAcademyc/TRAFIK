@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
 <meta name="apple-mobile-web-app-title" content="Trafik">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -69,8 +70,12 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 14p
 button:active{transform:scale(.97)}
 button.alt{background:var(--soft);color:var(--ink)}
 button.on{background:var(--main);color:var(--on)}
-button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-select,input{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:48px}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+select,input,textarea{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:48px}
+textarea{min-height:92px;resize:vertical;line-height:1.35;display:block}
+.stcap{margin:12px 0 0;overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;-webkit-touch-callout:none}
+.stcnt{text-align:right;font-size:12.5px;margin-top:4px}
+.stcap a{color:var(--ink);font-weight:700;text-decoration:underline;word-break:break-all}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:14px;margin-top:12px;box-shadow:var(--sh)}
 label{display:block;font-size:14px;color:var(--mute);margin:10px 0 6px;font-weight:600}
 .big{display:grid;gap:10px;margin-top:14px}
@@ -87,7 +92,7 @@ nav button[aria-current="page"]{color:var(--ink)}
 nav button[aria-current="page"]::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;border-radius:0 0 4px 4px;background:var(--acc)}
 .fb{display:flex;gap:6px;margin-top:10px}
 .fb button{flex:1;padding:8px 4px;font-size:14px}
-#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:92%;text-align:center;z-index:50;box-shadow:var(--sh)}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:92%;text-align:center;z-index:100000;box-shadow:var(--sh)}
 #toast.show{opacity:1}
 @media (min-width:720px){.list{grid-template-columns:1fr 1fr}.big{grid-template-columns:repeat(3,1fr)}.big button{flex-direction:column;text-align:center;justify-content:center}main{padding:6px 24px 24px}}
 @media (max-width:520px){.top-in{flex-wrap:nowrap}.top .btn{min-height:40px;padding:0 12px;font-size:14px}.authbar{gap:6px}.brand .sub{display:none}h1{font-size:18px}.logo{width:36px;height:36px}.seg .a{padding:8px 8px 8px 0}.seg .a button{min-height:38px;padding:6px 12px;font-size:13px;width:100%}}
@@ -217,7 +222,7 @@ nav{left:50%;right:auto;width:100%;max-width:var(--w);transform:translateX(-50%)
 @keyframes ring{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
 .ibtn.ring svg{animation:ring .9s ease-in-out;transform-origin:50% 10%}
 @media (prefers-reduced-motion:reduce){.ibtn.ring svg{animation:none}}
-.menu{position:absolute;right:0;top:calc(100% + 10px);width:min(300px,calc(100vw - 24px));background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);padding:6px;z-index:70}
+.menu{position:absolute;right:0;top:calc(100% + 10px);width:min(300px,calc(100vw - 24px));background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);padding:6px;z-index:70;max-height:calc(100vh - 100px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));max-height:calc(100dvh - 100px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .mhead{display:flex;align-items:center;gap:10px;padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
 .mhead b{display:block;font-size:15px}.mhead small,.mi small{display:block;color:var(--mute);font-size:12.5px;font-weight:500}
 .mrow{display:flex;gap:8px;padding:10px}.mrow .btn{flex:1;min-height:40px;font-size:14px}
@@ -226,6 +231,12 @@ nav{left:50%;right:auto;width:100%;max-width:var(--w);transform:translateX(-50%)
 .mi svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.9}
 .mi.out{color:#EE6A6A}.msep{height:1px;background:var(--line);margin:4px 6px}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.aud{display:flex;flex-direction:column;gap:8px;margin:8px 0 4px}
+.aud button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;min-height:48px;font-size:15px;font-weight:600}
+.aud button i{width:20px;height:20px;border-radius:50%;border:2px solid var(--mute);flex:none;box-sizing:border-box}
+.aud button[aria-checked="true"]{border-color:var(--main);background:var(--soft)}
+.aud button[aria-checked="true"] i{border:6px solid var(--main)}
+.aud button em{font-style:normal;margin-left:auto;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
 .sw{width:50px;min-height:30px;height:30px;padding:0;border-radius:15px;background:var(--soft);position:relative;flex:none}
 .sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#8a949b;transition:left .15s}
 .sw[aria-checked="true"]{background:var(--g)}.sw[aria-checked="true"] i{left:23px;background:#fff}
@@ -291,7 +302,7 @@ html,body{overscroll-behavior-y:contain}
   radial-gradient(60% 32% at 0% 30%,rgba(30,100,255,.28),transparent 70%),
   #060A1C}
 /* icônes de l'écran de bienvenue : illustrations en couleurs */
-svg.ti{width:62px;height:62px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
+svg.ti{width:62px;height:62px}
 /* listes : une seule colonne (les cartes en 2 colonnes étaient trop étroites : les boutons se chevauchaient) */
 .list{grid-template-columns:1fr!important}
 .seg .a{flex:none}
@@ -346,6 +357,17 @@ svg.ti{width:62px;height:62px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
 .cav{width:44px;height:44px;border-radius:50%;flex:none;overflow:hidden;background:var(--acc);color:#2b2000;display:grid;place-items:center;font-weight:800;font-size:18px}
 .cav img{width:100%;height:100%;object-fit:cover;display:block}
 .panel>.row:first-child{border-top:0}
+/* statuts (niveaux Gardien et Légende) : bandeau de pastilles, comme les statuts WhatsApp */
+.sth{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sts{display:flex;gap:12px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.sts::-webkit-scrollbar{display:none}
+.stb{background:none;flex:none;width:70px;padding:0;min-height:0;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--ink);font-weight:600}
+.str{width:62px;height:62px;border-radius:50%;padding:3px;border:2.5px solid var(--line);display:grid;place-items:center;overflow:hidden;background:var(--soft);font-weight:800;font-size:20px}
+.str.un{border-color:var(--acc)}
+.str img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.stn{font-size:12px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stv img{width:100%;max-height:62vh;object-fit:contain;border-radius:14px;background:#000;display:block}
+.stp img{width:100%;max-height:40vh;object-fit:contain;border-radius:14px;background:#000;display:block;margin-top:10px}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
@@ -548,7 +570,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-07-co7';
+var BUILD='2026-11-08-st2';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -560,7 +582,7 @@ var BUILD='2026-11-07-co7';
  document.addEventListener('visibilitychange',function(){if(!document.hidden)check()});
  setTimeout(check,2500);setInterval(check,600000)})();
 /* trois types, jamais mélangés : demande (quelqu’un demande), suivi (une route suivie change), reception (signalement reçu d’un autre) */
-var KN={demande:'Demande d’état',suivi:'Changement sur une route',reception:'Signalement',valide:'État validé par vote'};
+var KN={statut:'Nouveau statut',demande:'Demande d’état',suivi:'Changement sur une route',reception:'Signalement',valide:'État validé par vote',abo:'Nouvel abonné'};
 function notify(a){try{
  if(!('Notification' in window)||Notification.permission!=='granted'||!document.hidden)return;
  var k=a.k||'suivi',ti='Trafik · '+(k==='demande'?(a.st?'Demande essence':'Demande route'):KN[k]),txt=String(a.txt).replace(/<[^>]*>/g,''),o={body:txt,tag:'trafik-'+k+(a.seg?'-'+a.seg:(a.st?'-st-'+a.st:'')),renotify:true};
@@ -568,7 +590,7 @@ function notify(a){try{
  if(SWR&&SWR.showNotification)SWR.showNotification(ti,o);else{delete o.actions;delete o.data;new Notification(ti,o)}}catch(e){}}
 /* alertes de la cloche : celles des tronçons et stations suivis passent en premier dans chaque catégorie et restent ; les autres s’effacent seules après 3 h */
 var AL_TTL=3*3600000;
-function alFol(a){if(a.seg!==undefined&&a.seg!==null)return S.watch.indexOf(Number(a.seg))>=0;if(a.st!==undefined&&a.st!==null)return S.fwatch.indexOf(String(a.st))>=0;return (a.k||'suivi')==='suivi'}
+function alFol(a){if(a.by||a.k==='abo')return true;if(a.seg!==undefined&&a.seg!==null)return S.watch.indexOf(Number(a.seg))>=0;if(a.st!==undefined&&a.st!==null)return S.fwatch.indexOf(String(a.st))>=0;return (a.k||'suivi')==='suivi'}
 function purgeAlerts(){var n=Date.now(),b=S.alerts.length;S.alerts=S.alerts.filter(function(a){return alFol(a)||!a.ts||n-a.ts<AL_TTL});if(S.alerts.length!==b){saveAlerts();return true}return false}
 function pushAlert(a){if(!a.ts)a.ts=Date.now();S.alerts.unshift(a);purgeAlerts();S.alerts=S.alerts.slice(0,30);saveAlerts();notify(a);ringBell()}
 setInterval(function(){if(purgeAlerts())render()},60000);
@@ -626,6 +648,7 @@ var MI={
  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
  out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+ chart:'<path d="M4 20V11M10 20V4M16 20v-7M22 20H2"/>',
  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'
 };
 function mi(ic,txt,fn,sub,cls){return '<button type="button" class="mi'+(cls?' '+cls:'')+'" role="menuitem" onclick="closeMenu();'+fn+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+MI[ic]+'</svg><span>'+txt+(sub?'<small>'+sub+'</small>':'')+'</span></button>'}
@@ -642,7 +665,8 @@ function buildMenu(){var u=window.CURU,m=document.getElementById('menu'),h='';
  else h+='<div class="mhead"><div><b>Bienvenue</b><small>Connectez-vous pour signaler et suivre des routes</small></div></div>';
  h+=(u?mi('user','Profil','openProfile()','Nom, téléphone'):'')+
   (u?mi('trophy','Points et classement','openBoard()',ME?esc(ME.level.name)+' · '+ME.points+' pt'+(ME.points>1?'s':''):'Niveau, badges, zones'):'')+
-  mi('gear','Paramètres','openSettings()','Notifications, vibration')+
+  (isAdm()?mi('chart','Visites de l’app','openVisits()','Aujourd’hui et total'):'')+
+  mi('gear','Paramètres','openSettings()','Notifications, vie privée, vibration')+
   mi('ring','Sonnerie','openRing()',PR.sound?TONES[PR.tone].n:'Désactivée')+
   mi('route','Mes routes suivies','setTab(\'alerts\')',S.watch.length+' route'+(S.watch.length>1?'s':''))+
   mi('refresh','Actualiser','refreshAll()','Signalements, états, essence')+
@@ -671,12 +695,30 @@ function openSettings(){var perm=('Notification' in window)?Notification.permiss
   srow('Alertes de toutes les stations',PR.fuel?'Vous recevez les alertes de toutes les stations. Désactivez pour ne garder que celles que vous suivez (bouton Suivre, onglet Essence).':'Seulement les stations que vous suivez (bouton Suivre, onglet Essence). Activez pour recevoir toutes les stations.',sw(PR.fuel,'toggleFuel()','Alertes de toutes les stations'))+
   (window.ADMIN?srow('Mode test (administrateur)','Désactive la vérification GPS pour tester de chez vous. Revient à la normale au rechargement de la page.',sw(!!S.test,'toggleTest()','Mode test')):'')+
   (window.ADMIN?srow('Évaluations de l’app','Moyenne et nombre de notes reçues','<button type="button" class="alt" onclick="openRatings()">Voir</button>'):'')+
+  (window.CURU?srow('Vie privée','Qui voit votre statut et votre photo de profil','<button type="button" class="alt" onclick="openPrivacy()">Gérer</button>'):'')+
   srow('Vibration','Quand une alerte arrive',sw(PR.vib,'togglePR(\'vib\')','Vibration'))+
   srow('Sonnerie',PR.sound?TONES[PR.tone].n:'Désactivée','<button type="button" class="alt" onclick="openRing()">Choisir</button>')+
   srow('Alertes','Effacer toutes les alertes et demandes','<button type="button" class="alt" onclick="clearAlerts();toast(\'Alertes effacées\')">Effacer</button>')+
   srow('Données de cet appareil','Routes suivies, préférences, délais','<button type="button" class="alt" onclick="wipeLocal()">Réinitialiser</button>')+
   (window.CURU?srow('Supprimer mon compte','Efface définitivement votre compte et vos données','<button type="button" class="dng" onclick="openDelete()">Supprimer</button>'):'')+
   '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p>')}
+/* ===== Visites de l'app =====
+   Une visite = une ouverture de l'app (nouvelle visite après 30 min d'inactivité). Enregistrée côté serveur (log_visit), lue seulement par l'administrateur.
+   Avec doublons = nombre de visites ; sans doublons = personnes différentes (compte connecté, sinon appareil). */
+var VIS_T=0;
+function visDevice(){try{var k='trafik-device',v=localStorage.getItem(k);if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('d'+Date.now().toString(36)+Math.random().toString(36).slice(2,12));localStorage.setItem(k,v)}return v}catch(e){return null}}
+function visLog(){if(!window.sbRpc||Date.now()-VIS_T<30*60000)return;var d=visDevice();if(!d)return;VIS_T=Date.now();window.sbRpc('log_visit',{p_device:d}).catch(function(){VIS_T=0})}
+(function(){var n=0;(function go(){if(typeof window.CURU==='undefined'&&n++<20)return setTimeout(go,400);visLog()})()})();
+document.addEventListener('visibilitychange',function(){if(!document.hidden)visLog()});
+function openVisits(){if(!isAdm())return;openSheet('Visites de l’app','<div id="vis" class="mute" aria-live="polite">Chargement…</div>');
+ window.sbRpc('get_visit_stats').then(function(r){var el=document.getElementById('vis'),d=r&&r.data;if(!el||!d)return;
+  var f=function(n){return String(n||0).replace(/\B(?=(\d{3})+(?!\d))/g,' ')};
+  function box(t,tot,uni){return '<div class="card" style="margin:10px 0 0"><b>'+t+'</b><div style="display:flex;gap:10px;margin-top:8px"><div style="flex:1;text-align:center"><div style="font-size:30px;font-weight:800;line-height:1">'+f(tot)+'</div><div class="mute">Avec doublons<br>(visites)</div></div><div style="flex:1;text-align:center"><div style="font-size:30px;font-weight:800;line-height:1">'+f(uni)+'</div><div class="mute">Sans doublons<br>(personnes)</div></div></div></div>'}
+  var days=Array.isArray(d.days)?d.days:[];
+  el.className='';el.innerHTML=box('Aujourd’hui',d.today_total,d.today_unique)+box('Depuis le début',d.all_total,d.all_unique)+
+   '<div style="margin-top:14px"><b>7 derniers jours</b></div>'+days.map(function(x){var p=String(x.d).split('-');return '<div class="srow"><div style="flex:1">'+p[2]+'/'+p[1]+'</div><div class="mute" style="text-align:right">'+f(x.total)+' visite'+(x.total>1?'s':'')+' · '+f(x.unique)+' personne'+(x.unique>1?'s':'')+'</div></div>'}).join('')+
+   '<p class="mute" style="margin:10px 0 0;font-size:12.5px">Une visite = une ouverture de l’app (une nouvelle visite après 30 min d’inactivité). Jours comptés à l’heure d’Haïti.</p>'})
+ .catch(function(){var el=document.getElementById('vis');if(el)el.textContent='Impossible de charger les statistiques : réessayez.'})}
 /* administrateur : notes (étoiles) envoyées par les utilisateurs, lues dans la table app_ratings (accès réservé par is_admin()) */
 function openRatings(){var c=window.sbClient;if(!window.ADMIN||!c)return;openSheet('Évaluations de l’app','<div id="rtc" class="mute" aria-live="polite">Chargement…</div>');
  c.from('app_ratings').select('stars,created_at').order('created_at',{ascending:false}).limit(1000).then(function(r){var el=document.getElementById('rtc');if(!el)return;
@@ -718,8 +760,8 @@ var AVTRY='';
 function avSet(v){try{if(v)localStorage.setItem(avKey(),v);else localStorage.removeItem(avKey())}catch(e){}if(window.CURU)menuBtn()}
 function CHK(n){return n>=5?['#1877F2','#fff','Niveau Légende']:n===4?['#8A949B','#fff','Niveau Gardien']:['#C9B6F2','#4B2E83','Niveau Sentinelle']}
 function isAdm(){return !!(window.ADMIN||(ME&&ME.admin))}
-function admChk(px){return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="Administrateur" style="flex:none;vertical-align:middle;filter:drop-shadow(0 0 4px rgba(34,197,94,.65))"><defs><linearGradient id="admg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4ADE80"/><stop offset="1" stop-color="#15803D"/></linearGradient></defs><circle cx="12" cy="12" r="11" fill="url(#admg)"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
-function vBadge(){if(isAdm())return '<span class="vb" style="display:block;line-height:0">'+admChk(28)+'</span>';var n=ME&&ME.level?ME.level.n:0;if(n<3)return '';var c=CHK(n);return '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="'+c[2]+'"><circle cx="12" cy="12" r="11" fill="'+c[0]+'" stroke="var(--card)" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="'+c[1]+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function admChk(px){return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="Administrateur" style="flex:none;vertical-align:middle;overflow:visible;filter:drop-shadow(0 1px 3px rgba(22,163,74,.55))"><path d="M23.40 12.00 L23.24 12.74 L22.81 13.42 L22.20 14.03 L21.56 14.56 L21.03 15.06 L20.68 15.60 L20.55 16.22 L20.57 16.95 L20.65 17.78 L20.65 18.64 L20.47 19.43 L20.06 20.06 L19.43 20.47 L18.64 20.65 L17.78 20.65 L16.95 20.57 L16.22 20.55 L15.60 20.68 L15.06 21.03 L14.56 21.56 L14.03 22.20 L13.42 22.81 L12.74 23.24 L12.00 23.40 L11.26 23.24 L10.58 22.81 L9.97 22.20 L9.44 21.56 L8.94 21.03 L8.40 20.68 L7.78 20.55 L7.05 20.57 L6.22 20.65 L5.36 20.65 L4.57 20.47 L3.94 20.06 L3.53 19.43 L3.35 18.64 L3.35 17.78 L3.43 16.95 L3.45 16.22 L3.32 15.60 L2.97 15.06 L2.44 14.56 L1.80 14.03 L1.19 13.42 L0.76 12.74 L0.60 12.00 L0.76 11.26 L1.19 10.58 L1.80 9.97 L2.44 9.44 L2.97 8.94 L3.32 8.40 L3.45 7.78 L3.43 7.05 L3.35 6.22 L3.35 5.36 L3.53 4.57 L3.94 3.94 L4.57 3.53 L5.36 3.35 L6.22 3.35 L7.05 3.43 L7.78 3.45 L8.40 3.32 L8.94 2.97 L9.44 2.44 L9.97 1.80 L10.58 1.19 L11.26 0.76 L12.00 0.60 L12.74 0.76 L13.42 1.19 L14.03 1.80 L14.56 2.44 L15.06 2.97 L15.60 3.32 L16.22 3.45 L16.95 3.43 L17.78 3.35 L18.64 3.35 L19.43 3.53 L20.06 3.94 L20.47 4.57 L20.65 5.36 L20.65 6.22 L20.57 7.05 L20.55 7.78 L20.68 8.40 L21.03 8.94 L21.56 9.44 L22.20 9.97 L22.81 10.58 L23.24 11.26Z" fill="#15803D"/><path d="M21.40 12.00 L21.27 12.61 L20.92 13.17 L20.43 13.68 L19.92 14.12 L19.49 14.54 L19.21 14.98 L19.09 15.50 L19.10 16.10 L19.15 16.78 L19.14 17.48 L18.99 18.13 L18.65 18.65 L18.13 18.99 L17.48 19.14 L16.78 19.15 L16.10 19.10 L15.50 19.09 L14.98 19.21 L14.54 19.49 L14.12 19.92 L13.68 20.43 L13.17 20.92 L12.61 21.27 L12.00 21.40 L11.39 21.27 L10.83 20.92 L10.32 20.43 L9.88 19.92 L9.46 19.49 L9.02 19.21 L8.50 19.09 L7.90 19.10 L7.22 19.15 L6.52 19.14 L5.87 18.99 L5.35 18.65 L5.01 18.13 L4.86 17.48 L4.85 16.78 L4.90 16.10 L4.91 15.50 L4.79 14.98 L4.51 14.54 L4.08 14.12 L3.57 13.68 L3.08 13.17 L2.73 12.61 L2.60 12.00 L2.73 11.39 L3.08 10.83 L3.57 10.32 L4.08 9.88 L4.51 9.46 L4.79 9.02 L4.91 8.50 L4.90 7.90 L4.85 7.22 L4.86 6.52 L5.01 5.87 L5.35 5.35 L5.87 5.01 L6.52 4.86 L7.22 4.85 L7.90 4.90 L8.50 4.91 L9.02 4.79 L9.46 4.51 L9.88 4.08 L10.32 3.57 L10.83 3.08 L11.39 2.73 L12.00 2.60 L12.61 2.73 L13.17 3.08 L13.68 3.57 L14.12 4.08 L14.54 4.51 L14.98 4.79 L15.50 4.91 L16.10 4.90 L16.78 4.85 L17.48 4.86 L18.13 5.01 L18.65 5.35 L18.99 5.87 L19.14 6.52 L19.15 7.22 L19.10 7.90 L19.09 8.50 L19.21 9.02 L19.49 9.46 L19.92 9.88 L20.43 10.32 L20.92 10.83 L21.27 11.39Z" fill="#22C55E"/><path d="M12 4.6a7.4 7.4 0 0 1 6.6 4.1 8 8 0 0 0-13.2 0A7.4 7.4 0 0 1 12 4.6z" fill="#fff" opacity=".28"/><path d="M7.9 12.4l2.9 2.9 5.5-6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function vBadge(){if(isAdm())return '<span class="vb" style="display:block;line-height:0">'+admChk(30)+'</span>';var n=ME&&ME.level?ME.level.n:0;if(n<3)return '';var c=CHK(n);return '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="'+c[2]+'"><circle cx="12" cy="12" r="11" fill="'+c[0]+'" stroke="var(--card)" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="'+c[1]+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 function avInner(){var d=avGet(),pick='document.getElementById(\'avf\').click()';
  return '<div class="av"><button type="button" class="avc'+(d?' has':'')+'" aria-label="'+(d?'Changer':'Ajouter')+' la photo de profil" onclick="'+pick+'">'+(d?'<img alt="" src="'+d+'">':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>')+'</button>'+vBadge()+'</div>'+
   '<div style="text-align:center;margin-bottom:6px"><button type="button" class="lnk" onclick="'+pick+'">'+(d?'Changer la photo':'Ajouter une photo (facultatif)')+'</button>'+(d?' · <button type="button" class="lnk" onclick="avRemove()">Retirer</button>':'')+'</div><input type="file" id="avf" accept="image/*" hidden onchange="avPick(this)">'}
@@ -741,23 +783,23 @@ function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
  openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+
   '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfse" role="alert" aria-live="polite" style="margin-top:6px;font-weight:700"></div><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Sentinelle, Gardien et Légende.</div>'+
-  srow('Photo visible par la communauté','Les membres connectés peuvent voir votre photo dans la Communauté. Désactivé par défaut.',sw(false,'pfPub(this)','Photo visible par la communauté').replace('<button ','<button id="pfpub" '))+
+  srow('Vie privée','Photo de profil et statut : qui peut les voir','<button type="button" class="alt" onclick="openPrivacy()">Gérer</button>')+
   '<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
  avFetch();try{window.sbClient.from('profiles').select('prenom,nom,telephone,pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone],['pfs',d.pseudo]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]});var pb=document.getElementById('pfpub');if(pb&&!pb.dataset.t)pb.setAttribute('aria-checked',String(!!d.photo_public));MYP={pseudo:d.pseudo||'',pub:!!d.photo_public}})}catch(e){}}
-function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()},pb=document.getElementById('pfpub');
+function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
  var ps=v('pfs').toLowerCase();
  if(ps&&!pseudoOk(ps)){pfsMsg('5 caractères maximum : lettres minuscules (au moins une) et chiffres.');return toast('Pseudonyme : 5 caractères maximum, lettres minuscules (au moins une) et chiffres')}
  if(ps&&PFSV===ps){pfsMsg(PFS_TAKEN);var pe=document.getElementById('pfs');if(pe)pe.focus();return toast('Ce pseudonyme est déjà utilisé : choisissez-en un autre')}
- var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30),pseudo:ps||null,photo_public:!!(pb&&pb.getAttribute('aria-checked')==='true')};
+ var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30),pseudo:ps||null};
  window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}
-  MYP={pseudo:d.pseudo||'',pub:d.photo_public};CM.t=0;if(S.tab==='community')cmLoad(true);toast('Profil enregistré');closeSheet()}).catch(function(e){
+  MYP={pseudo:d.pseudo||'',pub:!!(MYP&&MYP.pub)};CM.t=0;if(S.tab==='community')cmLoad(true);toast('Profil enregistré');closeSheet()}).catch(function(e){
   if(e&&e.code==='23505'){PFSV=ps;pfsMsg(PFS_TAKEN);var pe=document.getElementById('pfs');if(pe)pe.focus();return toast('Ce pseudonyme est déjà utilisé : choisissez-en un autre')}
   if(e&&e.code==='23514'){pfsMsg('Ce pseudonyme n’est pas autorisé : choisissez-en un autre.');return toast('Pseudonyme refusé : choisissez-en un autre')}
   toast('Échec de l’enregistrement : réessayez')})}
 /* ===== Communauté : pseudonymes des niveaux Sentinelle (3), Gardien (4) et Légende (5) =====
    La liste vient de la fonction get_community (aucun identifiant, point ni nom renvoyé). Les photos passent par des liens signés d'une heure,
    délivrés seulement pour les comptes qui ont rendu leur photo publique. */
-var CM={rows:null,urls:{},t:0,busy:false,err:false,tab:'3'},MYP=null;
+var CM={rows:null,urls:{},t:0,busy:false,err:false,tab:'3',mode:'all'},MYP=null;
 var PFSQ=0,PFSV='',PFS_TAKEN='Ce pseudonyme est déjà utilisé par un autre utilisateur. Un pseudonyme doit être unique : choisissez-en un autre.';
 function pfsMsg(t,ok){var e=document.getElementById('pfse'),i=document.getElementById('pfs');if(!e)return;e.textContent=t||'';e.style.color=ok?'var(--g)':'var(--r)';if(i){if(t&&!ok)i.setAttribute('aria-invalid','true');else i.removeAttribute('aria-invalid')}}
 function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);el.dataset.t=1;
@@ -765,6 +807,22 @@ function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'').s
  if(!v||!pseudoOk(v)||(MYP&&MYP.pseudo===v)||!window.sbRpc)return;
  PFSQ=setTimeout(function(){window.sbRpc('pseudo_available',{p:v}).then(function(r){var c=document.getElementById('pfs');if(!c||c.value!==v)return;
   if(r.data===false){PFSV=v;pfsMsg(PFS_TAKEN)}else if(r.data===true)pfsMsg('✓ Pseudonyme disponible',true)}).catch(function(){})},400)}
+/* ===== Vie privée : photo de profil et audience du statut =====
+   Audience du statut : « Moi uniquement » et « Mes abonnés » sont disponibles pour tous ; « Tout le monde » (payant) affiche « Option non encore disponible » pour les utilisateurs (gratuit pour l'admin). */
+var STAUD='subs';
+function stAudHtml(){var adm=!!(ME&&ME.admin),o=[['me','Moi uniquement',''],['subs','Mes abonnés',''],['all','Tout le monde',adm?'Admin : gratuit':'Payant']];
+ return '<div class="aud" role="radiogroup" aria-label="Qui peut voir mon statut">'+o.map(function(x){return '<button type="button" role="radio" aria-checked="'+(x[0]===STAUD)+'" onclick="stAud(\''+x[0]+'\')"><i aria-hidden="true"></i><span>'+x[1]+'</span>'+(x[2]?'<em>'+x[2]+'</em>':'')+'</button>'}).join('')+'</div>'}
+function stAud(k){var adm=!!(ME&&ME.admin);
+ if(k==='all'&&!adm)return toast('Option non encore disponible');
+ STAUD=k;document.querySelectorAll('.aud').forEach(function(e){e.outerHTML=stAudHtml()});
+ toast(k==='all'?'Vos prochains statuts seront visibles par tout le monde':k==='me'?'Vos prochains statuts ne seront visibles que par vous':'Vos prochains statuts seront visibles par vos abonnés')}
+function openPrivacy(){var u=window.CURU;if(!u)return toast('Connectez-vous pour gérer votre vie privée');
+ openSheet('Vie privée','<h4 style="margin:10px 0 0">Photo de profil</h4>'+
+  srow('Visible par la communauté','Les membres connectés peuvent voir votre photo dans la Communauté. Désactivé par défaut.',sw(!!(MYP&&MYP.pub),'ppToggle(this)','Photo visible par la communauté').replace('<button ','<button id="ppub" '))+
+  '<h4 style="margin:16px 0 0">Statut</h4><div class="mute" style="margin-top:4px">Qui peut voir mon statut ?</div>'+stAudHtml());
+ try{window.sbClient.from('profiles').select('pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;MYP={pseudo:d.pseudo||'',pub:!!d.photo_public};var b=document.getElementById('ppub');if(b&&!b.dataset.t)b.setAttribute('aria-checked',String(!!d.photo_public))})}catch(e){}}
+function ppToggle(b){var u=window.CURU;if(!u||b.disabled)return;b.dataset.t=1;var on=b.getAttribute('aria-checked')!=='true';b.disabled=true;
+ window.sbClient.from('profiles').update({photo_public:on}).eq('id',u.id).then(function(r){if(r.error)throw r.error;b.setAttribute('aria-checked',String(on));b.disabled=false;MYP={pseudo:(MYP&&MYP.pseudo)||'',pub:on};CM.t=0;if(S.tab==='community')cmLoad(true);toast(on?'Votre photo est visible par la communauté':'Votre photo n’est plus visible par la communauté')}).catch(function(){b.disabled=false;toast('Échec de l’enregistrement : réessayez')})}
 function pfPub(b){b.dataset.t=1;b.setAttribute('aria-checked',String(b.getAttribute('aria-checked')!=='true'))}
 function pseudoOk(p){return /^[a-z0-9]{1,5}$/.test(p)&&/[a-z]/.test(p)}
 function cmLoad(force){if(!window.sbRpc||!window.UID||CM.busy||(!force&&CM.rows&&Date.now()-CM.t<60000))return Promise.resolve();
@@ -773,27 +831,163 @@ function cmLoad(force){if(!window.sbRpc||!window.UID||CM.busy||(!force&&CM.rows&
  var list=window.sbRpc('get_community').then(function(r){var rows=Array.isArray(r.data)?r.data:[],paths=rows.map(function(x){return x.o_photo}).filter(Boolean);
   if(!paths.length){CM.urls={};return rows}
   return window.sbClient.storage.from('avatars').createSignedUrls(paths,3600).then(function(q){var m={};((q&&q.data)||[]).forEach(function(x){if(x&&x.signedUrl&&!x.error)m[x.path]=x.signedUrl});CM.urls=m;return rows},function(){CM.urls={};return rows})});
- return Promise.all([mine,list]).then(function(a){CM.rows=a[1];CM.t=Date.now()}).catch(function(){CM.err=true}).then(function(){CM.busy=false;if(S.tab==='community')render()})}
+ return Promise.all([mine,list]).then(function(a){CM.rows=a[1];CM.t=Date.now();if(!CM.pick&&MYP&&MYP.pseudo){var m=a[1].filter(function(x){return x.o_pseudo===MYP.pseudo})[0];if(m)CM.tab=String(Math.min(5,Math.max(3,m.o_level)))}}).catch(function(){CM.err=true}).then(function(){CM.busy=false;if(S.tab==='community')render()})}
 function cmChk(n,px){var c=CHK(n);return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="'+c[2]+'" style="flex:none"><circle cx="12" cy="12" r="11" fill="'+c[0]+'"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="'+c[1]+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 function cmAv(x){var u=x.o_photo&&CM.urls[x.o_photo];return '<span class="cav" aria-hidden="true">'+(u?'<img alt="" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo).charAt(0).toUpperCase()))+'</span>'}
-function setCm(t){CM.tab=t;render()}
+function setCm(t){CM.tab=t;CM.pick=1;render()}
+function setCmMode(m){CM.mode=m;render()}
+function cmModeTog(rows){var n=(rows||[]).filter(function(x){return x.o_following}).length;
+ return '<div class="tog" role="group" aria-label="Affichage"><button type="button" aria-pressed="'+(CM.mode!=='fol')+'" onclick="setCmMode(\'all\')">Membres</button><button type="button" aria-pressed="'+(CM.mode==='fol')+'" onclick="setCmMode(\'fol\')">Mes abonnements'+(rows?' ('+n+')':'')+'</button></div>'}
+function cmRow(x,me){return '<div class="row" style="cursor:default">'+cmAv(x)+'<div class="nm"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>'+esc(x.o_pseudo)+'</span>'+cmChk(x.o_level,18)+(me&&x.o_pseudo===me?'<span class="pill" style="margin:0 0 0 2px">Vous</span>':'')+'</div><div class="mute" aria-live="polite">'+cmFol(x.o_followers)+'</div></div>'+(me&&x.o_pseudo===me?'':cmBtn(x))+'</div>'}
+function folFeed(){var out=[];
+ (S.reports||[]).forEach(function(r){var p=r.u&&FOLM[r.u],sg=p&&seg(r.seg);if(p&&sg&&LV[r.lvl])out.push({t:r.t,p:p,txt:sg[1]+' : '+LV[r.lvl].n.toLowerCase(),c:LV[r.lvl].c})});
+ (FREP||[]).forEach(function(r){var p=r.u&&FOLM[r.u],st=p&&(window.STN||[]).filter(function(x){return String(x.id)===String(r.st)})[0];if(p&&st&&FLV[r.lvl])out.push({t:r.t,p:p,txt:'Station '+esc(st.name)+' : '+FLV[r.lvl].n.toLowerCase(),c:FLV[r.lvl].c})});
+ return out.sort(function(a,b){return b.t-a.t})}
+function cmFolView(rows,me){
+ if(!rows)return '<section class="panel"><div class="row mute" style="cursor:default">'+(CM.err?'Impossible de charger la Communauté. Tirez vers le bas pour réessayer.':'Chargement…')+'</div></section>';
+ var fl=rows.filter(function(x){return x.o_following});
+ if(!fl.length)return '<div class="card" style="margin-top:14px"><b>Vous ne suivez encore personne</b><div class="mute" style="margin-top:4px">Suivez des membres fiables : vous verrez ici leurs derniers signalements et vous serez alerté dès qu’ils signalent.</div><button type="button" style="margin-top:10px" onclick="setCmMode(\'all\')">Voir les membres</button></div>';
+ var fd=folFeed().slice(0,12),H='<h3 style="margin:16px 0 8px;font-size:16px">';
+ return H+'Derniers signalements</h3><section class="panel" aria-live="polite">'+(fd.length?fd.map(function(f){return '<div class="row" style="cursor:default"><span class="dot '+f.c+'"></span><div class="nm">'+esc(f.p)+' <span class="mute" style="font-weight:400">· '+f.txt+'</span><div class="mute">'+ago(f.t)+'</div></div></div>'}).join(''):'<div class="row mute" style="cursor:default">Aucun signalement récent de vos abonnements</div>')+'</section>'+
+  H+'Personnes suivies</h3><section class="panel">'+fl.map(function(x){return cmRow(x,me)}).join('')+'</section>'}
+function cmFol(n){n=Number(n)||0;return n.toLocaleString('fr-FR')+' abonné'+(n>1?'s':'')}
+function cmBtn(x){var on=!!x.o_following;return '<button type="button" aria-pressed="'+on+'" aria-label="'+(on?'Ne plus suivre ':'Suivre ')+esc(x.o_pseudo)+'" onclick="cmFollow(\''+esc(x.o_pseudo)+'\')" class="'+(on?'alt':'')+'" style="min-height:36px;padding:6px 16px;font-size:14px;border-radius:999px;flex:none'+(on?'':';background:var(--acc);color:#2b2000')+'">'+(on?'✓ Suivi':'Suivre')+'</button>'}
+var CMF={};
+function cmFollow(p){var r=(CM.rows||[]).filter(function(x){return x.o_pseudo===p})[0];if(!r||CMF[p])return;
+ var on=!r.o_following,was=[r.o_following,r.o_followers];CMF[p]=1;
+ r.o_following=on;r.o_followers=Math.max(0,(Number(r.o_followers)||0)+(on?1:-1));render();
+ window.sbRpc('set_follow',{p_pseudo:p,p_on:on}).then(function(q){var d=q.data||{};r.o_following=!!d.following;if(typeof d.followers==='number')r.o_followers=d.followers;delete CMF[p];render();folLoad()}).catch(function(e){
+  delete CMF[p];r.o_following=was[0];r.o_followers=was[1];render();
+  toast(e&&e.code==='P0001'?e.message:(e&&e.code==='42501'?'Compte suspendu':'Action impossible : réessayez plus tard'))})}
 function communityV(){
  var head='<h2>Communauté</h2><div class="mute" style="margin-top:4px">Les membres des niveaux Sentinelle, Gardien et Légende, par pseudonyme.</div>';
  if(window.LOGGED===false)return head+'<div class="card"><b>Connexion requise</b><div class="mute">Connectez-vous pour voir la Communauté.</div><a class="btn primary" style="margin-top:10px" href="auth.html">Se connecter</a></div>';
- var rows=CM.rows,all=rows||[],n5='Légende',n4='Gardien',n3='Sentinelle';
+ head+=stStrip();var rows=CM.rows,all=rows||[],n5='Légende',n4='Gardien',n3='Sentinelle';
  all.forEach(function(x){if(x.o_level>=5)n5=x.o_level_name||n5;else if(x.o_level===4)n4=x.o_level_name||n4;else n3=x.o_level_name||n3});
  var l5=all.filter(function(x){return x.o_level>=5}),l4=all.filter(function(x){return x.o_level===4}),l3=all.filter(function(x){return x.o_level===3});
  var tb=function(k,nm,l){return '<button type="button" aria-pressed="'+(CM.tab===k)+'" onclick="setCm(\''+k+'\')">'+esc(nm)+(rows?' ('+l.length+')':'')+'</button>'};
- var tog='<div class="tog" role="group" aria-label="Niveau">'+tb('3',n3,l3)+tb('4',n4,l4)+tb('5',n5,l5)+'</div>';
+ var tog='<div class="tog" role="group" aria-label="Niveau">'+tb('3',n3,l3)+tb('4',n4,l4)+tb('5',n5,l5)+'</div>',mt=cmModeTog(rows);
  var lv=ME&&ME.level?ME.level.n:0,me=MYP&&MYP.pseudo,note='';
  if(lv>=3&&MYP&&!MYP.pseudo)note='<div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>Choisissez un pseudonyme</b><div class="mute">Vous avez le niveau '+esc(ME.level.name)+' : un pseudonyme vous fait apparaître ici.</div></div><button type="button" onclick="openProfile()">Ouvrir le profil</button></div>';
  else if(lv>0&&lv<3)note='<div class="card mute">'+(lv===2&&ME.level.next_min?'Il vous manque '+(ME.level.next_min-ME.points)+' point'+(ME.level.next_min-ME.points>1?'s':'')+' pour devenir '+esc(n3)+', premier niveau de la Communauté.':'Atteignez le niveau '+esc(n3)+' pour rejoindre la Communauté.')+'</div>';
+ if(CM.mode==='fol')return head+mt+cmFolView(rows,me);
  var cur=CM.tab==='5'?l5:CM.tab==='4'?l4:l3,cn=CM.tab==='5'?n5:CM.tab==='4'?n4:n3,body;
+ if(me)cur=cur.filter(function(x){return x.o_pseudo===me}).concat(cur.filter(function(x){return x.o_pseudo!==me}));
  if(!rows)body='<div class="row mute" style="cursor:default">'+(CM.err?'Impossible de charger la Communauté. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
  else if(!cur.length)body='<div class="row mute" style="cursor:default">Aucun membre '+esc(cn)+' pour le moment.</div>';
- else body=cur.map(function(x){return '<div class="row" style="cursor:default">'+cmAv(x)+'<div class="nm">'+esc(x.o_pseudo)+(me&&x.o_pseudo===me?' <span class="pill" style="margin:0 0 0 6px">Vous</span>':'')+'<div class="mute">'+esc(x.o_level_name)+'</div></div>'+cmChk(x.o_level,22)+'</div>'}).join('');
- return head+tog+note+'<section class="panel" aria-live="polite">'+body+'</section>'}
+ else body=cur.map(function(x){return cmRow(x,me)}).join('');
+ return head+mt+tog+note+'<section class="panel" aria-live="polite">'+body+'</section>'}
 
+/* ===== Statuts : 1 photo + légende, réservés aux niveaux Gardien (4) et Légende (5) =====
+   Visibles seulement par le propriétaire et ses abonnés (règles de la base), effacés automatiquement au bout de 30 h.
+   Les abonnés reçoivent une notification à la publication (serveur : fonction notify-status, même app fermée). */
+var STT={rows:null,urls:{},t:0,busy:false,err:false},STF=null,STPB=false,STI=0;
+function stCanPost(){var lv=ME&&ME.level?ME.level.n:0;return !!(ME&&(ME.admin||lv>=4))}
+function stSeenGet(){try{return JSON.parse(localStorage.getItem('trafik-st-seen-'+window.UID))||{}}catch(e){return {}}}
+function stSeenSet(o){try{var n=Date.now();for(var k in o)if(n-o[k]>3*864e5)delete o[k];localStorage.setItem('trafik-st-seen-'+window.UID,JSON.stringify(o))}catch(e){}}
+function stLoad(force){if(!window.sbRpc||!window.UID||STT.busy||(!force&&STT.rows&&Date.now()-STT.t<45000))return Promise.resolve();
+ STT.busy=true;STT.err=false;
+ return window.sbRpc('get_statuses').then(function(r){var rows=Array.isArray(r.data)?r.data:[],paths=rows.map(function(x){return x.o_path}).filter(Boolean);
+  if(!paths.length){STT.urls={};return rows}
+  return window.sbClient.storage.from('statuses').createSignedUrls(paths,3600).then(function(q){var m={};((q&&q.data)||[]).forEach(function(x){if(x&&x.signedUrl&&!x.error)m[x.path]=x.signedUrl});STT.urls=m;return rows},function(){STT.urls={};return rows})})
+ .then(function(rows){STT.rows=rows;STT.t=Date.now();stNotify(rows)}).catch(function(){STT.err=true})
+ .then(function(){return window.sbRpc('get_my_status_ban').then(function(r){STT.ban=(r&&r.data&&r.data.until&&Date.parse(r.data.until)>Date.now())?r.data:null;stBanNotify()},function(){})})
+ .then(function(){STT.busy=false;if(S.tab==='community')render()})}
+/* règles : types de statuts refusés (analyse automatique de la photo et de la légende) */
+var ST_RULES='<b>Non acceptés :</b> propos de haine ou discriminatoires, meurtres, violence et photos choquantes (sang, blessés, cadavres), menaces, injures et harcèlement, contenu sexuel ou nudité. Un statut refusé est <b>supprimé automatiquement</b> quelques secondes après sa publication, vous êtes prévenu de la raison, et vous devez <b>attendre 30 h</b> avant de publier à nouveau.';
+function stBanLeft(){var b=STT.ban;return b?Math.max(1,Math.ceil((Date.parse(b.until)-Date.now())/36e5)):0}
+/* alerte dans la cloche quand un statut vient d'être supprimé (une seule fois par suppression) */
+function stBanNotify(){try{var b=STT.ban;if(!b||!window.UID)return;var k='trafik-st-ban-'+window.UID;if(localStorage.getItem(k)===b.at)return;localStorage.setItem(k,b.at);
+ var t='Votre statut a été supprimé : '+esc(b.reason)+'. Vous pourrez publier de nouveau dans '+stBanLeft()+' h.';pushAlert({t:hhmm(Date.now()),txt:t,l:2,k:'statut'});toast(dec(t))}catch(e){}}
+/* alerte dans la cloche quand un abonnement publie (la première lecture sert de point de départ, sans alerte) */
+function stNotify(rows){try{var k='trafik-st-notif-'+window.UID,old=null;try{old=JSON.parse(localStorage.getItem(k))}catch(e){}
+ localStorage.setItem(k,JSON.stringify(rows.filter(function(x){return !x.o_mine}).map(function(x){return x.o_path})));
+ if(!Array.isArray(old))return;
+ rows.forEach(function(x){if(x.o_mine||old.indexOf(x.o_path)>=0)return;var t=esc(x.o_pseudo)+' a publié un statut';pushAlert({t:hhmm(Date.now()),txt:t,l:3,k:'statut'});toast(dec(t))})}catch(e){}}
+function stStrip(){var rows=STT.rows,seen=stSeenGet(),adm=!!(ME&&ME.admin),mine=!adm&&rows&&rows.filter(function(x){return x.o_mine})[0],can=stCanPost();
+ var h='<div class="card" style="margin-top:14px"><div class="sth"><b>Statuts</b>'+(can&&!mine&&!STT.ban?'<button type="button" class="alt" style="min-height:36px;padding:6px 14px;font-size:14px" onclick="stCompose()">+ Publier</button>':'')+'</div>';
+ if(!rows)h+='<div class="mute" style="margin-top:6px">'+(STT.err?'Impossible de charger les statuts. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
+ else if(!rows.length)h+='<div class="mute" style="margin-top:6px">Aucun statut pour le moment. Les membres Gardien et Légende que vous suivez peuvent publier une photo visible 30 h.</div>';
+ else h+='<div class="sts" role="list">'+rows.map(function(x,i){var u=STT.urls[x.o_path],nm=x.o_mine?'Mon statut':x.o_pseudo;
+  return '<button type="button" class="stb" role="listitem" aria-label="Statut de '+esc(nm)+'" onclick="stOpen('+i+')"><span class="str'+(seen[x.o_path]?'':' un')+'">'+(u?'<img alt="" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo||'?').charAt(0).toUpperCase()))+'</span><span class="stn">'+esc(nm)+'</span></button>'}).join('')+'</div>';
+ if(STT.ban&&!(ME&&ME.admin))h+='<div class="offl" style="margin:10px 0 0;text-align:left;border:1px solid var(--r)"><b>Statut supprimé</b> : '+esc(STT.ban.reason)+'.<br>Vous pourrez publier de nouveau dans environ '+stBanLeft()+' h.</div>';
+ if(can&&mine)h+='<div class="mute" style="margin-top:6px">Un seul statut par jour : vous pourrez en publier un nouveau 30 h après la publication, même si vous supprimez celui-ci.</div>';
+ if(mine&&mine.o_pending)h+='<div class="mute" style="margin-top:6px">Votre statut est en cours de vérification : vos abonnés le verront dans quelques secondes s’il est conforme.</div>';
+ h+='<div class="mute" style="margin-top:10px;font-size:12.5px">'+ST_RULES+'</div>';
+ return h+'</div>'}
+var EYE='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+function stOpenPath(p){var rows=STT.rows||[];for(var i=0;i<rows.length;i++)if(rows[i].o_path===p)return stOpen(i);closeSheet()}
+function stOpen(i){var rows=STT.rows||[],x=rows[i];if(!x)return;STI=i;var adm=!!(ME&&ME.admin);
+ var seen=stSeenGet();seen[x.o_path]=Date.now();stSeenSet(seen);
+ if(!x.o_mine&&!adm&&window.sbRpc)window.sbRpc('record_status_view',{p_path:x.o_path}).catch(function(){});
+ var u=STT.urls[x.o_path],exp=Date.parse(x.o_expires),forever=exp>Date.UTC(2100,0,1),left=Math.max(1,Math.ceil((exp-Date.now())/36e5)),nav='';
+ if(rows.length>1)nav='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+rows.length-1)%rows.length)+')">‹ Précédent</button><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+1)%rows.length)+')">Suivant ›</button></div>';
+ var eye=x.o_views!=null?'<button type="button" class="alt" style="min-height:36px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;flex:none" aria-label="Nombre de vues : '+x.o_views+'" onclick="stViews('+i+')">'+EYE+'<b>'+x.o_views+'</b></button>':'';
+ openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+cmChk(Math.max(4,x.o_level),18),
+  '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+'</div>'+
+  (x.o_caption?'<p class="stcap">'+stCapHtml(x)+'</p>':'')+
+  (x.o_pending?'<div class="offl" style="margin:10px 0 0;text-align:left">Vérification automatique en cours : seul vous le voyez pour l’instant.</div>':'')+
+  '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px"><div class="mute">Publié '+ago(Date.parse(x.o_created))+' · '+(forever?'ne disparaît pas':'disparaît dans environ '+left+' h')+(x.o_audience==='all'?' · pour tout le monde':'')+'</div>'+eye+'</div>'+nav+
+  ((x.o_mine||adm)?'<button type="button" class="dng" style="width:100%;margin-top:12px" onclick="stDelete('+x.o_id+','+(x.o_mine?1:0)+')">'+(x.o_mine?'Supprimer mon statut':'Supprimer ce statut')+'</button>':''));
+ render()}
+/* nombre de vues seulement : le serveur ne renvoie jamais qui a vu */
+/* légende : texte simple pour tous ; seuls les liens (http, https, www) d'un administrateur sont cliquables.
+   Un administrateur peut nommer un lien avec [texte affiché](adresse) : seul le texte est visible. */
+function stCapHtml(x){var t=esc(x.o_caption);if(!x.o_admin)return t;
+ function href(u){return /^www\./i.test(u)?'https://'+u:u}
+ function a(u,l){return '<a href="'+href(u)+'" target="_blank" rel="noopener noreferrer nofollow">'+l+'</a>'}
+ return t.replace(/\[([^\]\n]{1,100})\]\(((?:https?:\/\/|www\.)[^\s)<]+)\)|((?:https?:\/\/|www\.)[^\s<]+)/gi,function(m,l,u,bare){
+  if(u)return a(u,l);var tail='',k=bare.match(/[.,!?)\]]+$/);if(k){tail=k[0];bare=bare.slice(0,-tail.length)}
+  return bare?a(bare,bare)+tail:m})}
+/* administrateur : insère [texte](adresse) à l'endroit du curseur dans la légende */
+function stAddLink(){var ta=document.getElementById('stcap');if(!ta)return;
+ var l=(prompt('Texte à afficher (ex. Voir la carte)')||'').trim().replace(/[\[\]\n]/g,' ');if(!l)return;
+ var u=(prompt('Adresse du lien (ex. https://exemple.com)')||'').trim();if(!/^(https?:\/\/|www\.)\S+$/i.test(u)||/[)<\s]/.test(u))return toast('Adresse invalide : elle doit commencer par https:// ou www. et ne pas contenir de parenthèse');
+ var i=ta.selectionStart==null?ta.value.length:ta.selectionStart,j=ta.selectionEnd==null?i:ta.selectionEnd,ins='['+l+']('+u+')';
+ ta.value=ta.value.slice(0,i)+ins+ta.value.slice(j);ta.focus();try{ta.setSelectionRange(i+ins.length,i+ins.length)}catch(e){}}
+/* administrateur : noms de ceux qui ont vu son statut (les autres utilisateurs ne voient que le nombre) */
+function stViewers(p){openSheet('Qui a vu mon statut','<div id="svw" class="mute" aria-live="polite">Chargement…</div><button type="button" class="alt" style="width:100%;margin-top:12px" onclick="stOpenPath(\''+p+'\')">Retour au statut</button>');
+ window.sbRpc('get_status_viewers',{p_path:p}).then(function(r){var el=document.getElementById('svw');if(!el)return;var d=Array.isArray(r.data)?r.data:[];
+  if(!d.length){el.textContent='Personne n’a encore vu ce statut.';return}
+  el.className='';el.innerHTML='<div class="mute" style="margin-bottom:4px">'+d.length+' personne'+(d.length>1?'s':'')+'</div>'+d.map(function(v){return '<div class="srow"><div style="flex:1;min-width:0"><b>'+esc(v.o_name)+'</b>'+(v.o_pseudo&&v.o_pseudo!==v.o_name?'<div class="mute">@'+esc(v.o_pseudo)+'</div>':'')+'</div><div class="mute">'+ago(Date.parse(v.o_at))+'</div></div>'}).join('')})
+ .catch(function(){var el=document.getElementById('svw');if(el)el.textContent='Impossible de charger la liste : réessayez.'})}
+function stViews(i){var x=(STT.rows||[])[i];if(!x)return;var p=x.o_path;
+ function lbl(n){return n===1?'personne a vu ce statut':'personnes ont vu ce statut'}
+ openSheet('Vues du statut','<div style="text-align:center;padding:10px 0 4px"><div id="svn" style="font-size:44px;font-weight:800;line-height:1">'+(x.o_views||0)+'</div><div class="mute" id="svl" style="margin-top:6px">'+lbl(x.o_views||0)+'</div></div>'+
+  srow('Qui a vu mon statut',(ME&&ME.admin&&x.o_mine)?'Voir les noms des personnes':'Voir la liste des personnes','<button type="button" class="alt" onclick="'+((ME&&ME.admin&&x.o_mine)?'stViewers(\''+p+'\')':'toast(\'Option non encore disponible\')')+'">Voir</button>')+
+  '<button type="button" class="alt" style="width:100%;margin-top:12px" onclick="stOpenPath(\''+p+'\')">Retour au statut</button>');
+ STT.t=0;stLoad(true).then(function(){var y=(STT.rows||[]).filter(function(r){return r.o_path===p})[0],n=document.getElementById('svn'),l=document.getElementById('svl');if(y&&n&&y.o_views!=null){n.textContent=y.o_views;l.textContent=lbl(y.o_views)}})}
+function stCompose(){if(!window.LOGGED)return askLogin('publier un statut');
+ if(!stCanPost())return toast('Les statuts sont réservés aux niveaux Gardien et Légende');
+ if(!(ME&&ME.admin)&&STT.rows&&STT.rows.some(function(x){return x.o_mine}))return toast('Un seul statut par jour : vous pourrez en publier un nouveau 30 h après la publication');
+ if(STT.ban&&!(ME&&ME.admin))return toast('Statut supprimé : vous pourrez publier de nouveau dans '+stBanLeft()+' h');
+ if(MYP&&!MYP.pseudo&&!(ME&&ME.admin))return toast('Choisissez d’abord un pseudonyme dans votre profil');
+ STF=null;STPB=false;STAUD='subs';
+ openSheet('Publier un statut','<p class="mute" style="margin:0 0 8px">'+((ME&&ME.admin)?'Administrateur : nombre de statuts illimité, sans durée de disparition. Choisissez qui peut le voir.':'Une photo par jour, visible par vos abonnés (ou par vous seul selon votre choix) pendant 30 h, puis effacée. Même supprimé, vous ne pourrez publier un nouveau statut qu’après 30 h. Vos abonnés sont prévenus par notification.')+'</p>'+
+  '<div class="offl" style="margin:0 0 8px;text-align:left;border:1px solid var(--r)">'+ST_RULES+'</div>'+
+  '<div style="font-weight:800;margin-top:4px">Qui peut voir ce statut ?</div>'+stAudHtml()+
+  '<input type="file" id="stf" accept="image/*" hidden onchange="stPick(this)"><button type="button" class="alt" style="width:100%" onclick="document.getElementById(\'stf\').click()">📷 Choisir une photo</button><div class="stp" id="stpv"></div>'+
+  '<label for="stcap">Légende (facultatif)</label><textarea id="stcap" rows="3"'+((ME&&ME.admin)?'':' maxlength="150" oninput="stCnt(this)"')+' autocomplete="off" placeholder="Ex. Route dégagée à Delmas 33"></textarea>'+((ME&&ME.admin)?'<div class="mute stcnt">Administrateur : aucune limite</div>':'<div class="mute stcnt" id="stcnt" aria-live="polite">0 / 150</div>')+'<div class="mute" style="margin-top:4px;font-size:12.5px">'+((ME&&ME.admin)?'Vos liens seront cliquables pour les autres. Pour cacher l’adresse : [texte affiché](https://adresse).<br><button type="button" class="alt" style="min-height:36px;padding:6px 14px;margin-top:6px" onclick="stAddLink()">🔗 Ajouter un lien nommé</button>':'Les liens ne sont pas cliquables.')+'</div>'+
+  '<button type="button" id="stpb" style="width:100%;margin-top:14px" disabled onclick="stPublish()">Publier</button>')}
+function stCnt(t){var e=document.getElementById('stcnt');if(e)e.textContent=t.value.length+' / 150'}
+function stPick(inp){var f=inp.files&&inp.files[0];if(!f)return;if(!/^image\//.test(f.type))return toast('Choisissez une image');
+ var im=new Image(),url=URL.createObjectURL(f);
+ im.onload=function(){URL.revokeObjectURL(url);var M=1280,r=Math.min(1,M/Math.max(im.width,im.height)),w=Math.max(1,Math.round(im.width*r)),h=Math.max(1,Math.round(im.height*r)),c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+  function enc(q){c.toBlob(function(b){if(!b)return toast('Image illisible : essayez une autre photo');if(b.size>1500000&&q>.45)return enc(q-.15);if(b.size>1500000)return toast('Photo trop lourde : choisissez-en une autre');
+   STF=b;var pv=document.getElementById('stpv'),bt=document.getElementById('stpb');if(pv)pv.innerHTML='<img alt="Aperçu" src="'+URL.createObjectURL(b)+'">';if(bt)bt.disabled=false},'image/jpeg',q)}
+  enc(.82)};
+ im.onerror=function(){URL.revokeObjectURL(url);toast('Image non prise en charge : choisissez une photo JPEG ou PNG')};im.src=url}
+function stPublish(){if(!STF||STPB||!window.UID)return;STPB=true;var b=document.getElementById('stpb');if(b){b.disabled=true;b.textContent='Publication…'}
+ var cap=(document.getElementById('stcap')||{}).value||'',path=window.UID+'/'+Date.now()+'.jpg';
+ window.sbClient.storage.from('statuses').upload(path,STF,{contentType:'image/jpeg',cacheControl:'3600'}).then(function(r){if(r.error)throw r.error;
+  return window.sbRpc('publish_status',{p_path:path,p_caption:cap.trim(),p_audience:((ME&&ME.admin)||STAUD!=='all')?STAUD:'subs'}).catch(function(e){try{window.sbClient.storage.from('statuses').remove([path])}catch(x){}throw e})})
+ .then(function(r){STPB=false;STF=null;closeSheet();toast(r&&r.data&&r.data.audience==='me'?'Statut publié : visible par vous seul':r&&r.data&&r.data.pending===false?'Statut publié : vos abonnés sont prévenus':'Statut envoyé : vérification automatique en cours…');STT.t=0;stLoad(true);
+  [6000,15000,40000].forEach(function(ms){setTimeout(function(){STT.t=0;stLoad(true)},ms)})})
+ .catch(function(e){STPB=false;toast(e&&e.code==='P0001'&&e.message?e.message:(e&&e.code==='42501'?'Compte suspendu':'Échec de la publication : réessayez'));if(b){b.disabled=false;b.textContent='Publier'}})}
+function stDelete(id,mine){if(!confirm(mine?'Supprimer votre statut ? Vous ne pourrez pas en publier un autre avant 30 h après sa publication.':'Supprimer ce statut ? Il disparaîtra pour tout le monde.'))return;
+ window.sbRpc('delete_status',{p_id:id}).then(function(){closeSheet();toast('Statut supprimé');STT.t=0;stLoad(true)}).catch(function(){toast('Échec : réessayez')})}
+setInterval(function(){if(window.UID&&!document.hidden)stLoad()},90000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&window.UID)stLoad()});
 function openDelete(){if(!window.CURU)return;
  openSheet('Supprimer mon compte','<p style="margin:0 0 10px">Cette action est <b>définitive</b>. Seront effacés : votre compte, votre profil (nom, prénom, téléphone, photo), vos signalements, vos demandes, vos routes suivies et vos notifications.</p><p class="mute" style="margin:0 0 6px">Pour confirmer, écrivez <b>SUPPRIMER</b> ci-dessous.</p><input id="delc" autocomplete="off" autocapitalize="characters" placeholder="SUPPRIMER" oninput="document.getElementById(\'delb\').disabled=this.value.trim().toUpperCase()!==\'SUPPRIMER\'"><button type="button" id="delb" class="dng" style="width:100%;margin-top:14px" disabled onclick="doDelete()">Supprimer définitivement</button><button type="button" class="alt" style="width:100%;margin-top:8px" onclick="closeSheet()">Annuler</button>')}
 function doDelete(){var b=document.getElementById('delb');if(b){b.disabled=true;b.textContent='Suppression…'}
@@ -841,7 +1035,7 @@ function meHtml(){if(!ME)return '<div class="mute" style="padding:20px 0;text-al
  return '<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span style="font-size:38px;line-height:1" aria-hidden="true">'+lvIcon(l.n)+'</span><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800">'+esc(l.name)+'</div><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+
   (ME.admin?'<div class="offl" style="margin:8px 0 0">Compte administrateur : vous ne gagnez pas de points.</div>':'')+
   '<div class="bst"><div>'+ME.week+'<span>Cette semaine</span></div><div>'+ME.validated+'<span>Validés</span></div><div>'+ME.votes+'<span>Votes</span></div></div>'+
-  '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande). Chaque vote donne 1 point (10 par jour au maximum) ; une route ou une station que vous proposez, une fois publiée, rapporte 20 points.</div>'+
+  '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande). Chaque vote donne 1 point (10 par jour au maximum) ; une route ou une station que vous proposez, une fois publiée, rapporte 20 points. Un nouvel abonné actif vous rapporte 2 points (10 par jour au maximum).</div>'+
   (zk.length?'<div class="mute" style="margin-top:10px">Votre contribution cette semaine : '+zk.map(function(k){return '<b>'+esc(k)+'</b> '+z[k]+' pt'+(z[k]>1?'s':'')}).join(' · ')+'</div>':'')+
   '<h3 style="margin:16px 0 8px;font-size:16px">Badges ('+got+'/'+ME.badges.length+')</h3><div class="bgs">'+ME.badges.map(function(b){return '<div class="bg'+(b.earned?'':' lk')+'" role="group" aria-label="'+esc(b.name)+(b.earned?' : obtenu':' : verrouillé')+'"><span class="ic" aria-hidden="true">'+esc(b.icon)+'</span><b>'+esc(b.name)+'</b><small>'+esc(b.descr)+'</small></div>'}).join('')+'</div>'}
 function zonesHtml(){var h='<div class="mute" style="margin:12px 0 4px">Les zones se disputent la semaine : chaque point gagné compte pour la zone concernée. Remise à zéro chaque lundi.</div>';
@@ -898,7 +1092,7 @@ function pendingAction(){var o=null;try{o=JSON.parse(localStorage.getItem('trafi
  if(!o||!o.f||Date.now()-o.t>10*60000||['report','fReport','ask','fAsk','vote'].indexOf(o.f)<0||typeof window[o.f]!=='function')return;
  var n=0;(function go(){if(!DB&&n++<40)return setTimeout(go,250);toast('Connexion réussie : reprise de votre action…');try{window[o.f].apply(null,o.a||[])}catch(e){}})()}
 function pendingReply(){try{pendingAction();var v=localStorage.getItem('trafik-reply');localStorage.removeItem('trafik-reply');if(!v)return;if(v.charAt(0)==='f'){openFuelReply(v.slice(1));return}var id=+v;if(id&&seg(id)){SEL=id;S.reply=id;setTab('report')}}catch(e){}}
-function hashReply(){var m=/^#repondre-(\d+)$/.exec(location.hash),f=/^#essence-(\d+)$/.exec(location.hash);if(!m&&!f)return;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}if(m)openReply(m[1]);else openFuelReply(f[1])}
+function hashReply(){if(location.hash==='#statuts'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}setTab('community');return}var m=/^#repondre-(\d+)$/.exec(location.hash),f=/^#essence-(\d+)$/.exec(location.hash);if(!m&&!f)return;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}if(m)openReply(m[1]);else openFuelReply(f[1])}
 try{if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(ev){if(ev.data&&ev.data.type==='reply')openReply(ev.data.seg);else if(ev.data&&ev.data.type==='fuel')openFuelReply(ev.data.st)})}catch(e){}
 window.addEventListener('hashchange',hashReply);setTimeout(hashReply,400);
 function save(){try{localStorage.setItem(KEY,JSON.stringify({watch:S.watch,fwatch:S.fwatch,live:S.live,pins:S.pins,fpins:S.fpins}))}catch(e){}}
@@ -1006,14 +1200,14 @@ function toggle(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toa
  if(window.sbClient&&window.LOGGED){var q=window.sbClient.from('watched_segments');(on?q.upsert({segment_id:id},{onConflict:'user_id,segment_id',ignoreDuplicates:true}):q.delete().eq('segment_id',id)).then(function(){},function(){})}}
 var WSYNC='';
 function syncWatch(){var c=window.sbClient;if(!c)return;
- c.auth.getSession().then(function(r){var u=r.data&&r.data.session&&r.data.session.user;if(u){pendingReply();pushCheck();meLoad()}if(!u||WSYNC===u.id)return;WSYNC=u.id;
+ c.auth.getSession().then(function(r){var u=r.data&&r.data.session&&r.data.session.user;if(u){pendingReply();pushCheck();meLoad();folLoad();folPoll();stLoad()}if(!u||WSYNC===u.id)return;WSYNC=u.id;
   return c.from('watched_segments').select('segment_id').then(function(r2){if(r2.error)throw r2.error;
    var srv=r2.data.map(function(x){return Number(x.segment_id)}),add=S.watch.filter(function(id){return srv.indexOf(id)<0});
    srv.forEach(function(id){if(S.watch.indexOf(id)<0)S.watch.push(id)});save();render();pushPrefs();
    if(add.length)return c.from('watched_segments').upsert(add.map(function(id){return {segment_id:id}}),{onConflict:'user_id,segment_id',ignoreDuplicates:true})
   })}).catch(function(){WSYNC=''})}
 window.syncWatch=syncWatch;syncWatch();
-function setTab(t){if(t!=='state'){S.focus=null;S.ts='T';S.q=''}if(t!=='fuel'){S.fs='T';S.fq=''}if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;if(t==='report'&&!setTab.w){setTab.w=1;setTimeout(function(){toast('🚫 Pas de téléphone en conduisant')},400)}S.tab=t;if(t==='community')cmLoad();window.scrollTo(0,0);render()}
+function setTab(t){if(t!=='state'){S.focus=null;S.ts='T';S.q=''}if(t!=='fuel'){S.fs='T';S.fq=''}if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;if(t==='report'&&!setTab.w){setTab.w=1;setTimeout(function(){toast('🚫 Pas de téléphone en conduisant')},400)}S.tab=t;if(t==='community'){cmLoad();stLoad()}window.scrollTo(0,0);render()}
 /* ouvre l’onglet Trafic (liste) directement sur le tronçon : il est placé en tête de liste et mis en évidence */
 function goSeg(id){S.view='list';S.zone='Tous';S.q='';S.ts='T';S.focus=id;setTab('state')}
 function setZone(z){S.focus=null;S.zone=z;render()}
@@ -1067,7 +1261,17 @@ function welcome(){try{if(window.__wlOpen)return;window.__wlOpen=1;
  function rel(){if(!drag)return;drag=0;var to=Math.round(pos-vel*260/PPC),b=Math.round(p0);if(to===b&&Math.abs(vel)>.3)to=b-(vel>0?1:-1);to=Math.max(0,Math.min(n-1,to));snap(to,Math.max(300,Math.min(650,Math.abs(to-pos)*420+220)))}
  o.addEventListener('pointerup',rel);o.addEventListener('pointercancel',rel);
  place(0);document.body.appendChild(o);draw()}catch(e){}}
-setTimeout(welcome,0);
+/* écran de bienvenue : une seule fois, à la toute première ouverture de l'app sur cet appareil */
+(function(){var WK='trafik-welcomed',fired=false;
+ function seen(){try{return !!localStorage.getItem(WK)}catch(e){return false}}
+ function mark(){try{localStorage.setItem(WK,'1')}catch(e){}}
+ /* jamais pour une personne connectée (retour de la page de connexion, autre navigateur, lien de confirmation) ni après une première fois */
+ function decide(u){if(fired)return;fired=true;if(seen()||u||/auth\.html/.test(document.referrer||'')){mark();return}mark();welcome()}
+ if(seen())return;
+ var c=window.sbClient;
+ if(!c||!c.auth){decide(null);return}
+ var t=setTimeout(function(){decide(null)},2500);
+ c.auth.getSession().then(function(r){clearTimeout(t);decide(r&&r.data&&r.data.session&&r.data.session.user)},function(){clearTimeout(t);decide(null)})})();
 function pinSeg(id){var i=S.pins.indexOf(id);if(i>=0){S.pins.splice(i,1);toast('Tronçon désépinglé')}else{if(S.pins.length>=2)return toast('2 tronçons épinglés au maximum : désépinglez-en un d’abord');S.pins.push(id);toast('Tronçon épinglé en haut de la liste')}save();render()}
 function pinSt(id){id=String(id);var i=S.fpins.indexOf(id);if(i>=0){S.fpins.splice(i,1);toast('Station désépinglée')}else{if(S.fpins.length>=2)return toast('2 stations épinglées au maximum : désépinglez-en une d’abord');S.fpins.push(id);toast('Station épinglée en haut de la liste')}save();render()}
 function setLive(){S.live=!S.live;save();render()}
@@ -1088,22 +1292,37 @@ function openReq(id){var rs=REQ.concat(LREQ).filter(function(q){return q.seg===i
   return S.reports.some(function(r){return r.seg===id&&r.t>t})?null:t}
 /* réception : tout signalement reçu d’une autre personne sur une route que je suis ou que j’ai demandée */
 var FSEEN={},FSEEN0=false;
+/* personnes suivies : identifiant -> pseudonyme ; nouveaux abonnés signalés par une alerte */
+var FOLM={},FOLM0={};
+function folLoad(){if(!window.sbRpc||!window.UID)return Promise.resolve();
+ return window.sbRpc('get_my_following').then(function(r){var m={};(Array.isArray(r.data)?r.data:[]).forEach(function(x){if(x&&x.o_user&&x.o_pseudo)m[x.o_user]=x.o_pseudo});FOLM=m;if(S.tab==='community')render()}).catch(function(){})}
+function folPoll(){if(!window.sbRpc||!window.UID)return;
+ var k='trafik-fol-seen-'+window.UID,since=null;try{since=localStorage.getItem(k)}catch(e){}since=since||FOLM0[k]||null;
+ if(!since){since=new Date().toISOString();FOLM0[k]=since;try{localStorage.setItem(k,since)}catch(e){}return}
+ window.sbRpc('get_new_followers',{p_since:since}).then(function(r){var a=Array.isArray(r.data)?r.data:[];if(!a.length)return;
+  var mx=a.reduce(function(m,x){return Date.parse(x.o_at)>Date.parse(m)?x.o_at:m},a[0].o_at);FOLM0[k]=mx;try{localStorage.setItem(k,mx)}catch(e){}
+  a.slice().reverse().forEach(function(x){var t=x.o_pseudo?esc(x.o_pseudo)+' vous suit':'Un nouveau membre vous suit';pushAlert({t:hhmm(Date.now()),txt:t,l:3,k:'abo'});toast(t)});
+  if(S.tab==='community')cmLoad(true)}).catch(function(){})}
+setInterval(function(){if(window.UID&&!document.hidden)folPoll()},90000);
+setInterval(function(){if(window.UID&&!document.hidden)folLoad()},300000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&window.UID){folPoll();folLoad()}});
 /* essence : alerte dès qu'une autre personne signale une station (sans attendre les votes) */
 function fuelRecv(docs){var fresh=[];
  docs.forEach(function(r){if(!((typeof r.st==='number'||typeof r.st==='string')&&typeof r.t==='number'&&(r.lvl===0||r.lvl===1||r.lvl===2)))return;var k=r.st+':'+r.t+':'+r.lvl+':'+(r.u||'');if(!FSEEN[k]){FSEEN[k]=1;fresh.push(r)}});
  if(!FSEEN0){FSEEN0=true;return}
- fresh.forEach(function(r){if(mine(r)||!fWanted(r.st))return;var st=(window.STN||[]).filter(function(x){return String(x.id)===String(r.st)})[0];if(!st)return;
-  var txt=st.name+' : '+FLV[r.lvl].n.toLowerCase()+' (nouveau signalement)'+(fstat(r.st)===3?' · en attente de confirmation':'');
-  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception',st:r.st});toast('Signalement · '+txt)})}
+ fresh.forEach(function(r){var fb=r.u&&FOLM[r.u];if(mine(r)||(!fb&&!fWanted(r.st)))return;var st=(window.STN||[]).filter(function(x){return String(x.id)===String(r.st)})[0];if(!st)return;
+  var txt=st.name+' : '+FLV[r.lvl].n.toLowerCase()+(fb?' (signalé par '+esc(fb)+')':' (nouveau signalement)')+(fstat(r.st)===3?' · en attente de confirmation':'');
+  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception',st:r.st,by:fb||undefined});toast('Signalement · '+txt)})}
 var SEEN={},SEEN0=false;
 function recvCheck(docs){var n=Date.now(),fresh=[];
  docs.forEach(function(r){var k=r.seg+':'+r.t+':'+r.lvl+':'+(r.u||'');if(!SEEN[k]){SEEN[k]=1;fresh.push(r)}});
  if(!SEEN0){SEEN0=true;return}
  fresh.forEach(function(r){if(mine(r)||!seg(r.seg))return;
   var asked=REQ.concat(LREQ).some(function(q){return mine(q)&&q.seg===r.seg&&n-q.t<45*MIN&&r.t>q.t}),w=S.watch.indexOf(r.seg)>=0;
-  if(!asked&&!w&&!reqWanted(r.seg))return;
-  var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':' (nouveau signalement)')+(status(r.seg)===3?' · en attente de confirmation':'');
-  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception',seg:Number(r.seg)});toast('Signalement · '+txt)})}
+  var fb=r.u&&FOLM[r.u];
+  if(!asked&&!w&&!fb&&!reqWanted(r.seg))return;
+  var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':fb?' (signalé par '+esc(fb)+')':' (nouveau signalement)')+(status(r.seg)===3?' · en attente de confirmation':'');
+  pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception',seg:Number(r.seg),by:fb||undefined});toast('Signalement · '+txt)})}
 function ask(id){if(coolLeft('q:'+id)||(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN))return noteCool('q:'+id,'Demande déjà envoyée');
   needLogin(function(){lastAsk[id]=Date.now();var q={seg:id,t:Date.now(),own:1};
   function loc(){LREQ.push(q);coolMark('q:'+id);toast('Demande enregistrée sur cet appareil seulement');render()}
@@ -1463,12 +1682,12 @@ S.dd={};
 function dropPanel(key,t,n,body,act,red){return '<details class="panel dd"'+(S.dd[key]?' open':'')+' ontoggle="S.dd[\''+key+'\']=this.open"><summary><span>'+t+'<span class="cnt'+(red?' rd':'')+'">'+n+'</span></span><svg class="cv" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'+body+(act?'<div class="ddf">'+act+'</div>':'')+'</details>'}
 function panel(t,body,act){return '<section class="panel"><div class="ph"><b>'+t+'</b>'+(act||'')+'</div>'+body+'</section>'}
 var TI={
-'Trafic':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiH" x1="0" x2="1"><stop offset="0" stop-color="#46515d"/><stop offset=".5" stop-color="#1c232a"/><stop offset="1" stop-color="#0d1115"/></linearGradient><radialGradient id="tiR" cx=".38" cy=".32"><stop offset="0" stop-color="#ffb3b3"/><stop offset=".55" stop-color="#e5303a"/><stop offset="1" stop-color="#8a0f18"/></radialGradient><radialGradient id="tiY" cx=".38" cy=".32"><stop offset="0" stop-color="#fff0a8"/><stop offset=".55" stop-color="#f5b81c"/><stop offset="1" stop-color="#9a6a05"/></radialGradient><radialGradient id="tiG" cx=".38" cy=".32"><stop offset="0" stop-color="#b6ffd0"/><stop offset=".55" stop-color="#22b868"/><stop offset="1" stop-color="#0c6535"/></radialGradient></defs><rect x="29" y="48" width="6" height="13" fill="#2a323a"/><rect x="24" y="58" width="16" height="4" rx="1.5" fill="#1a2026"/><rect x="19" y="2" width="26" height="48" rx="7" fill="url(#tiH)" stroke="#66737f" stroke-width="1.2"/><circle cx="32" cy="14" r="6.5" fill="url(#tiR)"/><circle cx="32" cy="26" r="6.5" fill="url(#tiY)"/><circle cx="32" cy="38" r="6.5" fill="url(#tiG)"/><path d="M24 9.5q8-5 16 0l-1.4 2.4q-6.6-3-13.200 0z" fill="#07090c"/><path d="M24 21.500q8-5 16 0l-1.400 2.400q-6.600-3-13.200 0z" fill="#07090c"/><path d="M24 33.500q8-5 16 0l-1.400 2.400q-6.600-3-13.200 0z" fill="#07090c"/></svg>',
-'Carte':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 15L22 10V50L6 55Z" fill="#cfc7a3"/><path d="M22 10L42 16V56L22 50Z" fill="#ece6cb"/><path d="M42 16L58 11V51L42 56Z" fill="#c4dbb0"/><path d="M22 36q8-4 12 2t8 4" fill="none" stroke="#6fb0e3" stroke-width="3.500" stroke-linecap="round"/><path d="M8 40l14-5M22 26l20 8M42 30l16-6" fill="none" stroke="#e9a43c" stroke-width="2.200" stroke-linecap="round"/><path d="M6 15L22 10L42 16L58 11V51L42 56L22 50L6 55Z" fill="none" stroke="#8d8566" stroke-width="1.200" stroke-linejoin="round"/><ellipse cx="34" cy="38" rx="6" ry="2" fill="rgba(0,0,0,.35)"/><g transform="translate(18 6) scale(.5)"><path d="M32 4C21.500 4 14 11.700 14 21.400c0 12.700 14.500 27.600 17.100 30.200a1.300 1.300 0 0 0 1.800 0C35.500 49 50 34.100 50 21.400 50 11.700 42.500 4 32 4z" fill="#E5484D" stroke="#8f1b22" stroke-width="2"/><circle cx="32" cy="21.500" r="7.500" fill="#fff"/></g></svg>',
-'Essence':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiP" x1="0" x2="1"><stop offset="0" stop-color="#f0525a"/><stop offset=".55" stop-color="#cf2a33"/><stop offset="1" stop-color="#8f1119"/></linearGradient></defs><rect x="6" y="56" width="38" height="5" rx="1.500" fill="#39434d"/><rect x="10" y="6" width="30" height="51" rx="3.500" fill="url(#tiP)" stroke="#6e0d14" stroke-width="1"/><rect x="14" y="11" width="22" height="13" rx="2" fill="#10241b" stroke="#2b3138" stroke-width="1.500"/><rect x="17" y="15" width="16" height="5" rx="1" fill="#5cf0a0" opacity=".9"/><rect x="14" y="30" width="22" height="16" rx="2" fill="#a51e27"/><rect x="18" y="34" width="14" height="3" rx="1" fill="#f3d9da" opacity=".85"/><rect x="18" y="40" width="9" height="3" rx="1" fill="#f3d9da" opacity=".6"/><path d="M40 20h4a4 4 0 0 1 4 4v22" fill="none" stroke="#161a1f" stroke-width="3.200" stroke-linecap="round"/><path d="M44 46h10v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3z" fill="#2a3139" stroke="#59646f" stroke-width="1"/><path d="M54 46l4-5" stroke="#59646f" stroke-width="3" stroke-linecap="round"/></svg>',
-'Sécurité':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8fe0"/><stop offset=".55" stop-color="#2a56b5"/><stop offset="1" stop-color="#16306b"/></linearGradient></defs><path d="M32 3L55 11V30C55 44 46 55 32 61C18 55 9 44 9 30V11Z" fill="url(#tiS)" stroke="#d3dce8" stroke-width="3" stroke-linejoin="round"/><path d="M32 3L55 11V30C55 44 46 55 32 61Z" fill="#000" opacity=".2"/><path d="M32 9L49 15V30C49 41 42 49 32 54C22 49 15 41 15 30V15Z" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.500"/><path d="M32 18l3.500 7.500 8 1-5.900 5.600 1.600 8L32 36l-7.200 4.100 1.600-8-5.900-5.600 8-1z" fill="#f6c431" stroke="#a87a0b" stroke-width="1" stroke-linejoin="round"/></svg>',
-'Cloche':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiB" x1="0" x2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".45" stop-color="#f2b91f"/><stop offset="1" stop-color="#a86f06"/></linearGradient></defs><path d="M32 5a3.500 3.500 0 0 1 3.500 3.500v1.800C42.500 12 47 18 47 26v10l6 8v3H11v-3l6-8V26c0-8 4.500-14 11.500-15.700V8.500A3.500 3.500 0 0 1 32 5z" fill="url(#tiB)" stroke="#8a5a05" stroke-width="1.200"/><path d="M22 27c0-5 3-9 7-10.500" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.500" stroke-linecap="round"/><path d="M24 49a8 8 0 0 0 16 0z" fill="#b57c0b" stroke="#7a5004" stroke-width="1"/><circle cx="48" cy="14" r="8" fill="#e5303a" stroke="#fff" stroke-width="2"/><rect x="47" y="9.500" width="2" height="6" rx="1" fill="#fff"/><circle cx="48" cy="18" r="1.200" fill="#fff"/></svg>',
-'WhatsApp':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tiW" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5cf08a"/><stop offset="1" stop-color="#119c4a"/></linearGradient></defs><path d="M32 4a27 27 0 0 0-23.300 40.600L5 60l15.800-3.600A27 27 0 1 0 32 4z" fill="url(#tiW)" stroke="#0d7a39" stroke-width="1.500"/><path d="M23.500 18.500c-1.300 0-2.700 1.200-3.200 2.800-1 3.100.4 7.300 4.300 11.700 4 4.400 8.600 6.800 12 6.400 1.700-.2 3.100-1.700 3.300-3.100.1-.5-.1-1-.5-1.200l-4.100-2.100c-.5-.2-1.100-.1-1.400.4l-1.400 1.700c-.3.400-.8.500-1.300.3-2.700-1.200-5.100-3.700-6.400-6.300-.2-.4-.1-.9.2-1.300l1.400-1.600c.3-.4.400-.9.100-1.400l-2.100-3.800c-.2-.4-.6-.6-1.100-.6z" fill="#fff"/></svg>'};
+'Trafic':'<svg class="ti" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="20" y="4" width="24" height="46" rx="7"/><circle cx="32" cy="15" r="5" fill="#EE6A6A" stroke="none"/><circle cx="32" cy="27" r="5" fill="#F2B91F" stroke="none"/><circle cx="32" cy="39" r="5" fill="#46B982" stroke="none"/><path d="M32 50v10M24 60h16"/></svg>',
+'Carte':'<svg class="ti" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 58S14 40 14 26a18 18 0 0 1 36 0c0 14-18 32-18 32z"/><circle cx="32" cy="26" r="6.500" fill="#EE6A6A" stroke="none"/></svg>',
+'Essence':'<svg class="ti" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 58V10a4 4 0 0 1 4-4h20a4 4 0 0 1 4 4v48M8 58h36"/><rect x="18" y="13" width="16" height="12" rx="2" fill="#46B982" stroke="none"/><path d="M40 22h5a4 4 0 0 1 4 4v18a3.500 3.500 0 0 0 7 0V24l-6-7"/></svg>',
+'Sécurité':'<svg class="ti" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 5L54 13v16c0 14-9 24-22 30C19 53 10 43 10 29V13z"/><path d="M32 20v15" stroke="#F2B91F" stroke-width="4"/><circle cx="32" cy="43" r="2.800" fill="#F2B91F" stroke="none"/></svg>',
+'Cloche':'<svg class="ti" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 8c-9 0-15 7-15 16v10l-5 8h40l-5-8V24c0-9-6-16-15-16z"/><path d="M26 50a6 6 0 0 0 12 0"/><circle cx="47" cy="14" r="6" fill="#EE6A6A" stroke="none"/></svg>',
+'WhatsApp':'<svg class="ti" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4a27 27 0 0 0-23.300 40.600L5 60l15.800-3.600A27 27 0 1 0 32 4z" fill="#25D366"/><path d="M23.500 18.500c-1.300 0-2.700 1.200-3.200 2.800-1 3.100.4 7.300 4.300 11.700 4 4.400 8.600 6.800 12 6.400 1.700-.2 3.100-1.700 3.300-3.100.1-.5-.1-1-.5-1.200l-4.100-2.100c-.5-.2-1.100-.1-1.400.4l-1.400 1.700c-.3.400-.8.500-1.300.3-2.700-1.200-5.100-3.700-6.400-6.300-.2-.4-.1-.9.2-1.300l1.400-1.600c.3-.4.400-.9.100-1.400l-2.100-3.800c-.2-.4-.6-.6-1.100-.6z" fill="#fff"/></svg>'};
 /* ===== Évaluer l’app : 5 étoiles sur l’Accueil + rappel à l’écran tous les 15 jours après la première utilisation ===== */
 var RK='trafik-rating',RF='trafik-first',RN='trafik-rate-next',RDAYS=15*864e5;
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
@@ -1527,7 +1746,7 @@ function alertsV(){
   var rq=reqList().map(function(q){var sg=seg(q.seg);return '<div class="row" style="cursor:default"><span class="dot l3"></span><div class="nm">Quelqu’un demande l’état de la route : '+esc(sg?sg[1]:'')+'<div class="mute">'+ago(q.t)+'</div></div><button type="button" class="alt" style="margin-right:4px" onclick="openReply('+q.seg+')">Répondre</button>'+X('delReq(\''+q.seg+':'+q.t+'\')')+'</div>'});
   var fq=freqList().map(function(q){var s=(window.STN||[]).filter(function(x){return x.id===q.st})[0];return '<div class="row" style="cursor:default"><span class="dot l3"></span><div class="nm">Quelqu’un demande si la station est fonctionnelle : '+esc(s?s.name:'')+'<div class="mute">'+ago(q.t)+'</div></div><button type="button" class="alt" style="margin-right:4px" onclick="openFuelReply('+q.st+')">Répondre</button>'+X('delReq(\'f'+q.st+':'+q.t+'\')')+'</div>'});
   var item=function(o){var a=o.a;return '<div class="row" style="cursor:default"><span class="dot '+LV[a.l].c+'"></span><div class="nm">'+a.txt+'<div class="mute">'+esc(a.t)+'</div></div>'+X('delAlert('+o.i+')')+'</div>'};
-  var su=alKind('suivi').map(item),rc=alKind('reception').map(item),va=alKind('valide').map(item);
+  var su=alKind('suivi').map(item),rc=alKind('reception').map(item),va=alKind('valide').map(item),ab=alKind('abo').map(item),sx=alKind('statut').map(item);
   var clr=function(k,n){return n?'<button class="lnk" onclick="clearKind(\''+k+'\')">Tout effacer</button>':''};
   return nb+
    dropPanel('a_w','Routes suivies',S.watch.length,S.watch.length?S.watch.map(function(id){return miniSeg(id)}).join(''):EMPTY('Aucune route suivie'),'<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Suivre</button>',1)+
@@ -1535,6 +1754,8 @@ function alertsV(){
    dropPanel('a_su','Changements sur mes routes',su.length,su.length?su.join(''):EMPTY('Aucun changement sur vos routes suivies'),clr('suivi',su.length),1)+
    dropPanel('a_va','États validés par vote',va.length,va.length?va.join(''):EMPTY('Aucun état validé récemment'),clr('valide',va.length),1)+
    dropPanel('a_rc','Signalements',rc.length,rc.length?rc.join(''):EMPTY('Aucun signalement reçu'),clr('reception',rc.length),1)+
+   dropPanel('a_ab','Nouveaux abonnés',ab.length,ab.length?ab.join(''):EMPTY('Aucun nouvel abonné'),clr('abo',ab.length),1)+
+   dropPanel('a_sx','Nouveaux statuts',sx.length,sx.length?sx.join(''):EMPTY('Aucun nouveau statut'),clr('statut',sx.length),1)+
    dropPanel('a_fq','Demandes d’essence',fq.length,fq.length?fq.join(''):EMPTY('Personne ne demande si une station est fonctionnelle'),clr('essence',fq.length),1)+
    ''}
 
@@ -1708,7 +1929,7 @@ function refreshAll(silent){
  if(REFRESHING)return Promise.resolve();REFRESHING=true;if(!silent)ptrSpin();
  var tasks=[];
  try{if(window.sbRefresh)tasks.push(window.sbRefresh())}catch(e){}
- try{if(S.tab==='community')tasks.push(cmLoad(true))}catch(e){}
+ try{if(S.tab==='community'){tasks.push(cmLoad(true));tasks.push(stLoad(true))}}catch(e){}
  try{if(SWR&&SWR.update)tasks.push(Promise.resolve(SWR.update()).catch(function(){}))}catch(e){}
  /* l’indicateur reste visible au moins 0,6 s ; sur réseau très lent, on ne bloque jamais plus de 8 s */
  var min=new Promise(function(r){setTimeout(r,silent?0:600)}),cap=new Promise(function(r){setTimeout(r,8000)});
