@@ -767,25 +767,36 @@ function avInner(){var d=avGet(),pick='document.getElementById(\'avf\').click()'
   '<div style="text-align:center;margin-bottom:6px"><button type="button" class="lnk" onclick="'+pick+'">'+(d?'Changer la photo':'Ajouter une photo (facultatif)')+'</button>'+(d?' · <button type="button" class="lnk" onclick="avRemove()">Retirer</button>':'')+'</div><input type="file" id="avf" accept="image/*" hidden onchange="avPick(this)">'}
 function avHtml(){return '<div id="avw">'+avInner()+'</div>'}
 function avUpdate(){var e=document.getElementById('avw');if(e)e.innerHTML=avInner()}
-function avFetch(){var u=window.CURU;if(!u||avGet()||AVTRY===u.id||!window.sbClient||!window.sbClient.storage)return;AVTRY=u.id;
- window.sbClient.storage.from('avatars').download(u.id+'/avatar.jpg').then(function(r){
-  if(r.error||!r.data){if(r.error&&!/not.?found|404/i.test(String(r.error.message||r.error.statusCode||'')))AVTRY='';return}
-  var fr=new FileReader();fr.onload=function(){avSet(String(fr.result));avUpdate()};fr.readAsDataURL(r.data)},function(){AVTRY=''})}
+var AVT=0;
+/* synchronisation entre appareils : la copie du serveur fait toujours foi. Au démarrage, à l'ouverture du profil et au retour dans l'application, on recompare avec le serveur (au plus une fois par minute, sauf demande explicite). Photo retirée ailleurs : la copie locale est effacée aussi. */
+function avFetch(force){var u=window.CURU;if(!u||!window.sbClient||!window.sbClient.storage)return;
+ if(!force&&AVTRY===u.id&&Date.now()-AVT<60000)return;AVTRY=u.id;AVT=Date.now();var id=u.id;
+ function gone(){if(window.CURU&&window.CURU.id===id&&avGet()){avSet(null);avUpdate()}}
+ window.sbClient.storage.from('avatars').createSignedUrl(id+'/avatar.jpg',60).then(function(q){
+  if(!window.CURU||window.CURU.id!==id)return;
+  if(!q||q.error||!q.data||!q.data.signedUrl){var m=String((q&&q.error&&(q.error.message||q.error.statusCode))||'');if(/not.?found|404/i.test(m))gone();else AVT=0;return}
+  return fetch(q.data.signedUrl,{cache:'no-store'}).then(function(r){
+   if(r.status===404){gone();return}
+   if(!r.ok){AVT=0;return}
+   return r.blob().then(function(b){return new Promise(function(ok){var fr=new FileReader();fr.onload=function(){ok(String(fr.result))};fr.onerror=function(){ok(null)};fr.readAsDataURL(b)})}).then(function(d){
+    if(!d||!window.CURU||window.CURU.id!==id)return;
+    if(d!==avGet()){avSet(d);avUpdate()}})})}).catch(function(){AVT=0})}
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&window.CURU)avFetch()});
 function avPick(inp){var f=inp.files&&inp.files[0],u=window.CURU;if(!f||!u)return;if(!/^image\//.test(f.type)){toast('Choisissez une image');return}
  var im=new Image(),url=URL.createObjectURL(f);
  im.onload=function(){URL.revokeObjectURL(url);var SZ=256,c=document.createElement('canvas');c.width=c.height=SZ;var m=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,SZ,SZ);
   var data=c.toDataURL('image/jpeg',.85);
   c.toBlob(function(b){if(!b)return toast('Image illisible : essayez une autre photo');toast('Envoi de la photo…');
-   window.sbClient.storage.from('avatars').upload(u.id+'/avatar.jpg',b,{upsert:true,contentType:'image/jpeg',cacheControl:'3600'}).then(function(r){if(r.error)throw r.error;avSet(data);avUpdate();toast('Photo enregistrée')}).catch(function(){toast('Échec de l’envoi de la photo : réessayez')})},'image/jpeg',.85)};
+   window.sbClient.storage.from('avatars').upload(u.id+'/avatar.jpg',b,{upsert:true,contentType:'image/jpeg',cacheControl:'3600'}).then(function(r){if(r.error)throw r.error;avSet(data);AVT=Date.now();avUpdate();toast('Photo enregistrée')}).catch(function(){toast('Échec de l’envoi de la photo : réessayez')})},'image/jpeg',.85)};
  im.onerror=function(){URL.revokeObjectURL(url);toast('Image non prise en charge : choisissez une photo JPEG ou PNG')};im.src=url}
-function avRemove(){var u=window.CURU;if(!u)return;window.sbClient.storage.from('avatars').remove([u.id+'/avatar.jpg']).then(function(r){if(r.error)throw r.error;avSet(null);avUpdate();toast('Photo retirée')}).catch(function(){toast('Échec : réessayez')})}
+function avRemove(){var u=window.CURU;if(!u)return;window.sbClient.storage.from('avatars').remove([u.id+'/avatar.jpg']).then(function(r){if(r.error)throw r.error;avSet(null);AVT=Date.now();avUpdate();toast('Photo retirée')}).catch(function(){toast('Échec : réessayez')})}
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
  openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+
   '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfse" role="alert" aria-live="polite" style="margin-top:6px;font-weight:700"></div><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Sentinelle, Gardien et Légende.</div>'+
   srow('Vie privée','Photo de profil et statut : qui peut les voir','<button type="button" class="alt" onclick="openPrivacy()">Gérer</button>')+
   '<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
- avFetch();try{window.sbClient.from('profiles').select('prenom,nom,telephone,pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone],['pfs',d.pseudo]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]});var pb=document.getElementById('pfpub');if(pb&&!pb.dataset.t)pb.setAttribute('aria-checked',String(!!d.photo_public));MYP={pseudo:d.pseudo||'',pub:!!d.photo_public}})}catch(e){}}
+ avFetch(true);try{window.sbClient.from('profiles').select('prenom,nom,telephone,pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone],['pfs',d.pseudo]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]});var pb=document.getElementById('pfpub');if(pb&&!pb.dataset.t)pb.setAttribute('aria-checked',String(!!d.photo_public));MYP={pseudo:d.pseudo||'',pub:!!d.photo_public}})}catch(e){}}
 function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
  var ps=v('pfs').toLowerCase();
  if(ps&&!pseudoOk(ps)){pfsMsg('5 caractères maximum : lettres minuscules (au moins une) et chiffres.');return toast('Pseudonyme : 5 caractères maximum, lettres minuscules (au moins une) et chiffres')}
