@@ -889,11 +889,11 @@ function communityV(){
  else body=cur.map(function(x){return cmRow(x,me)}).join('');
  return head+mt+tog+note+'<section class="panel" aria-live="polite">'+body+'</section>'}
 
-/* ===== Statuts : 1 photo + légende, réservés aux niveaux Gardien (4) et Légende (5) =====
+/* ===== Statuts : 1 photo + légende, réservés aux niveaux Sentinelle (3), Gardien (4) et Légende (5) =====
    Visibles seulement par le propriétaire et ses abonnés (règles de la base), effacés automatiquement au bout de 30 h.
    Les abonnés reçoivent une notification à la publication (serveur : fonction notify-status, même app fermée). */
 var STT={rows:null,urls:{},t:0,busy:false,err:false},STF=null,STPB=false,STI=0;
-function stCanPost(){var lv=ME&&ME.level?ME.level.n:0;return !!(ME&&(ME.admin||lv>=4))}
+function stCanPost(){var lv=ME&&ME.level?ME.level.n:0;return !!(ME&&(ME.admin||lv>=3))}
 function stSeenGet(){try{return JSON.parse(localStorage.getItem('trafik-st-seen-'+window.UID))||{}}catch(e){return {}}}
 function stSeenSet(o){try{var n=Date.now();for(var k in o)if(n-o[k]>3*864e5)delete o[k];localStorage.setItem('trafik-st-seen-'+window.UID,JSON.stringify(o))}catch(e){}}
 function stLoad(force){if(!window.sbRpc||!window.UID||STT.busy||(!force&&STT.rows&&Date.now()-STT.t<45000))return Promise.resolve();
@@ -918,7 +918,7 @@ function stNotify(rows){try{var k='trafik-st-notif-'+window.UID,old=null;try{old
 function stStrip(){var rows=STT.rows,seen=stSeenGet(),adm=!!(ME&&ME.admin),mine=!adm&&rows&&rows.filter(function(x){return x.o_mine})[0],can=stCanPost();
  var h='<div class="card" style="margin-top:14px"><div class="sth"><b>Statuts</b>'+(can&&!mine&&!STT.ban?'<button type="button" class="alt" style="min-height:36px;padding:6px 14px;font-size:14px" onclick="stCompose()">+ Publier</button>':'')+'</div>';
  if(!rows)h+='<div class="mute" style="margin-top:6px">'+(STT.err?'Impossible de charger les statuts. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
- else if(!rows.length)h+='<div class="mute" style="margin-top:6px">Aucun statut pour le moment. Les membres Gardien et Légende que vous suivez peuvent publier une photo visible 30 h.</div>';
+ else if(!rows.length)h+='<div class="mute" style="margin-top:6px">Aucun statut pour le moment. Les membres Sentinelle, Gardien et Légende que vous suivez peuvent publier une photo visible 30 h.</div>';
  else h+='<div class="sts" role="list">'+rows.map(function(x,i){var u=STT.urls[x.o_path],nm=x.o_mine?'Mon statut':x.o_pseudo;
   return '<button type="button" class="stb" role="listitem" aria-label="Statut de '+esc(nm)+'" onclick="stOpen('+i+')"><span class="str'+(seen[x.o_path]?'':' un')+'">'+(u?'<img alt="" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo||'?').charAt(0).toUpperCase()))+'</span><span class="stn">'+esc(nm)+'</span></button>'}).join('')+'</div>';
  if(STT.ban&&!(ME&&ME.admin))h+='<div class="offl" style="margin:10px 0 0;text-align:left;border:1px solid var(--r)"><b>Statut supprimé</b> : '+esc(STT.ban.reason)+'.<br>Vous pourrez publier de nouveau dans environ '+stBanLeft()+' h.</div>';
@@ -934,7 +934,7 @@ function stOpen(i){var rows=STT.rows||[],x=rows[i];if(!x)return;STI=i;var adm=!!
  var u=STT.urls[x.o_path],exp=Date.parse(x.o_expires),forever=exp>Date.UTC(2100,0,1),left=Math.max(1,Math.ceil((exp-Date.now())/36e5)),nav='';
  if(rows.length>1)nav='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+rows.length-1)%rows.length)+')">‹ Précédent</button><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+1)%rows.length)+')">Suivant ›</button></div>';
  var eye=x.o_views!=null?'<button type="button" class="alt" style="min-height:36px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;flex:none" aria-label="Nombre de vues : '+x.o_views+'" onclick="stViews('+i+')">'+EYE+'<b>'+x.o_views+'</b></button>':'';
- openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+(x.o_admin?admChk(18):cmChk(Math.max(4,x.o_level),18)),
+ openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+(x.o_admin?admChk(18):(x.o_level>=3?cmChk(x.o_level,18):'')),
   '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+'</div>'+
   (x.o_caption?'<p class="stcap">'+stCapHtml(x)+'</p>':'')+
   (x.o_pending?'<div class="offl" style="margin:10px 0 0;text-align:left">Vérification automatique en cours : seul vous le voyez pour l’instant.</div>':'')+
@@ -969,7 +969,7 @@ function stViews(i){var x=(STT.rows||[])[i];if(!x)return;var p=x.o_path;
   '<button type="button" class="alt" style="width:100%;margin-top:12px" onclick="stOpenPath(\''+p+'\')">Retour au statut</button>');
  STT.t=0;stLoad(true).then(function(){var y=(STT.rows||[]).filter(function(r){return r.o_path===p})[0],n=document.getElementById('svn'),l=document.getElementById('svl');if(y&&n&&y.o_views!=null){n.textContent=y.o_views;l.textContent=lbl(y.o_views)}})}
 function stCompose(){if(!window.LOGGED)return askLogin('publier un statut');
- if(!stCanPost())return toast('Les statuts sont réservés aux niveaux Gardien et Légende');
+ if(!stCanPost())return toast('Les statuts sont réservés aux niveaux Sentinelle, Gardien et Légende');
  if(!(ME&&ME.admin)&&STT.rows&&STT.rows.some(function(x){return x.o_mine}))return toast('Un seul statut par jour : vous pourrez en publier un nouveau 30 h après la publication');
  if(STT.ban&&!(ME&&ME.admin))return toast('Statut supprimé : vous pourrez publier de nouveau dans '+stBanLeft()+' h');
  if(MYP&&!MYP.pseudo&&!(ME&&ME.admin))return toast('Choisissez d’abord un pseudonyme dans votre profil');
