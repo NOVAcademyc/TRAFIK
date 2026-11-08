@@ -1017,9 +1017,10 @@ function lvBar(l,p){var v=lvPct(l,p);return '<div class="lvb" role="progressbar"
 function meCompare(d){try{var uid=window.UID,codes=d.badges.filter(function(b){return b.earned}).map(function(b){return b.code}),s=JSON.parse(localStorage.getItem(MEK)||'null');
  localStorage.setItem(MEK,JSON.stringify({u:uid,p:d.points,v:d.validated,pr:d.proposals,lv:d.level.n,b:codes}));
  if(!s||s.u!==uid||d.admin)return;
- var msg=[],gain=d.points-s.p;
- if(d.validated>s.v)msg.push('Votre signalement a été validé par la communauté (+'+gain+' point'+(gain>1?'s':'')+')');
- else if(d.proposals>s.pr)msg.push('Votre proposition a été publiée : merci ! (+'+gain+' points)');
+ var msg=[],gain=d.points-s.p,ev=[];
+ if(d.validated>s.v)ev.push('Votre signalement a été validé par la communauté');
+ if(d.proposals>s.pr)ev.push('Votre proposition a été publiée : merci !');
+ if(ev.length)msg.push(ev.join(' · ')+(gain>0?' (+'+gain+' point'+(gain>1?'s':'')+' depuis votre dernière visite)':''));
  if(d.level.n>s.lv)msg.push('🏆 Nouveau niveau : '+esc(d.level.name));
  d.badges.forEach(function(b){if(b.earned&&(s.b||[]).indexOf(b.code)<0)msg.push(esc(b.icon)+' Nouveau badge : '+esc(b.name))});
  msg.forEach(function(t){pushAlert({t:hhmm(Date.now()),txt:t,l:0,k:'valide'});toast(dec(t))})}catch(e){}}
@@ -1046,7 +1047,7 @@ function meHtml(){if(!ME)return '<div class="mute" style="padding:20px 0;text-al
  return '<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span style="font-size:38px;line-height:1" aria-hidden="true">'+lvIcon(l.n)+'</span><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800">'+esc(l.name)+'</div><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+
   (ME.admin?'<div class="offl" style="margin:8px 0 0">Compte administrateur : vous ne gagnez pas de points.</div>':'')+
   '<div class="bst"><div>'+ME.week+'<span>Cette semaine</span></div><div>'+ME.validated+'<span>Validés</span></div><div>'+ME.votes+'<span>Votes</span></div></div>'+
-  '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande). Chaque vote donne 1 point (10 par jour au maximum) ; une route ou une station que vous proposez, une fois publiée, rapporte 20 points. Un nouvel abonné actif vous rapporte 2 points (10 par jour au maximum).</div>'+
+  '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande), dans la limite de <b>40 points par 24 h</b> pour ces deux gains. Chaque vote donne 1 point (10 points au maximum par 24 h). Une route ou une station que vous proposez, une fois publiée, rapporte 20 points (une route ou une station déjà existante ne rapporte rien). Un nouvel abonné qui a lui-même au moins 20 points vous rapporte 2 points (10 points au maximum par 24 h).</div>'+
   (zk.length?'<div class="mute" style="margin-top:10px">Votre contribution cette semaine : '+zk.map(function(k){return '<b>'+esc(k)+'</b> '+z[k]+' pt'+(z[k]>1?'s':'')}).join(' · ')+'</div>':'')+
   '<h3 style="margin:16px 0 8px;font-size:16px">Badges ('+got+'/'+ME.badges.length+')</h3><div class="bgs">'+ME.badges.map(function(b){return '<div class="bg'+(b.earned?'':' lk')+'" role="group" aria-label="'+esc(b.name)+(b.earned?' : obtenu':' : verrouillé')+'"><span class="ic" aria-hidden="true">'+esc(b.icon)+'</span><b>'+esc(b.name)+'</b><small>'+esc(b.descr)+'</small></div>'}).join('')+'</div>'}
 function zonesHtml(){var h='<div class="mute" style="margin:12px 0 4px">Les zones se disputent la semaine : chaque point gagné compte pour la zone concernée. Remise à zéro chaque lundi.</div>';
