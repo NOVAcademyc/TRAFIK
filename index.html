@@ -43,9 +43,9 @@ main{padding:6px 16px 24px}
 .hero b{font-size:17px;display:block}
 .hero span{font-size:13.5px;opacity:.85}
 .hero .btns{display:flex;gap:8px}
-.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
-.sum div{border-radius:16px;padding:12px 6px;color:#fff;text-align:center;font-weight:800;font-size:28px;line-height:1.1;box-shadow:var(--sh)}
-.sum span{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.sum div{border-radius:12px;padding:6px 4px;color:#fff;text-align:center;font-weight:800;font-size:20px;line-height:1.05;box-shadow:var(--sh)}
+.sum span{display:block;font-size:11px;font-weight:600;margin-top:1px;line-height:1.15}
 .hd{color:#fff;font-weight:700;text-align:center}
 .hl{height:1px;background:#fff;margin:16px 0 0}
 :root[data-theme="light"] .hd{color:var(--ink)}
@@ -101,13 +101,13 @@ nav button[aria-current="page"]::before{content:"";position:absolute;top:0;left:
 .tog{display:flex;background:var(--soft);border-radius:14px;padding:4px;margin-top:12px;gap:4px}
 .tog button{flex:1;background:none;color:var(--mute);min-height:40px}
 .tog button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:var(--rad);padding:16px;text-align:left;box-shadow:var(--sh);min-height:112px}
-.tile svg{width:30px;height:30px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}
-.tile b{font-size:17px}.tile span{font-size:13px;color:var(--mute);font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:var(--rad);padding:10px 14px;text-align:left;box-shadow:var(--sh);min-height:0}
+.tile svg{width:24px;height:24px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-bottom:2px}
+.tile b{font-size:16px;line-height:1.15}.tile span{font-size:12px;color:var(--mute);font-weight:500;line-height:1.2}
 @media (min-width:720px){.grid2{grid-template-columns:repeat(4,1fr)}}
-.cta{width:100%;margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(135deg,var(--acc),#f0b92a);color:#2b2000;border-radius:var(--rad);padding:18px;min-height:76px;box-shadow:var(--sh)}
-.cta b{font-size:18px}.cta span{font-size:14px;font-weight:600;opacity:.8}
+.cta{width:100%;margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(135deg,var(--acc),#f0b92a);color:#2b2000;border-radius:var(--rad);padding:10px 14px;min-height:0;box-shadow:var(--sh)}
+.cta b{font-size:16px;line-height:1.15}.cta span{font-size:13px;font-weight:600;opacity:.8;line-height:1.2}
 .sep{display:flex;align-items:center;gap:12px;margin:26px 0 14px;color:var(--mute);font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
 .sep span{display:flex;align-items:center;gap:7px}.sep span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 0 3px rgba(42,138,91,.2)}
@@ -334,10 +334,10 @@ svg.ti{width:62px;height:62px}
 .stars .starb{background:transparent;border:0;box-shadow:none;color:var(--mute);font-size:36px;line-height:1;padding:2px 6px;min-width:46px;min-height:46px;cursor:pointer;transition:transform .12s ease,color .12s ease}
 .stars .starb.on{color:var(--acc,#F2B91F)}
 .stars .starb:active{transform:scale(.88)}
-.rc{padding:10px 14px}
-.rc .stars{margin-top:2px}
-.rc .stars .starb{font-size:28px;min-width:40px;min-height:36px;padding:0 4px}
-.sum.st div{background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:26px;padding:12px 8px}
+.rc{padding:8px 12px}
+.rc .stars{margin-top:0}
+.rc .stars .starb{font-size:22px;min-width:36px;min-height:32px;padding:0 3px}
+.sum.st div{background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:20px;padding:6px 6px}
 .sum.st span{color:var(--mute)}
 .av{position:relative;width:88px;height:88px;margin:4px auto 6px}
 .av .avc{width:88px;height:88px;min-height:0;border-radius:50%;padding:0;border:2px dashed var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;box-shadow:none}
@@ -793,13 +793,13 @@ function avRemove(){var u=window.CURU;if(!u)return;window.sbClient.storage.from(
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
  openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+
-  '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfse" role="alert" aria-live="polite" style="margin-top:6px;font-weight:700"></div><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Sentinelle, Gardien et Légende.</div>'+
+  '<label for="pfs">Pseudonyme</label><input id="pfs"'+(isAdm()?'':' maxlength="5"')+' autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfse" role="alert" aria-live="polite" style="margin-top:6px;font-weight:700"></div><div id="pfsh" class="mute" style="margin-top:6px">'+(isAdm()?'Administrateur : aucune limite de longueur. Lettres minuscules (au moins une) et chiffres, sans espace.':'5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace.')+' Affiché dans la Communauté aux niveaux Sentinelle, Gardien et Légende.</div>'+
   srow('Vie privée','Photo de profil et statut : qui peut les voir','<button type="button" class="alt" onclick="openPrivacy()">Gérer</button>')+
   '<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
  avFetch(true);try{window.sbClient.from('profiles').select('prenom,nom,telephone,pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone],['pfs',d.pseudo]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]});var pb=document.getElementById('pfpub');if(pb&&!pb.dataset.t)pb.setAttribute('aria-checked',String(!!d.photo_public));MYP={pseudo:d.pseudo||'',pub:!!d.photo_public}})}catch(e){}}
 function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()};
  var ps=v('pfs').toLowerCase();
- if(ps&&!pseudoOk(ps)){pfsMsg('5 caractères maximum : lettres minuscules (au moins une) et chiffres.');return toast('Pseudonyme : 5 caractères maximum, lettres minuscules (au moins une) et chiffres')}
+ if(ps&&!pseudoOk(ps)){var pm=isAdm()?'Lettres minuscules (au moins une) et chiffres, sans espace.':'5 caractères maximum : lettres minuscules (au moins une) et chiffres.';pfsMsg(pm);return toast('Pseudonyme : '+pm)}
  if(ps&&PFSV===ps){pfsMsg(PFS_TAKEN);var pe=document.getElementById('pfs');if(pe)pe.focus();return toast('Ce pseudonyme est déjà utilisé : choisissez-en un autre')}
  var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30),pseudo:ps||null};
  window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}
@@ -813,7 +813,7 @@ function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return d
 var CM={rows:null,urls:{},t:0,busy:false,err:false,tab:'3',mode:'all'},MYP=null;
 var PFSQ=0,PFSV='',PFS_TAKEN='Ce pseudonyme est déjà utilisé par un autre utilisateur. Un pseudonyme doit être unique : choisissez-en un autre.';
 function pfsMsg(t,ok){var e=document.getElementById('pfse'),i=document.getElementById('pfs');if(!e)return;e.textContent=t||'';e.style.color=ok?'var(--g)':'var(--r)';if(i){if(t&&!ok)i.setAttribute('aria-invalid','true');else i.removeAttribute('aria-invalid')}}
-function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);el.dataset.t=1;
+function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'');if(isAdm())el.removeAttribute('maxlength');else el.value=el.value.slice(0,5);el.dataset.t=1;
  clearTimeout(PFSQ);var v=el.value;PFSV='';pfsMsg('');
  if(!v||!pseudoOk(v)||(MYP&&MYP.pseudo===v)||!window.sbRpc)return;
  PFSQ=setTimeout(function(){window.sbRpc('pseudo_available',{p:v}).then(function(r){var c=document.getElementById('pfs');if(!c||c.value!==v)return;
@@ -835,7 +835,7 @@ function openPrivacy(){var u=window.CURU;if(!u)return toast('Connectez-vous pour
 function ppToggle(b){var u=window.CURU;if(!u||b.disabled)return;b.dataset.t=1;var on=b.getAttribute('aria-checked')!=='true';b.disabled=true;
  window.sbClient.from('profiles').update({photo_public:on}).eq('id',u.id).then(function(r){if(r.error)throw r.error;b.setAttribute('aria-checked',String(on));b.disabled=false;MYP={pseudo:(MYP&&MYP.pseudo)||'',pub:on};CM.t=0;if(S.tab==='community')cmLoad(true);toast(on?'Votre photo est visible par la communauté':'Votre photo n’est plus visible par la communauté')}).catch(function(){b.disabled=false;toast('Échec de l’enregistrement : réessayez')})}
 function pfPub(b){b.dataset.t=1;b.setAttribute('aria-checked',String(b.getAttribute('aria-checked')!=='true'))}
-function pseudoOk(p){return /^[a-z0-9]{1,5}$/.test(p)&&/[a-z]/.test(p)}
+function pseudoOk(p){return (isAdm()?/^[a-z0-9]+$/:/^[a-z0-9]{1,5}$/).test(p)&&/[a-z]/.test(p)}
 function cmLoad(force){if(!window.sbRpc||!window.UID||CM.busy||(!force&&CM.rows&&Date.now()-CM.t<60000))return Promise.resolve();
  CM.busy=true;CM.err=false;
  var mine=window.sbClient.from('profiles').select('pseudo,photo_public').eq('id',window.UID).maybeSingle().then(function(r){if(r&&r.data)MYP={pseudo:r.data.pseudo||'',pub:!!r.data.photo_public}},function(){});
@@ -960,12 +960,12 @@ function stAddLink(){var ta=document.getElementById('stcap');if(!ta)return;
 function stViewers(p){openSheet('Qui a vu mon statut','<div id="svw" class="mute" aria-live="polite">Chargement…</div><button type="button" class="alt" style="width:100%;margin-top:12px" onclick="stOpenPath(\''+p+'\')">Retour au statut</button>');
  window.sbRpc('get_status_viewers',{p_path:p}).then(function(r){var el=document.getElementById('svw');if(!el)return;var d=Array.isArray(r.data)?r.data:[];
   if(!d.length){el.textContent='Personne n’a encore vu ce statut.';return}
-  el.className='';el.innerHTML='<div class="mute" style="margin-bottom:4px">'+d.length+' personne'+(d.length>1?'s':'')+'</div>'+d.map(function(v){return '<div class="srow"><div style="flex:1;min-width:0"><b>'+esc(v.o_name)+'</b>'+(v.o_pseudo&&v.o_pseudo!==v.o_name?'<div class="mute">@'+esc(v.o_pseudo)+'</div>':'')+'</div><div class="mute">'+ago(Date.parse(v.o_at))+'</div></div>'}).join('')})
+  el.className='';el.innerHTML='<div class="mute" style="margin-bottom:4px">'+d.length+' personne'+(d.length>1?'s':'')+'</div>'+d.map(function(v){var adm=!!(ME&&ME.admin),main=adm?(v.o_name||v.o_pseudo||'Utilisateur'):(v.o_pseudo?'@'+v.o_pseudo:'Utilisateur');return '<div class="srow"><div style="flex:1;min-width:0"><b>'+esc(main)+'</b>'+(adm&&v.o_pseudo&&v.o_pseudo!==v.o_name?'<div class="mute">@'+esc(v.o_pseudo)+'</div>':'')+'</div><div class="mute">'+ago(Date.parse(v.o_at))+'</div></div>'}).join('')})
  .catch(function(){var el=document.getElementById('svw');if(el)el.textContent='Impossible de charger la liste : réessayez.'})}
 function stViews(i){var x=(STT.rows||[])[i];if(!x)return;var p=x.o_path;
  function lbl(n){return n===1?'personne a vu ce statut':'personnes ont vu ce statut'}
  openSheet('Vues du statut','<div style="text-align:center;padding:10px 0 4px"><div id="svn" style="font-size:44px;font-weight:800;line-height:1">'+(x.o_views||0)+'</div><div class="mute" id="svl" style="margin-top:6px">'+lbl(x.o_views||0)+'</div></div>'+
-  srow('Qui a vu mon statut',(ME&&ME.admin&&x.o_mine)?'Voir les noms des personnes':'Voir la liste des personnes','<button type="button" class="alt" onclick="'+((ME&&ME.admin&&x.o_mine)?'stViewers(\''+p+'\')':'toast(\'Option non encore disponible\')')+'">Voir</button>')+
+  srow('Qui a vu mon statut',(ME&&ME.admin&&x.o_mine)?'Voir les noms et pseudonymes des personnes':'Voir les pseudonymes des personnes','<button type="button" class="alt" onclick="'+(x.o_mine?'stViewers(\''+p+'\')':'toast(\'Seul l’auteur du statut peut voir cette liste\')')+'">Voir</button>')+
   '<button type="button" class="alt" style="width:100%;margin-top:12px" onclick="stOpenPath(\''+p+'\')">Retour au statut</button>');
  STT.t=0;stLoad(true).then(function(){var y=(STT.rows||[]).filter(function(r){return r.o_path===p})[0],n=document.getElementById('svn'),l=document.getElementById('svl');if(y&&n&&y.o_views!=null){n.textContent=y.o_views;l.textContent=lbl(y.o_views)}})}
 function stCompose(){if(!window.LOGGED)return askLogin('publier un statut');
@@ -1718,7 +1718,7 @@ setInterval(ratePrompt,3600000);
 /* pastille de niveau : anneau + numéro, dans le style des icônes de l’app (remplace les emojis) */
 function lvIcon(n){return '<svg viewBox="0 0 40 40" aria-hidden="true" style="width:1em;height:1em;vertical-align:middle"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--acc,#F2B91F)" stroke-width="2.5"/><text x="20" y="27.5" text-anchor="middle" font-size="22" font-weight="800" fill="var(--acc,#F2B91F)" font-family="inherit">'+n+'</text></svg>'}
 /* visiteur non connecté : invitation à se connecter pour gagner des points */
-function ptsCta(){return '<div class="card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:32px;height:32px;flex:0 0 auto;stroke:var(--acc,#F2B91F);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">'+MI.trophy+'</svg><div style="flex:1;min-width:180px"><b>Gagnez des points en aidant la communauté</b><div class="mute">Signalez, votez et répondez aux demandes !</div></div><a class="btn primary" href="auth.html" style="flex:0 0 auto">Se connecter</a></div>'}
+function ptsCta(){return '<div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:26px;height:26px;flex:0 0 auto;stroke:var(--acc,#F2B91F);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">'+MI.trophy+'</svg><div style="flex:1;min-width:150px;font-size:15px;line-height:1.2"><b>Gagnez des points en aidant la communauté</b><div class="mute" style="font-size:12.5px;margin-top:2px">Signalez, votez et répondez aux demandes !</div></div><a class="btn primary" href="auth.html" style="flex:0 0 auto;min-height:36px;padding:6px 14px;font-size:14px">Se connecter</a></div>'}
 /* statistiques du jour (heure d’Haïti) : totaux calculés côté serveur par get_daily_stats, sans donnée personnelle */
 var DS={d:null,t:0,busy:0,fail:0};
 function dailyFetch(){if(DS.busy||DS.fail||Date.now()-DS.t<60000||!window.sbRpc)return;DS.busy=1;
