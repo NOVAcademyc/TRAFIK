@@ -520,13 +520,18 @@ function addSeg(){var n=document.getElementById('sn').value.trim(),z=document.ge
  if(n.length<4)return toast('Entrez le nom de la route ou du tronçon');
  if(SEG.some(function(s){return s[1].toLowerCase()===esc(n).toLowerCase()}))return toast('Ce tronçon existe déjà');
  n=n.slice(0,80);
- /* ajout direct : le tronçon apparaît tout de suite dans Trafic et dans la liste de Signaler (même liste SEG) */
- needLogin(function(){window.sbClient.from('segments').insert({name:n,zone:z}).select('id,name,zone').single().then(function(r){
+ function fail(e){
+   toast(e&&e.code==='23505'?'Ce tronçon existe déjà':(e&&e.code==='P0001'?e.message:(e&&e.code==='42501'?((ADMIN||/suspendu/i.test(String(e.message||'')))?'Compte suspendu':'Action non autorisée : proposez le tronçon, un administrateur le validera'):'Échec de l’ajout : réessayez plus tard')))}
+ /* administrateur : ajout direct (visible tout de suite) ; autres comptes : proposition validée ensuite par un administrateur (la base n'autorise l'insertion directe qu'aux administrateurs) */
+ needLogin(function(){
+  if(ADMIN){window.sbClient.from('segments').insert({name:n,zone:z}).select('id,name,zone').single().then(function(r){
    if(r.error)throw r.error;var x=r.data,id=Number(x.id);
    if(!seg(id))SEG.push([id,esc(String(x.name).slice(0,80)),x.zone]);
    document.getElementById('sn').value='';SEL=id;S.zone='Tous';render();
-   toast('Tronçon ajouté : il est maintenant dans Trafic et Signaler')}).catch(function(e){
-   toast(e&&e.code==='23505'?'Ce tronçon existe déjà':(e&&e.code==='P0001'?e.message:(e&&e.code==='42501'?'Compte suspendu':'Échec de l’ajout : réessayez plus tard')))})},'ajouter un tronçon')}
+   toast('Tronçon ajouté : il est maintenant dans Trafic et Signaler')}).catch(fail)}
+  else{DB.collection('segment_requests').add({name:n,zone:z}).then(function(){
+   document.getElementById('sn').value='';render();
+   toast('Merci ! Tronçon proposé : il apparaîtra après validation')}).catch(fail)}},'proposer un tronçon')}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;
  db.collection('segments').onSnapshot(function(snap){snap.docs.forEach(function(d){var x=d.data();
   if(typeof x.id==='number'&&Array.isArray(x.geo)&&x.geo.length>=2&&x.geo.every(function(p){return Array.isArray(p)&&typeof p[0]==='number'&&typeof p[1]==='number'})){SGEO[x.id]=x.geo;if(typeof lApplyGeo==='function')lApplyGeo(x.id)}
@@ -543,7 +548,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-07-co2';
+var BUILD='2026-11-07-co5';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -706,12 +711,13 @@ function openRing(){
 function pickTone(k){if(!TONES[k])return;PR.tone=k;PR.sound=true;savePR();playTone(k);openRing()}
 function setSound(){PR.sound=!PR.sound;savePR();if(PR.sound)playTone();openRing()}
 /* photo de profil : recadrée en carré et réduite à 256 px sur l’appareil, stockée dans le bucket privé « avatars » (une image par compte, visible seulement par son propriétaire), avec une copie locale pour l’affichage immédiat.
-   Coche à côté du cercle : bleue au niveau Légende (5), grise au niveau juste avant (4), aucune pour les autres. */
+   Coche à côté du cercle : bleue au niveau Légende (5), grise au niveau Gardien (4), mauve pâle au niveau Sentinelle (3), aucune pour les autres. */
 function avKey(){return 'trafik-avatar-'+(window.CURU?window.CURU.id:'')}
 function avGet(){try{return localStorage.getItem(avKey())}catch(e){return null}}
 var AVTRY='';
 function avSet(v){try{if(v)localStorage.setItem(avKey(),v);else localStorage.removeItem(avKey())}catch(e){}if(window.CURU)menuBtn()}
-function vBadge(){var n=ME&&ME.level?ME.level.n:0;if(n<4)return '';var leg=n>=5;return '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="'+(leg?'Niveau Légende':'Niveau '+esc(ME.level.name))+'"><circle cx="12" cy="12" r="11" fill="'+(leg?'#1877F2':'#8A949B')+'" stroke="var(--card)" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function CHK(n){return n>=5?['#1877F2','#fff','Niveau Légende']:n===4?['#8A949B','#fff','Niveau Gardien']:['#C9B6F2','#4B2E83','Niveau Sentinelle']}
+function vBadge(){var n=ME&&ME.level?ME.level.n:0;if(n<3)return '';var c=CHK(n);return '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="'+c[2]+'"><circle cx="12" cy="12" r="11" fill="'+c[0]+'" stroke="var(--card)" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="'+c[1]+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 function avInner(){var d=avGet(),pick='document.getElementById(\'avf\').click()';
  return '<div class="av"><button type="button" class="avc'+(d?' has':'')+'" aria-label="'+(d?'Changer':'Ajouter')+' la photo de profil" onclick="'+pick+'">'+(d?'<img alt="" src="'+d+'">':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>')+'</button>'+vBadge()+'</div>'+
   '<div style="text-align:center;margin-bottom:6px"><button type="button" class="lnk" onclick="'+pick+'">'+(d?'Changer la photo':'Ajouter une photo (facultatif)')+'</button>'+(d?' · <button type="button" class="lnk" onclick="avRemove()">Retirer</button>':'')+'</div><input type="file" id="avf" accept="image/*" hidden onchange="avPick(this)">'}
@@ -732,7 +738,7 @@ function avRemove(){var u=window.CURU;if(!u)return;window.sbClient.storage.from(
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
  openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+
-  '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Gardien et Légende.</div>'+
+  '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Sentinelle, Gardien et Légende.</div>'+
   srow('Photo visible par la communauté','Les membres connectés peuvent voir votre photo dans la Communauté. Désactivé par défaut.',sw(false,'pfPub(this)','Photo visible par la communauté').replace('<button ','<button id="pfpub" '))+
   '<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
  avFetch();try{window.sbClient.from('profiles').select('prenom,nom,telephone,pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone],['pfs',d.pseudo]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]});var pb=document.getElementById('pfpub');if(pb&&!pb.dataset.t)pb.setAttribute('aria-checked',String(!!d.photo_public));MYP={pseudo:d.pseudo||'',pub:!!d.photo_public}})}catch(e){}}
@@ -743,10 +749,10 @@ function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return d
  window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}
   MYP={pseudo:d.pseudo||'',pub:d.photo_public};CM.t=0;if(S.tab==='community')cmLoad(true);toast('Profil enregistré');closeSheet()}).catch(function(e){
   toast(e&&e.code==='23505'?'Ce pseudonyme est déjà pris : choisissez-en un autre':e&&e.code==='23514'?'Pseudonyme refusé : choisissez-en un autre':'Échec de l’enregistrement : réessayez')})}
-/* ===== Communauté : pseudonymes des niveaux Gardien (4) et Légende (5) =====
+/* ===== Communauté : pseudonymes des niveaux Sentinelle (3), Gardien (4) et Légende (5) =====
    La liste vient de la fonction get_community (aucun identifiant, point ni nom renvoyé). Les photos passent par des liens signés d'une heure,
    délivrés seulement pour les comptes qui ont rendu leur photo publique. */
-var CM={rows:null,urls:{},t:0,busy:false,err:false,tab:'5'},MYP=null;
+var CM={rows:null,urls:{},t:0,busy:false,err:false,tab:'3'},MYP=null;
 function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);el.dataset.t=1}
 function pfPub(b){b.dataset.t=1;b.setAttribute('aria-checked',String(b.getAttribute('aria-checked')!=='true'))}
 function pseudoOk(p){return /^[a-z0-9]{1,5}$/.test(p)&&/[a-z]/.test(p)}
@@ -757,22 +763,23 @@ function cmLoad(force){if(!window.sbRpc||!window.UID||CM.busy||(!force&&CM.rows&
   if(!paths.length){CM.urls={};return rows}
   return window.sbClient.storage.from('avatars').createSignedUrls(paths,3600).then(function(q){var m={};((q&&q.data)||[]).forEach(function(x){if(x&&x.signedUrl&&!x.error)m[x.path]=x.signedUrl});CM.urls=m;return rows},function(){CM.urls={};return rows})});
  return Promise.all([mine,list]).then(function(a){CM.rows=a[1];CM.t=Date.now()}).catch(function(){CM.err=true}).then(function(){CM.busy=false;if(S.tab==='community')render()})}
-function cmChk(n,px){return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="'+(n>=5?'Niveau Légende':'Niveau Gardien')+'" style="flex:none"><circle cx="12" cy="12" r="11" fill="'+(n>=5?'#1877F2':'#8A949B')+'"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function cmChk(n,px){var c=CHK(n);return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="'+c[2]+'" style="flex:none"><circle cx="12" cy="12" r="11" fill="'+c[0]+'"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="'+c[1]+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 function cmAv(x){var u=x.o_photo&&CM.urls[x.o_photo];return '<span class="cav" aria-hidden="true">'+(u?'<img alt="" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo).charAt(0).toUpperCase()))+'</span>'}
 function setCm(t){CM.tab=t;render()}
 function communityV(){
- var head='<h2>Communauté</h2><div class="mute" style="margin-top:4px">Les membres des niveaux Gardien et Légende, par pseudonyme.</div>';
+ var head='<h2>Communauté</h2><div class="mute" style="margin-top:4px">Les membres des niveaux Sentinelle, Gardien et Légende, par pseudonyme.</div>';
  if(window.LOGGED===false)return head+'<div class="card"><b>Connexion requise</b><div class="mute">Connectez-vous pour voir la Communauté.</div><a class="btn primary" style="margin-top:10px" href="auth.html">Se connecter</a></div>';
- var rows=CM.rows,all=rows||[],n5='Légende',n4='Gardien';
- all.forEach(function(x){if(x.o_level>=5)n5=x.o_level_name||n5;else n4=x.o_level_name||n4});
- var l5=all.filter(function(x){return x.o_level>=5}),l4=all.filter(function(x){return x.o_level===4});
- var tog='<div class="tog" role="group" aria-label="Niveau"><button type="button" aria-pressed="'+(CM.tab==='5')+'" onclick="setCm(\'5\')">'+esc(n5)+(rows?' ('+l5.length+')':'')+'</button><button type="button" aria-pressed="'+(CM.tab==='4')+'" onclick="setCm(\'4\')">'+esc(n4)+(rows?' ('+l4.length+')':'')+'</button></div>';
+ var rows=CM.rows,all=rows||[],n5='Légende',n4='Gardien',n3='Sentinelle';
+ all.forEach(function(x){if(x.o_level>=5)n5=x.o_level_name||n5;else if(x.o_level===4)n4=x.o_level_name||n4;else n3=x.o_level_name||n3});
+ var l5=all.filter(function(x){return x.o_level>=5}),l4=all.filter(function(x){return x.o_level===4}),l3=all.filter(function(x){return x.o_level===3});
+ var tb=function(k,nm,l){return '<button type="button" aria-pressed="'+(CM.tab===k)+'" onclick="setCm(\''+k+'\')">'+esc(nm)+(rows?' ('+l.length+')':'')+'</button>'};
+ var tog='<div class="tog" role="group" aria-label="Niveau">'+tb('3',n3,l3)+tb('4',n4,l4)+tb('5',n5,l5)+'</div>';
  var lv=ME&&ME.level?ME.level.n:0,me=MYP&&MYP.pseudo,note='';
- if(lv>=4&&MYP&&!MYP.pseudo)note='<div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>Choisissez un pseudonyme</b><div class="mute">Vous avez le niveau '+esc(ME.level.name)+' : un pseudonyme vous fait apparaître ici.</div></div><button type="button" onclick="openProfile()">Ouvrir le profil</button></div>';
- else if(lv>0&&lv<4)note='<div class="card mute">'+(lv===3&&ME.level.next_min?'Il vous manque '+(ME.level.next_min-ME.points)+' point'+(ME.level.next_min-ME.points>1?'s':'')+' pour devenir '+esc(n4)+', premier niveau de la Communauté.':'Atteignez le niveau '+esc(n4)+' pour rejoindre la Communauté.')+'</div>';
- var cur=CM.tab==='4'?l4:l5,body;
+ if(lv>=3&&MYP&&!MYP.pseudo)note='<div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>Choisissez un pseudonyme</b><div class="mute">Vous avez le niveau '+esc(ME.level.name)+' : un pseudonyme vous fait apparaître ici.</div></div><button type="button" onclick="openProfile()">Ouvrir le profil</button></div>';
+ else if(lv>0&&lv<3)note='<div class="card mute">'+(lv===2&&ME.level.next_min?'Il vous manque '+(ME.level.next_min-ME.points)+' point'+(ME.level.next_min-ME.points>1?'s':'')+' pour devenir '+esc(n3)+', premier niveau de la Communauté.':'Atteignez le niveau '+esc(n3)+' pour rejoindre la Communauté.')+'</div>';
+ var cur=CM.tab==='5'?l5:CM.tab==='4'?l4:l3,cn=CM.tab==='5'?n5:CM.tab==='4'?n4:n3,body;
  if(!rows)body='<div class="row mute" style="cursor:default">'+(CM.err?'Impossible de charger la Communauté. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
- else if(!cur.length)body='<div class="row mute" style="cursor:default">Aucun membre '+esc(CM.tab==='4'?n4:n5)+' pour le moment.</div>';
+ else if(!cur.length)body='<div class="row mute" style="cursor:default">Aucun membre '+esc(cn)+' pour le moment.</div>';
  else body=cur.map(function(x){return '<div class="row" style="cursor:default">'+cmAv(x)+'<div class="nm">'+esc(x.o_pseudo)+(me&&x.o_pseudo===me?' <span class="pill" style="margin:0 0 0 6px">Vous</span>':'')+'<div class="mute">'+esc(x.o_level_name)+'</div></div>'+cmChk(x.o_level,22)+'</div>'}).join('');
  return head+tog+note+'<section class="panel" aria-live="polite">'+body+'</section>'}
 
@@ -1613,7 +1620,15 @@ function doFReport(id,lvl){S.freply=null;
 function addStation(){var n=document.getElementById('fn').value.trim().slice(0,80),z=document.getElementById('fzone').value;
   if(n.length<3)return toast('Entrez le nom ou le repère de la station');
   if(STN.some(function(s){return s.name.toLowerCase()===n.toLowerCase()&&s.zone===z}))return toast('Cette station existe déjà dans cette zone');
-  needLogin(function(){DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){toast('Merci ! Station envoyée : visible après validation')}).catch(function(e){if(e&&e.message==='login')return askLogin('proposer une station');toast(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard')})},'proposer une station')}
+  function fail(e){if(e&&e.message==='login')return askLogin('proposer une station');toast(e&&e.code==='P0001'?e.message:(e&&e.code==='42501'?(ADMIN||/suspendu/i.test(String(e.message||''))?'Compte suspendu':'Action non autorisée : proposez la station, un administrateur la validera'):(e&&e.code==='23505'?'Cette station existe déjà':'Échec de l’envoi : réessayez plus tard')))}
+  /* administrateur : ajout direct (visible tout de suite) ; autres comptes : proposition validée ensuite par un administrateur */
+  needLogin(function(){
+   if(ADMIN){window.sbClient.from('stations').insert({name:n,zone:z}).select('id,name,zone').single().then(function(r){
+    if(r.error)throw r.error;var x=r.data,id=Number(x.id);
+    if(!STN.some(function(s){return s.id===id}))STN.push({id:id,name:String(x.name).slice(0,80),zone:x.zone});
+    document.getElementById('fn').value='';render();
+    toast('Station ajoutée : elle est maintenant dans Essence')}).catch(fail)}
+   else{DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){document.getElementById('fn').value='';render();toast('Merci ! Station envoyée : visible après validation')}).catch(fail)}},ADMIN?'ajouter une station':'proposer une station')}
 function vote(kind,id,val){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return toast('Aucun signalement récent à confirmer');
  if(iReported(kind,id))return toast('Vous avez signalé cet état : seuls les autres utilisateurs peuvent voter.');
  var ck='v:'+kind+':'+id,m=coolLeft(ck);if(m)return toast('Vous avez déjà voté ici. Vous pourrez voter à nouveau dans '+m+' min.');
