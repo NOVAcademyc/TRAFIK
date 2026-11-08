@@ -849,7 +849,7 @@ function setCm(t){CM.tab=t;CM.pick=1;render()}
 function setCmMode(m){CM.mode=m;render()}
 function cmModeTog(rows){var n=(rows||[]).filter(function(x){return x.o_following}).length;
  return '<div class="tog" role="group" aria-label="Affichage"><button type="button" aria-pressed="'+(CM.mode!=='fol')+'" onclick="setCmMode(\'all\')">Membres</button><button type="button" aria-pressed="'+(CM.mode==='fol')+'" onclick="setCmMode(\'fol\')">Mes abonnements'+(rows?' ('+n+')':'')+'</button></div>'}
-function cmRow(x,me){return '<div class="row" style="cursor:default">'+cmAv(x)+'<div class="nm"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>'+esc(x.o_pseudo)+'</span>'+cmChk(x.o_level,18)+(me&&x.o_pseudo===me?'<span class="pill" style="margin:0 0 0 2px">Vous</span>':'')+'</div><div class="mute" aria-live="polite">'+cmFol(x.o_followers)+'</div></div>'+(me&&x.o_pseudo===me?'':cmBtn(x))+'</div>'}
+function cmRow(x,me){return '<div class="row" style="cursor:default">'+cmAv(x)+'<div class="nm"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>'+esc(x.o_pseudo)+'</span>'+(x.o_admin?admChk(18):cmChk(x.o_level,18))+(me&&x.o_pseudo===me?'<span class="pill" style="margin:0 0 0 2px">Vous</span>':'')+'</div><div class="mute" aria-live="polite">'+cmFol(x.o_followers)+'</div></div>'+(me&&x.o_pseudo===me?'':cmBtn(x))+'</div>'}
 function folFeed(){var out=[];
  (S.reports||[]).forEach(function(r){var p=r.u&&FOLM[r.u],sg=p&&seg(r.seg);if(p&&sg&&LV[r.lvl])out.push({t:r.t,p:p,txt:sg[1]+' : '+LV[r.lvl].n.toLowerCase(),c:LV[r.lvl].c})});
  (FREP||[]).forEach(function(r){var p=r.u&&FOLM[r.u],st=p&&(window.STN||[]).filter(function(x){return String(x.id)===String(r.st)})[0];if(p&&st&&FLV[r.lvl])out.push({t:r.t,p:p,txt:'Station '+esc(st.name)+' : '+FLV[r.lvl].n.toLowerCase(),c:FLV[r.lvl].c})});
@@ -883,7 +883,7 @@ function communityV(){
  else if(lv>0&&lv<3)note='<div class="card mute">'+(lv===2&&ME.level.next_min?'Il vous manque '+(ME.level.next_min-ME.points)+' point'+(ME.level.next_min-ME.points>1?'s':'')+' pour devenir '+esc(n3)+', premier niveau de la Communauté.':'Atteignez le niveau '+esc(n3)+' pour rejoindre la Communauté.')+'</div>';
  if(CM.mode==='fol')return head+mt+cmFolView(rows,me);
  var cur=CM.tab==='5'?l5:CM.tab==='4'?l4:l3,cn=CM.tab==='5'?n5:CM.tab==='4'?n4:n3,body;
- if(me)cur=cur.filter(function(x){return x.o_pseudo===me}).concat(cur.filter(function(x){return x.o_pseudo!==me}));
+ var isMe=function(x){return !!me&&x.o_pseudo===me};cur=cur.filter(isMe).concat(cur.filter(function(x){return x.o_admin&&!isMe(x)}),cur.filter(function(x){return !x.o_admin&&!isMe(x)}));
  if(!rows)body='<div class="row mute" style="cursor:default">'+(CM.err?'Impossible de charger la Communauté. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
  else if(!cur.length)body='<div class="row mute" style="cursor:default">Aucun membre '+esc(cn)+' pour le moment.</div>';
  else body=cur.map(function(x){return cmRow(x,me)}).join('');
@@ -934,7 +934,7 @@ function stOpen(i){var rows=STT.rows||[],x=rows[i];if(!x)return;STI=i;var adm=!!
  var u=STT.urls[x.o_path],exp=Date.parse(x.o_expires),forever=exp>Date.UTC(2100,0,1),left=Math.max(1,Math.ceil((exp-Date.now())/36e5)),nav='';
  if(rows.length>1)nav='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+rows.length-1)%rows.length)+')">‹ Précédent</button><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+1)%rows.length)+')">Suivant ›</button></div>';
  var eye=x.o_views!=null?'<button type="button" class="alt" style="min-height:36px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;flex:none" aria-label="Nombre de vues : '+x.o_views+'" onclick="stViews('+i+')">'+EYE+'<b>'+x.o_views+'</b></button>':'';
- openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+cmChk(Math.max(4,x.o_level),18),
+ openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+(x.o_admin?admChk(18):cmChk(Math.max(4,x.o_level),18)),
   '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+'</div>'+
   (x.o_caption?'<p class="stcap">'+stCapHtml(x)+'</p>':'')+
   (x.o_pending?'<div class="offl" style="margin:10px 0 0;text-align:left">Vérification automatique en cours : seul vous le voyez pour l’instant.</div>':'')+
