@@ -249,7 +249,7 @@ nav{left:50%;right:auto;width:100%;max-width:var(--w);transform:translateX(-50%)
 .top .btn.xs{min-height:34px;padding:0 10px;font-size:12.5px;border-width:1.5px;border-radius:10px}
 @media (max-width:420px){.top-in.lo h1{display:none}}
 button.dng{background:#C93C3C;color:#fff}
-button:disabled{opacity:.45;cursor:not-allowed}
+button:disabled,button[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
 
 /* arrière-plan néon : noir bleuté lumineux, lueurs bleue et rouge, traits nets en diagonale */
 body{background:transparent}
@@ -819,9 +819,9 @@ function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'');i
  PFSQ=setTimeout(function(){window.sbRpc('pseudo_available',{p:v}).then(function(r){var c=document.getElementById('pfs');if(!c||c.value!==v)return;
   if(r.data===false){PFSV=v;pfsMsg(PFS_TAKEN)}else if(r.data===true)pfsMsg('✓ Pseudonyme disponible',true)}).catch(function(){})},400)}
 /* ===== Vie privée : photo de profil et audience du statut =====
-   Audience du statut : « Moi uniquement » et « Mes abonnés » sont disponibles pour tous ; « Tout le monde » (payant) affiche « Option non encore disponible » pour les utilisateurs (gratuit pour l'admin). */
+   Audience du statut : « Moi uniquement » et « Mes abonnés » sont disponibles pour tous ; « Tout le monde » (sans mention à côté) affiche « Option non encore disponible » pour les utilisateurs (gratuit pour l'admin). */
 var STAUD='subs';
-function stAudHtml(){var adm=!!(ME&&ME.admin),o=[['me','Moi uniquement',''],['subs','Mes abonnés',''],['all','Tout le monde',adm?'Admin : gratuit':'Payant']];
+function stAudHtml(){var adm=!!(ME&&ME.admin),o=[['me','Moi uniquement',''],['subs','Mes abonnés',''],['all','Tout le monde',adm?'Admin : gratuit':'']];
  return '<div class="aud" role="radiogroup" aria-label="Qui peut voir mon statut">'+o.map(function(x){return '<button type="button" role="radio" aria-checked="'+(x[0]===STAUD)+'" onclick="stAud(\''+x[0]+'\')"><i aria-hidden="true"></i><span>'+x[1]+'</span>'+(x[2]?'<em>'+x[2]+'</em>':'')+'</button>'}).join('')+'</div>'}
 function stAud(k){var adm=!!(ME&&ME.admin);
  if(k==='all'&&!adm)return toast('Option non encore disponible');
@@ -916,7 +916,7 @@ function stNotify(rows){try{var k='trafik-st-notif-'+window.UID,old=null;try{old
  if(!Array.isArray(old))return;
  rows.forEach(function(x){if(x.o_mine||old.indexOf(x.o_path)>=0)return;var t=esc(x.o_pseudo)+' a publié un statut';pushAlert({t:hhmm(Date.now()),txt:t,l:3,k:'statut'});toast(dec(t))})}catch(e){}}
 function stStrip(){var rows=STT.rows,seen=stSeenGet(),adm=!!(ME&&ME.admin),mine=!adm&&rows&&rows.filter(function(x){return x.o_mine})[0],can=stCanPost();
- var h='<div class="card" style="margin-top:14px"><div class="sth"><b>Statuts</b>'+(can&&!mine&&!STT.ban?'<button type="button" class="alt" style="min-height:36px;padding:6px 14px;font-size:14px" onclick="stCompose()">+ Publier</button>':'')+'</div>';
+ var h='<div class="card" style="margin-top:14px"><div class="sth"><b>Statuts</b>'+((!can||(!mine&&!STT.ban))?'<button type="button" class="alt"'+(can?'':' aria-disabled="true"')+' style="min-height:36px;padding:6px 14px;font-size:14px" onclick="stCompose()">+ Publier</button>':'')+'</div>';
  if(!rows)h+='<div class="mute" style="margin-top:6px">'+(STT.err?'Impossible de charger les statuts. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
  else if(!rows.length)h+='<div class="mute" style="margin-top:6px">Aucun statut pour le moment. Les membres Sentinelle, Gardien et Légende que vous suivez peuvent publier une photo visible 30 h.</div>';
  else h+='<div class="sts" role="list">'+rows.map(function(x,i){var u=STT.urls[x.o_path],nm=x.o_mine?'Mon statut':x.o_pseudo;
@@ -969,7 +969,7 @@ function stViews(i){var x=(STT.rows||[])[i];if(!x)return;var p=x.o_path;
   '<button type="button" class="alt" style="width:100%;margin-top:12px" onclick="stOpenPath(\''+p+'\')">Retour au statut</button>');
  STT.t=0;stLoad(true).then(function(){var y=(STT.rows||[]).filter(function(r){return r.o_path===p})[0],n=document.getElementById('svn'),l=document.getElementById('svl');if(y&&n&&y.o_views!=null){n.textContent=y.o_views;l.textContent=lbl(y.o_views)}})}
 function stCompose(){if(!window.LOGGED)return askLogin('publier un statut');
- if(!stCanPost())return toast('Les statuts sont réservés aux niveaux Sentinelle, Gardien et Légende');
+ if(!stCanPost())return toast(ME?'Il faut atteindre au moins le niveau Sentinelle pour publier un statut':'Chargement de votre niveau… réessayez dans un instant');
  if(!(ME&&ME.admin)&&STT.rows&&STT.rows.some(function(x){return x.o_mine}))return toast('Un seul statut par jour : vous pourrez en publier un nouveau 30 h après la publication');
  if(STT.ban&&!(ME&&ME.admin))return toast('Statut supprimé : vous pourrez publier de nouveau dans '+stBanLeft()+' h');
  if(MYP&&!MYP.pseudo&&!(ME&&ME.admin))return toast('Choisissez d’abord un pseudonyme dans votre profil');
