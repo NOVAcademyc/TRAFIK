@@ -548,7 +548,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-07-co5';
+var BUILD='2026-11-07-co6';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -738,22 +738,31 @@ function avRemove(){var u=window.CURU;if(!u)return;window.sbClient.storage.from(
 function openProfile(){var u=window.CURU;if(!u)return toast('Connectez-vous pour voir votre profil');var md=u.user_metadata||{};
  var inp=function(id,lab,val,ex){return '<label for="'+id+'">'+lab+'</label><input id="'+id+'" maxlength="'+(id==='pft'?30:60)+'" '+(ex||'')+' value="'+esc(val||'')+'" oninput="this.dataset.t=1">'};
  openSheet('Profil',avHtml()+'<div class="mute" style="margin:0 0 6px;text-align:center">'+esc(u.email||'')+'</div>'+(ME?'<button type="button" class="alt" style="width:100%;margin:4px 0 6px" onclick="openBoard()">'+lvIcon(ME.level.n)+' '+esc(ME.level.name)+' · '+ME.points+' point'+(ME.points>1?'s':'')+'</button>':'')+inp('pfp','Prénom',md.prenom)+inp('pfn','Nom',md.nom)+inp('pft','Téléphone',md.telephone,'type="tel"')+
-  '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Sentinelle, Gardien et Légende.</div>'+
+  '<label for="pfs">Pseudonyme</label><input id="pfs" maxlength="5" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ex. jean7" aria-describedby="pfsh" value="" oninput="pfsClean(this)"><div id="pfse" role="alert" aria-live="polite" style="margin-top:6px;font-weight:700"></div><div id="pfsh" class="mute" style="margin-top:6px">5 caractères maximum : lettres minuscules (au moins une) et chiffres, sans espace. Affiché dans la Communauté aux niveaux Sentinelle, Gardien et Légende.</div>'+
   srow('Photo visible par la communauté','Les membres connectés peuvent voir votre photo dans la Communauté. Désactivé par défaut.',sw(false,'pfPub(this)','Photo visible par la communauté').replace('<button ','<button id="pfpub" '))+
   '<button type="button" style="width:100%;margin-top:14px" onclick="saveProfile()">Enregistrer</button>');
  avFetch();try{window.sbClient.from('profiles').select('prenom,nom,telephone,pseudo,photo_public').eq('id',u.id).maybeSingle().then(function(r){var d=r&&r.data;if(!d)return;[['pfp',d.prenom],['pfn',d.nom],['pft',d.telephone],['pfs',d.pseudo]].forEach(function(x){var e=document.getElementById(x[0]);if(e&&x[1]!=null&&!e.dataset.t)e.value=x[1]});var pb=document.getElementById('pfpub');if(pb&&!pb.dataset.t)pb.setAttribute('aria-checked',String(!!d.photo_public));MYP={pseudo:d.pseudo||'',pub:!!d.photo_public}})}catch(e){}}
 function saveProfile(){var u=window.CURU;if(!u)return;var v=function(i){return document.getElementById(i).value.trim()},pb=document.getElementById('pfpub');
  var ps=v('pfs').toLowerCase();
- if(ps&&!pseudoOk(ps))return toast('Pseudonyme : 5 caractères maximum, lettres minuscules (au moins une) et chiffres');
+ if(ps&&!pseudoOk(ps)){pfsMsg('5 caractères maximum : lettres minuscules (au moins une) et chiffres.');return toast('Pseudonyme : 5 caractères maximum, lettres minuscules (au moins une) et chiffres')}
+ if(ps&&PFSV===ps){pfsMsg(PFS_TAKEN);var pe=document.getElementById('pfs');if(pe)pe.focus();return toast('Ce pseudonyme est déjà utilisé : choisissez-en un autre')}
  var d={prenom:v('pfp').slice(0,60),nom:v('pfn').slice(0,60),telephone:v('pft').slice(0,30),pseudo:ps||null,photo_public:!!(pb&&pb.getAttribute('aria-checked')==='true')};
  window.sbClient.from('profiles').update(d).eq('id',u.id).then(function(r){if(r.error)throw r.error;try{window.sbClient.auth.updateUser({data:{prenom:d.prenom,nom:d.nom}})}catch(e){}
   MYP={pseudo:d.pseudo||'',pub:d.photo_public};CM.t=0;if(S.tab==='community')cmLoad(true);toast('Profil enregistré');closeSheet()}).catch(function(e){
-  toast(e&&e.code==='23505'?'Ce pseudonyme est déjà pris : choisissez-en un autre':e&&e.code==='23514'?'Pseudonyme refusé : choisissez-en un autre':'Échec de l’enregistrement : réessayez')})}
+  if(e&&e.code==='23505'){PFSV=ps;pfsMsg(PFS_TAKEN);var pe=document.getElementById('pfs');if(pe)pe.focus();return toast('Ce pseudonyme est déjà utilisé : choisissez-en un autre')}
+  if(e&&e.code==='23514'){pfsMsg('Ce pseudonyme n’est pas autorisé : choisissez-en un autre.');return toast('Pseudonyme refusé : choisissez-en un autre')}
+  toast('Échec de l’enregistrement : réessayez')})}
 /* ===== Communauté : pseudonymes des niveaux Sentinelle (3), Gardien (4) et Légende (5) =====
    La liste vient de la fonction get_community (aucun identifiant, point ni nom renvoyé). Les photos passent par des liens signés d'une heure,
    délivrés seulement pour les comptes qui ont rendu leur photo publique. */
 var CM={rows:null,urls:{},t:0,busy:false,err:false,tab:'3'},MYP=null;
-function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);el.dataset.t=1}
+var PFSQ=0,PFSV='',PFS_TAKEN='Ce pseudonyme est déjà utilisé par un autre utilisateur. Un pseudonyme doit être unique : choisissez-en un autre.';
+function pfsMsg(t,ok){var e=document.getElementById('pfse'),i=document.getElementById('pfs');if(!e)return;e.textContent=t||'';e.style.color=ok?'var(--g)':'var(--r)';if(i){if(t&&!ok)i.setAttribute('aria-invalid','true');else i.removeAttribute('aria-invalid')}}
+function pfsClean(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);el.dataset.t=1;
+ clearTimeout(PFSQ);var v=el.value;PFSV='';pfsMsg('');
+ if(!v||!pseudoOk(v)||(MYP&&MYP.pseudo===v)||!window.sbRpc)return;
+ PFSQ=setTimeout(function(){window.sbRpc('pseudo_available',{p:v}).then(function(r){var c=document.getElementById('pfs');if(!c||c.value!==v)return;
+  if(r.data===false){PFSV=v;pfsMsg(PFS_TAKEN)}else if(r.data===true)pfsMsg('✓ Pseudonyme disponible',true)}).catch(function(){})},400)}
 function pfPub(b){b.dataset.t=1;b.setAttribute('aria-checked',String(b.getAttribute('aria-checked')!=='true'))}
 function pseudoOk(p){return /^[a-z0-9]{1,5}$/.test(p)&&/[a-z]/.test(p)}
 function cmLoad(force){if(!window.sbRpc||!window.UID||CM.busy||(!force&&CM.rows&&Date.now()-CM.t<60000))return Promise.resolve();
