@@ -731,7 +731,23 @@ function openRatings(){var c=window.sbClient;if(!window.ADMIN||!c)return;openShe
   for(var j=5;j>=1;j--){var pc=Math.round(cnt[j-1]*100/n);h+='<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="width:30px">'+j+' ★</span><div style="flex:1;height:10px;border-radius:5px;background:var(--soft)"><div style="width:'+pc+'%;height:100%;border-radius:5px;background:var(--acc,#F2B91F)"></div></div><span class="mute" style="width:78px;text-align:right">'+cnt[j-1]+' ('+pc+' %)</span></div>'}
   el.className='';el.innerHTML=h},function(){var el=document.getElementById('rtc');if(el)el.textContent='Impossible de charger les notes.'})}
 function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
-function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();pushPrefs();render()}
+/* limite quotidienne de « Suivre » (routes + stations) : 4 par jour, sauf administrateur.
+   Connecté : vérifiée par le serveur (register_follow, jour d'Haïti). Non connecté : compteur local sur l'appareil. */
+var FOL_MAX=4,FOLB={};
+function folLocal(){var k=new Date().toDateString();try{var o=JSON.parse(localStorage.getItem('trafik-fol-day'))||{};return o.d===k?o:{d:k,n:0}}catch(e){return {d:k,n:0}}}
+function folLocalAdd(){try{var o=folLocal();o.n++;localStorage.setItem('trafik-fol-day',JSON.stringify(o))}catch(e){}}
+function folGate(kind,id,go){
+ if(isAdm()||!isFinite(Number(id)))return go();
+ var msg='Limite atteinte : '+FOL_MAX+' suivis par jour (routes et stations). Réessayez demain.',key=kind+id;
+ if(FOLB[key])return;
+ if(window.LOGGED&&window.sbRpc){FOLB[key]=1;
+  return window.sbRpc('register_follow',{p_kind:kind,p_id:Number(id)}).then(function(){FOLB[key]=0;go()},function(e){FOLB[key]=0;
+   if(e&&e.code==='P0001')return toast(e.message||msg);
+   if(folLocal().n>=FOL_MAX)return toast(msg);folLocalAdd();go()})}
+ if(folLocal().n>=FOL_MAX)return toast(msg);
+ folLocalAdd();go()}
+function toggleSt(id){id=String(id);if(S.fwatch.indexOf(id)<0)return folGate('st',id,function(){toggleStDo(id)});toggleStDo(id)}
+function toggleStDo(id){var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();pushPrefs();render()}
 function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();pushPrefs();render();openSettings()}
 function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
@@ -1060,7 +1076,7 @@ function openAbout(){openSheet('Aide et à propos',
  '<p style="margin:0 0 10px">Trafik montre l’état de la circulation et des stations-service de Port-au-Prince, d’après les signalements de la communauté.</p>'+
  '<div class="srow"><div><b>Comment ça marche</b><div class="mute">● Fluide, ▲ Ralenti, ■ Bloqué. Un état s’affiche quand au moins '+QUORUM+' personnes différentes le confirment (un signalement compte pour un vote positif ; « Confirmer » et « Contester » sont réservés aux personnes à proximité). Si les votes négatifs dépassent les positifs, ou en cas d’égalité, l’état repasse à « Pas d’info ».</div></div></div>'+
  '<div class="srow"><div><b>Règles</b><div class="mute">Un signalement par tronçon ou station toutes les '+COOL+' minutes, 10 par heure au maximum. Un signalement compte 45 minutes (3 heures pour les stations). Vous devez être à proximité (environ 1 km) du tronçon ou de la station pour signaler ; votre position est vérifiée à l’envoi du signalement (téléphone et serveur) et n’est pas enregistrée.</div></div></div>'+
- '<div class="srow"><div><b>Alertes</b><div class="mute">Suivez un tronçon pour être prévenu quand son état change. La cloche sépare les demandes d’état des autres utilisateurs, les changements sur vos routes suivies et les signalements reçus.</div></div></div>'+
+ '<div class="srow"><div><b>Alertes</b><div class="mute">Suivez un tronçon pour être prévenu quand son état change (4 nouveaux suivis et 4 demandes par jour au maximum, routes et stations ensemble ; une demande reste active 45 minutes, puis vous pouvez la refaire pour le même tronçon ou la même station). La cloche sépare les demandes d’état des autres utilisateurs, les changements sur vos routes suivies et les signalements reçus.</div></div></div>'+
  '<div class="srow"><div><b>Données enregistrées</b><div class="mute">Votre e-mail, nom, prénom et téléphone, vos signalements, vos routes suivies et, si vous les activez, vos abonnements aux notifications.</div></div></div>'+
  '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p><p class="mute" style="margin:10px 0 0">🚫 Pas de téléphone en conduisant. En danger, suivez les consignes des autorités.</p>')}
 function shareApp(){var url=location.href.split('#')[0],d={title:'Trafik',text:'La circulation et les stations-service de Port-au-Prince en direct',url:url};
@@ -1152,7 +1168,7 @@ function change(id,before,after){
 /* anti-spam : un même utilisateur ne peut signaler le même tronçon / la même station qu'une fois toutes les 20 min (mémorisé sur l'appareil, survit au rechargement) */
 var COOL=20,VCOOL=30,CKEY='trafik-cool';
 /* votes : une fois qu'on a voté sur un tronçon / une station, on ne peut plus voter (ni changer d'option) avant 30 min ; signalements : 20 min */
-function coolDur(k){return (k.indexOf('v:')===0?VCOOL:/^f?q:/.test(k)?10:COOL)*MIN}
+function coolDur(k){return (k.indexOf('v:')===0?VCOOL:/^f?q:/.test(k)?45:COOL)*MIN}
 function coolLoad(){try{var o=JSON.parse(localStorage.getItem(CKEY))||{},n=Date.now();for(var k in o)if(n-o[k]>=coolDur(k))delete o[k];return o}catch(e){return {}}}
 function coolLeft(k){var o=coolLoad();return o[k]?Math.max(1,Math.ceil((coolDur(k)-(Date.now()-o[k]))/MIN)):0}
 function coolMark(k){try{var o=coolLoad();o[k]=Date.now();localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}setTimeout(function(){render()},coolDur(k)+800)}
@@ -1208,7 +1224,8 @@ function doReport(id,lvl){S.reply=null;if(!coolCheck('seg:'+id,'ce tronçon'))re
   function loc(){LOCAL.push(r);S.reports.push(r);change(id,b,status(id));render()}
   if(DB){DB.collection('reports').add(r).then(function(){toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase());render();repBump()}).catch(function(e){if(e&&e.code==='P0001'){coolClear('seg:'+id);return toast(e.message)}if(e&&e.message==='login'){coolClear('seg:'+id);return askLogin('signaler',['report',id,lvl])}loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
   else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
-function toggle(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toast('Vous recevrez les alertes pour ce tronçon')}else S.watch.splice(i,1);save();render();pushPrefs();
+function toggle(id){if(S.watch.indexOf(id)<0)return folGate('seg',id,function(){toggleDo(id)});toggleDo(id)}
+function toggleDo(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toast('Vous recevrez les alertes pour ce tronçon')}else S.watch.splice(i,1);save();render();pushPrefs();
  if(window.sbClient&&window.LOGGED){var q=window.sbClient.from('watched_segments');(on?q.upsert({segment_id:id},{onConflict:'user_id,segment_id',ignoreDuplicates:true}):q.delete().eq('segment_id',id)).then(function(){},function(){})}}
 var WSYNC='';
 function syncWatch(){var c=window.sbClient;if(!c)return;
@@ -1335,7 +1352,7 @@ function recvCheck(docs){var n=Date.now(),fresh=[];
   if(!asked&&!w&&!fb&&!reqWanted(r.seg))return;
   var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':fb?' (signalé par '+esc(fb)+')':' (nouveau signalement)')+(status(r.seg)===3?' · en attente de confirmation':'');
   pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception',seg:Number(r.seg),by:fb||undefined});toast('Signalement · '+txt)})}
-function ask(id){if(coolLeft('q:'+id)||(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN))return noteCool('q:'+id,'Demande déjà envoyée');
+function ask(id){if(coolLeft('q:'+id)||(lastAsk[id]&&Date.now()-lastAsk[id]<45*MIN))return noteCool('q:'+id,'Demande déjà envoyée');
   needLogin(function(){lastAsk[id]=Date.now();var q={seg:id,t:Date.now(),own:1};
   function loc(){LREQ.push(q);coolMark('q:'+id);toast('Demande enregistrée sur cet appareil seulement');render()}
   if(DB){DB.collection('requests').add(q).then(function(){coolMark('q:'+id);toast('Demande envoyée : les personnes concernées sont prévenues');render()}).catch(function(e){lastAsk[id]=0;if(e&&e.code==='P0001')return toast(e.message);if(e&&e.message==='login')return askLogin('faire une demande',['ask',id]);loc()})}else loc()},'faire une demande',['ask',id])}
@@ -1843,7 +1860,7 @@ function finfo(id){var rs=frecent(id),k=fcand(id);
   return ago(last)+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fonctionnelle, '+c[1]+' limitée, '+c[2]+' non fonctionnelle)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
 var FREQ=[],lastFAsk={};
 function fAsk(id){
-  if(coolLeft('fq:'+id)||(lastFAsk[id]&&Date.now()-lastFAsk[id]<10*MIN))return noteCool('fq:'+id,'Demande déjà envoyée');
+  if(coolLeft('fq:'+id)||(lastFAsk[id]&&Date.now()-lastFAsk[id]<45*MIN))return noteCool('fq:'+id,'Demande déjà envoyée');
   needLogin(function(){lastFAsk[id]=Date.now();
     DB.collection('fuel_requests').add({st:id}).then(function(){coolMark('fq:'+id);toast('Demande envoyée : les personnes concernées sont prévenues');render()}).catch(function(e){lastFAsk[id]=0;if(e&&e.message==='login')return askLogin('faire une demande',['fAsk',id]);toast(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard')})},'faire une demande',['fAsk',id])}
 /* Répondre à une demande d’essence : onglet Essence, station mise en évidence ; connexion requise pour envoyer */
