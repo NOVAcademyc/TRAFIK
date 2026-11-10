@@ -368,6 +368,16 @@ svg.ti{width:62px;height:62px}
 .stn{font-size:12px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stv img{width:100%;max-height:62vh;object-fit:contain;border-radius:14px;background:#000;display:block}
 .stp img{width:100%;max-height:40vh;object-fit:contain;border-radius:14px;background:#000;display:block;margin-top:10px}
+.stb{position:relative}
+.stc{position:absolute;top:-2px;right:2px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--acc);color:#2b2000;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid var(--card)}
+.stdots{display:flex;gap:5px;justify-content:center;margin-top:10px}
+.stdots span{flex:1;max-width:44px;height:4px;border-radius:2px;background:var(--line)}
+.stdots span.on{background:var(--acc)}
+/* protection des statuts et des photos de profil : pas de clic droit, de glisser-déposer, de sélection ni d'appui long ; masqués à l'impression et quand la fenêtre perd le focus */
+.stv,.sts,.stb,.str,.av,.avc,.cav{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.stv img,.str img,.av img,.avc img,.cav img{pointer-events:none;-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
+body.shield .stv img,body.shield .str img,body.shield .av img,body.shield .avc img,body.shield .cav img{visibility:hidden}
+@media print{.stv,.sts,.av,.cav{display:none!important}}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
@@ -570,7 +580,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-08-st2';
+var BUILD='2026-11-09-pts10';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -655,7 +665,7 @@ function mi(ic,txt,fn,sub,cls){return '<button type="button" class="mi'+(cls?' '
 function userName(u){var md=(u&&u.user_metadata)||{};return ((md.prenom||'')+' '+(md.nom||'')).trim()||(u&&u.email)||''}
 /* petit avatar rond (en-tête et menu) : photo de profil si elle existe, sinon initiale */
 function avSmall(nm,px){var d=avGet(),st='width:'+px+'px;height:'+px+'px;margin:0;border-radius:50%;overflow:hidden;flex:none';
- return d?'<span class="av" style="'+st+';background:none"><img alt="" src="'+d+'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'
+ return d?'<span class="av" style="'+st+';background:none"><img alt="" draggable="false" src="'+d+'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'
          :'<span class="av" style="'+st+'">'+esc(String(nm).charAt(0).toUpperCase())+'</span>'}
 function menuBtn(){var e=document.getElementById('mav');if(!e)return;var u=window.CURU,ti=document.getElementById('topin'),cb=document.getElementById('cbtn');if(cb)cb.hidden=!u;if(ti)ti.classList.toggle('lo',u===null);
  if(u){var md=u.user_metadata||{},nm=String(md.prenom||u.email||'?');e.innerHTML=avSmall(nm,38);avFetch()}
@@ -731,23 +741,7 @@ function openRatings(){var c=window.sbClient;if(!window.ADMIN||!c)return;openShe
   for(var j=5;j>=1;j--){var pc=Math.round(cnt[j-1]*100/n);h+='<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="width:30px">'+j+' ★</span><div style="flex:1;height:10px;border-radius:5px;background:var(--soft)"><div style="width:'+pc+'%;height:100%;border-radius:5px;background:var(--acc,#F2B91F)"></div></div><span class="mute" style="width:78px;text-align:right">'+cnt[j-1]+' ('+pc+' %)</span></div>'}
   el.className='';el.innerHTML=h},function(){var el=document.getElementById('rtc');if(el)el.textContent='Impossible de charger les notes.'})}
 function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
-/* limite quotidienne de « Suivre » (routes + stations) : 4 par jour, sauf administrateur.
-   Connecté : vérifiée par le serveur (register_follow, jour d'Haïti). Non connecté : compteur local sur l'appareil. */
-var FOL_MAX=4,FOLB={};
-function folLocal(){var k=new Date().toDateString();try{var o=JSON.parse(localStorage.getItem('trafik-fol-day'))||{};return o.d===k?o:{d:k,n:0}}catch(e){return {d:k,n:0}}}
-function folLocalAdd(){try{var o=folLocal();o.n++;localStorage.setItem('trafik-fol-day',JSON.stringify(o))}catch(e){}}
-function folGate(kind,id,go){
- if(isAdm()||!isFinite(Number(id)))return go();
- var msg='Limite atteinte : '+FOL_MAX+' suivis par jour (routes et stations). Réessayez demain.',key=kind+id;
- if(FOLB[key])return;
- if(window.LOGGED&&window.sbRpc){FOLB[key]=1;
-  return window.sbRpc('register_follow',{p_kind:kind,p_id:Number(id)}).then(function(){FOLB[key]=0;go()},function(e){FOLB[key]=0;
-   if(e&&e.code==='P0001')return toast(e.message||msg);
-   if(folLocal().n>=FOL_MAX)return toast(msg);folLocalAdd();go()})}
- if(folLocal().n>=FOL_MAX)return toast(msg);
- folLocalAdd();go()}
-function toggleSt(id){id=String(id);if(S.fwatch.indexOf(id)<0)return folGate('st',id,function(){toggleStDo(id)});toggleStDo(id)}
-function toggleStDo(id){var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();pushPrefs();render()}
+function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();pushPrefs();render()}
 function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();pushPrefs();render();openSettings()}
 function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
@@ -779,7 +773,7 @@ function isAdm(){return !!(window.ADMIN||(ME&&ME.admin))}
 function admChk(px){return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="Administrateur" style="flex:none;vertical-align:middle;overflow:visible;filter:drop-shadow(0 1px 3px rgba(22,163,74,.55))"><path d="M23.40 12.00 L23.24 12.74 L22.81 13.42 L22.20 14.03 L21.56 14.56 L21.03 15.06 L20.68 15.60 L20.55 16.22 L20.57 16.95 L20.65 17.78 L20.65 18.64 L20.47 19.43 L20.06 20.06 L19.43 20.47 L18.64 20.65 L17.78 20.65 L16.95 20.57 L16.22 20.55 L15.60 20.68 L15.06 21.03 L14.56 21.56 L14.03 22.20 L13.42 22.81 L12.74 23.24 L12.00 23.40 L11.26 23.24 L10.58 22.81 L9.97 22.20 L9.44 21.56 L8.94 21.03 L8.40 20.68 L7.78 20.55 L7.05 20.57 L6.22 20.65 L5.36 20.65 L4.57 20.47 L3.94 20.06 L3.53 19.43 L3.35 18.64 L3.35 17.78 L3.43 16.95 L3.45 16.22 L3.32 15.60 L2.97 15.06 L2.44 14.56 L1.80 14.03 L1.19 13.42 L0.76 12.74 L0.60 12.00 L0.76 11.26 L1.19 10.58 L1.80 9.97 L2.44 9.44 L2.97 8.94 L3.32 8.40 L3.45 7.78 L3.43 7.05 L3.35 6.22 L3.35 5.36 L3.53 4.57 L3.94 3.94 L4.57 3.53 L5.36 3.35 L6.22 3.35 L7.05 3.43 L7.78 3.45 L8.40 3.32 L8.94 2.97 L9.44 2.44 L9.97 1.80 L10.58 1.19 L11.26 0.76 L12.00 0.60 L12.74 0.76 L13.42 1.19 L14.03 1.80 L14.56 2.44 L15.06 2.97 L15.60 3.32 L16.22 3.45 L16.95 3.43 L17.78 3.35 L18.64 3.35 L19.43 3.53 L20.06 3.94 L20.47 4.57 L20.65 5.36 L20.65 6.22 L20.57 7.05 L20.55 7.78 L20.68 8.40 L21.03 8.94 L21.56 9.44 L22.20 9.97 L22.81 10.58 L23.24 11.26Z" fill="#15803D"/><path d="M21.40 12.00 L21.27 12.61 L20.92 13.17 L20.43 13.68 L19.92 14.12 L19.49 14.54 L19.21 14.98 L19.09 15.50 L19.10 16.10 L19.15 16.78 L19.14 17.48 L18.99 18.13 L18.65 18.65 L18.13 18.99 L17.48 19.14 L16.78 19.15 L16.10 19.10 L15.50 19.09 L14.98 19.21 L14.54 19.49 L14.12 19.92 L13.68 20.43 L13.17 20.92 L12.61 21.27 L12.00 21.40 L11.39 21.27 L10.83 20.92 L10.32 20.43 L9.88 19.92 L9.46 19.49 L9.02 19.21 L8.50 19.09 L7.90 19.10 L7.22 19.15 L6.52 19.14 L5.87 18.99 L5.35 18.65 L5.01 18.13 L4.86 17.48 L4.85 16.78 L4.90 16.10 L4.91 15.50 L4.79 14.98 L4.51 14.54 L4.08 14.12 L3.57 13.68 L3.08 13.17 L2.73 12.61 L2.60 12.00 L2.73 11.39 L3.08 10.83 L3.57 10.32 L4.08 9.88 L4.51 9.46 L4.79 9.02 L4.91 8.50 L4.90 7.90 L4.85 7.22 L4.86 6.52 L5.01 5.87 L5.35 5.35 L5.87 5.01 L6.52 4.86 L7.22 4.85 L7.90 4.90 L8.50 4.91 L9.02 4.79 L9.46 4.51 L9.88 4.08 L10.32 3.57 L10.83 3.08 L11.39 2.73 L12.00 2.60 L12.61 2.73 L13.17 3.08 L13.68 3.57 L14.12 4.08 L14.54 4.51 L14.98 4.79 L15.50 4.91 L16.10 4.90 L16.78 4.85 L17.48 4.86 L18.13 5.01 L18.65 5.35 L18.99 5.87 L19.14 6.52 L19.15 7.22 L19.10 7.90 L19.09 8.50 L19.21 9.02 L19.49 9.46 L19.92 9.88 L20.43 10.32 L20.92 10.83 L21.27 11.39Z" fill="#22C55E"/><path d="M12 4.6a7.4 7.4 0 0 1 6.6 4.1 8 8 0 0 0-13.2 0A7.4 7.4 0 0 1 12 4.6z" fill="#fff" opacity=".28"/><path d="M7.9 12.4l2.9 2.9 5.5-6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 function vBadge(){if(isAdm())return '<span class="vb" style="display:block;line-height:0">'+admChk(30)+'</span>';var n=ME&&ME.level?ME.level.n:0;if(n<3)return '';var c=CHK(n);return '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="'+c[2]+'"><circle cx="12" cy="12" r="11" fill="'+c[0]+'" stroke="var(--card)" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="'+c[1]+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 function avInner(){var d=avGet(),pick='document.getElementById(\'avf\').click()';
- return '<div class="av"><button type="button" class="avc'+(d?' has':'')+'" aria-label="'+(d?'Changer':'Ajouter')+' la photo de profil" onclick="'+pick+'">'+(d?'<img alt="" src="'+d+'">':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>')+'</button>'+vBadge()+'</div>'+
+ return '<div class="av"><button type="button" class="avc'+(d?' has':'')+'" aria-label="'+(d?'Changer':'Ajouter')+' la photo de profil" onclick="'+pick+'">'+(d?'<img alt="" draggable="false" src="'+d+'">':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>')+'</button>'+vBadge()+'</div>'+
   '<div style="text-align:center;margin-bottom:6px"><button type="button" class="lnk" onclick="'+pick+'">'+(d?'Changer la photo':'Ajouter une photo (facultatif)')+'</button>'+(d?' · <button type="button" class="lnk" onclick="avRemove()">Retirer</button>':'')+'</div><input type="file" id="avf" accept="image/*" hidden onchange="avPick(this)">'}
 function avHtml(){return '<div id="avw">'+avInner()+'</div>'}
 function avUpdate(){var e=document.getElementById('avw');if(e)e.innerHTML=avInner()}
@@ -860,7 +854,7 @@ function cmLoad(force){if(!window.sbRpc||!window.UID||CM.busy||(!force&&CM.rows&
   return window.sbClient.storage.from('avatars').createSignedUrls(paths,3600).then(function(q){var m={};((q&&q.data)||[]).forEach(function(x){if(x&&x.signedUrl&&!x.error)m[x.path]=x.signedUrl});CM.urls=m;return rows},function(){CM.urls={};return rows})});
  return Promise.all([mine,list]).then(function(a){CM.rows=a[1];CM.t=Date.now();if(!CM.pick&&MYP&&MYP.pseudo){var m=a[1].filter(function(x){return x.o_pseudo===MYP.pseudo})[0];if(m)CM.tab=String(Math.min(5,Math.max(3,m.o_level)))}}).catch(function(){CM.err=true}).then(function(){CM.busy=false;if(S.tab==='community')render()})}
 function cmChk(n,px){var c=CHK(n);return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" role="img" aria-label="'+c[2]+'" style="flex:none"><circle cx="12" cy="12" r="11" fill="'+c[0]+'"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="'+c[1]+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
-function cmAv(x){var u=x.o_photo&&CM.urls[x.o_photo];return '<span class="cav" aria-hidden="true">'+(u?'<img alt="" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo).charAt(0).toUpperCase()))+'</span>'}
+function cmAv(x){var u=x.o_photo&&CM.urls[x.o_photo];return '<span class="cav" aria-hidden="true">'+(u?'<img alt="" draggable="false" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo).charAt(0).toUpperCase()))+'</span>'}
 function setCm(t){CM.tab=t;CM.pick=1;render()}
 function setCmMode(m){CM.mode=m;render()}
 function cmModeTog(rows){var n=(rows||[]).filter(function(x){return x.o_following}).length;
@@ -931,12 +925,15 @@ function stNotify(rows){try{var k='trafik-st-notif-'+window.UID,old=null;try{old
  localStorage.setItem(k,JSON.stringify(rows.filter(function(x){return !x.o_mine}).map(function(x){return x.o_path})));
  if(!Array.isArray(old))return;
  rows.forEach(function(x){if(x.o_mine||old.indexOf(x.o_path)>=0)return;var t=esc(x.o_pseudo)+' a publié un statut';pushAlert({t:hhmm(Date.now()),txt:t,l:3,k:'statut'});toast(dec(t))})}catch(e){}}
+/* statuts d'un même compte : empilés dans un seul rond, du plus ancien au plus récent ; renvoie des listes d'index de STT.rows */
+function stGroups(rows){var m={},o=[];rows.forEach(function(x,i){var k=x.o_mine?'~moi':'p:'+x.o_pseudo;if(!m[k]){m[k]=[];o.push(k)}m[k].push(i)});
+ return o.map(function(k){return m[k].sort(function(p,q){return Date.parse(rows[p].o_created)-Date.parse(rows[q].o_created)})})}
 function stStrip(){var rows=STT.rows,seen=stSeenGet(),adm=!!(ME&&ME.admin),mine=!adm&&rows&&rows.filter(function(x){return x.o_mine})[0],can=stCanPost();
  var h='<div class="card" style="margin-top:14px"><div class="sth"><b>Statuts</b>'+((!can||(!mine&&!STT.ban))?'<button type="button" class="alt"'+(can?'':' aria-disabled="true"')+' style="min-height:36px;padding:6px 14px;font-size:14px" onclick="stCompose()">+ Publier</button>':'')+'</div>';
  if(!rows)h+='<div class="mute" style="margin-top:6px">'+(STT.err?'Impossible de charger les statuts. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
  else if(!rows.length)h+='<div class="mute" style="margin-top:6px">Aucun statut pour le moment. Les membres Sentinelle, Gardien et Légende que vous suivez peuvent publier une photo visible 30 h.</div>';
- else h+='<div class="sts" role="list">'+rows.map(function(x,i){var u=STT.urls[x.o_path],nm=x.o_mine?'Mon statut':x.o_pseudo;
-  return '<button type="button" class="stb" role="listitem" aria-label="Statut de '+esc(nm)+'" onclick="stOpen('+i+')"><span class="str'+(seen[x.o_path]?'':' un')+'">'+(u?'<img alt="" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo||'?').charAt(0).toUpperCase()))+'</span><span class="stn">'+esc(nm)+'</span></button>'}).join('')+'</div>';
+ else h+='<div class="sts" role="list">'+stGroups(rows).map(function(g){var f=g.filter(function(j){return !seen[rows[j].o_path]})[0],un=f!==undefined,x=rows[g[g.length-1]],u=STT.urls[x.o_path],nm=x.o_mine?'Mon statut':x.o_pseudo;
+  return '<button type="button" class="stb" role="listitem" aria-label="Statut de '+esc(nm)+(g.length>1?' ('+g.length+' statuts)':'')+'" onclick="stOpen('+(un?f:g[0])+')"><span class="str'+(un?' un':'')+'">'+(u?'<img alt="" draggable="false" loading="lazy" src="'+esc(u)+'">':esc(String(x.o_pseudo||'?').charAt(0).toUpperCase()))+'</span>'+(g.length>1?'<span class="stc" aria-hidden="true">'+g.length+'</span>':'')+'<span class="stn">'+esc(nm)+'</span></button>'}).join('')+'</div>';
  if(STT.ban&&!(ME&&ME.admin))h+='<div class="offl" style="margin:10px 0 0;text-align:left;border:1px solid var(--r)"><b>Statut supprimé</b> : '+esc(STT.ban.reason)+'.<br>Vous pourrez publier de nouveau dans environ '+stBanLeft()+' h.</div>';
  if(can&&mine)h+='<div class="mute" style="margin-top:6px">Un seul statut par jour : vous pourrez en publier un nouveau 30 h après la publication, même si vous supprimez celui-ci.</div>';
  if(mine&&mine.o_pending)h+='<div class="mute" style="margin-top:6px">Votre statut est en cours de vérification : vos abonnés le verront dans quelques secondes s’il est conforme.</div>';
@@ -948,10 +945,11 @@ function stOpen(i){var rows=STT.rows||[],x=rows[i];if(!x)return;STI=i;var adm=!!
  var seen=stSeenGet();seen[x.o_path]=Date.now();stSeenSet(seen);
  if(!x.o_mine&&!adm&&window.sbRpc)window.sbRpc('record_status_view',{p_path:x.o_path}).catch(function(){});
  var u=STT.urls[x.o_path],exp=Date.parse(x.o_expires),forever=exp>Date.UTC(2100,0,1),left=Math.max(1,Math.ceil((exp-Date.now())/36e5)),nav='';
- if(rows.length>1)nav='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+rows.length-1)%rows.length)+')">‹ Précédent</button><button type="button" class="alt" style="flex:1" onclick="stOpen('+((i+1)%rows.length)+')">Suivant ›</button></div>';
+ var g=stGroups(rows).filter(function(a){return a.indexOf(i)>=0})[0]||[i],pos=g.indexOf(i);
+ if(g.length>1)nav='<div class="stdots" aria-hidden="true">'+g.map(function(j,k){return '<span'+(k===pos?' class="on"':'')+'></span>'}).join('')+'</div><div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1"'+(pos>0?' onclick="stOpen('+g[pos-1]+')"':' disabled')+'>‹ Précédent</button><button type="button" class="alt" style="flex:1"'+(pos<g.length-1?' onclick="stOpen('+g[pos+1]+')"':' disabled')+'>Suivant ›</button></div>';
  var eye=x.o_views!=null?'<button type="button" class="alt" style="min-height:36px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;flex:none" aria-label="Nombre de vues : '+x.o_views+'" onclick="stViews('+i+')">'+EYE+'<b>'+x.o_views+'</b></button>':'';
- openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+(x.o_admin?admChk(18):(x.o_level>=3?cmChk(x.o_level,18):'')),
-  '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+'</div>'+
+ openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+(x.o_admin?admChk(18):(x.o_level>=3?cmChk(x.o_level,18):''))+(g.length>1?' <span class="mute" style="font-weight:600">'+(pos+1)+'/'+g.length+'</span>':''),
+  '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" draggable="false" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+'</div>'+
   (x.o_caption?'<p class="stcap">'+stCapHtml(x)+'</p>':'')+
   (x.o_pending?'<div class="offl" style="margin:10px 0 0;text-align:left">Vérification automatique en cours : seul vous le voyez pour l’instant.</div>':'')+
   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px"><div class="mute">Publié '+ago(Date.parse(x.o_created))+' · '+(forever?'ne disparaît pas':'disparaît dans environ '+left+' h')+(x.o_audience==='all'?' · pour tout le monde':'')+'</div>'+eye+'</div>'+nav+
@@ -1033,10 +1031,9 @@ function lvBar(l,p){var v=lvPct(l,p);return '<div class="lvb" role="progressbar"
 function meCompare(d){try{var uid=window.UID,codes=d.badges.filter(function(b){return b.earned}).map(function(b){return b.code}),s=JSON.parse(localStorage.getItem(MEK)||'null');
  localStorage.setItem(MEK,JSON.stringify({u:uid,p:d.points,v:d.validated,pr:d.proposals,lv:d.level.n,b:codes}));
  if(!s||s.u!==uid||d.admin)return;
- var msg=[],gain=d.points-s.p,ev=[];
- if(d.validated>s.v)ev.push('Votre signalement a été validé par la communauté');
- if(d.proposals>s.pr)ev.push('Votre proposition a été publiée : merci !');
- if(ev.length)msg.push(ev.join(' · ')+(gain>0?' (+'+gain+' point'+(gain>1?'s':'')+' depuis votre dernière visite)':''));
+ var msg=[],gain=d.points-s.p;
+ if(d.validated>s.v)msg.push('Votre signalement a été validé par la communauté (+'+gain+' point'+(gain>1?'s':'')+')');
+ else if(d.proposals>s.pr)msg.push('Votre proposition a été publiée : merci ! (+'+gain+' points)');
  if(d.level.n>s.lv)msg.push('🏆 Nouveau niveau : '+esc(d.level.name));
  d.badges.forEach(function(b){if(b.earned&&(s.b||[]).indexOf(b.code)<0)msg.push(esc(b.icon)+' Nouveau badge : '+esc(b.name))});
  msg.forEach(function(t){pushAlert({t:hhmm(Date.now()),txt:t,l:0,k:'valide'});toast(dec(t))})}catch(e){}}
@@ -1063,7 +1060,7 @@ function meHtml(){if(!ME)return '<div class="mute" style="padding:20px 0;text-al
  return '<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span style="font-size:38px;line-height:1" aria-hidden="true">'+lvIcon(l.n)+'</span><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800">'+esc(l.name)+'</div><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+
   (ME.admin?'<div class="offl" style="margin:8px 0 0">Compte administrateur : vous ne gagnez pas de points.</div>':'')+
   '<div class="bst"><div>'+ME.week+'<span>Cette semaine</span></div><div>'+ME.validated+'<span>Validés</span></div><div>'+ME.votes+'<span>Votes</span></div></div>'+
-  '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande), dans la limite de <b>40 points par 24 h</b> pour ces deux gains. Chaque vote donne 1 point (10 points au maximum par 24 h). Une route ou une station que vous proposez, une fois publiée, rapporte 20 points (une route ou une station déjà existante ne rapporte rien). Un nouvel abonné qui a lui-même au moins 20 points vous rapporte 2 points (10 points au maximum par 24 h).</div>'+
+  '<div class="mute">Un signalement rapporte <b>10 points</b> quand d’autres personnes le confirment (+5 si vous répondez à une demande). Chaque vote donne 1 point (10 par jour au maximum) ; une route ou une station que vous proposez, une fois publiée, rapporte 10 points. Un nouvel abonné actif vous rapporte 2 points (10 par jour au maximum).</div>'+
   (zk.length?'<div class="mute" style="margin-top:10px">Votre contribution cette semaine : '+zk.map(function(k){return '<b>'+esc(k)+'</b> '+z[k]+' pt'+(z[k]>1?'s':'')}).join(' · ')+'</div>':'')+
   '<h3 style="margin:16px 0 8px;font-size:16px">Badges ('+got+'/'+ME.badges.length+')</h3><div class="bgs">'+ME.badges.map(function(b){return '<div class="bg'+(b.earned?'':' lk')+'" role="group" aria-label="'+esc(b.name)+(b.earned?' : obtenu':' : verrouillé')+'"><span class="ic" aria-hidden="true">'+esc(b.icon)+'</span><b>'+esc(b.name)+'</b><small>'+esc(b.descr)+'</small></div>'}).join('')+'</div>'}
 function zonesHtml(){var h='<div class="mute" style="margin:12px 0 4px">Les zones se disputent la semaine : chaque point gagné compte pour la zone concernée. Remise à zéro chaque lundi.</div>';
@@ -1076,7 +1073,7 @@ function openAbout(){openSheet('Aide et à propos',
  '<p style="margin:0 0 10px">Trafik montre l’état de la circulation et des stations-service de Port-au-Prince, d’après les signalements de la communauté.</p>'+
  '<div class="srow"><div><b>Comment ça marche</b><div class="mute">● Fluide, ▲ Ralenti, ■ Bloqué. Un état s’affiche quand au moins '+QUORUM+' personnes différentes le confirment (un signalement compte pour un vote positif ; « Confirmer » et « Contester » sont réservés aux personnes à proximité). Si les votes négatifs dépassent les positifs, ou en cas d’égalité, l’état repasse à « Pas d’info ».</div></div></div>'+
  '<div class="srow"><div><b>Règles</b><div class="mute">Un signalement par tronçon ou station toutes les '+COOL+' minutes, 10 par heure au maximum. Un signalement compte 45 minutes (3 heures pour les stations). Vous devez être à proximité (environ 1 km) du tronçon ou de la station pour signaler ; votre position est vérifiée à l’envoi du signalement (téléphone et serveur) et n’est pas enregistrée.</div></div></div>'+
- '<div class="srow"><div><b>Alertes</b><div class="mute">Suivez un tronçon pour être prévenu quand son état change (4 nouveaux suivis et 4 demandes par jour au maximum, routes et stations ensemble ; une demande reste active 45 minutes, puis vous pouvez la refaire pour le même tronçon ou la même station). La cloche sépare les demandes d’état des autres utilisateurs, les changements sur vos routes suivies et les signalements reçus.</div></div></div>'+
+ '<div class="srow"><div><b>Alertes</b><div class="mute">Suivez un tronçon pour être prévenu quand son état change. La cloche sépare les demandes d’état des autres utilisateurs, les changements sur vos routes suivies et les signalements reçus.</div></div></div>'+
  '<div class="srow"><div><b>Données enregistrées</b><div class="mute">Votre e-mail, nom, prénom et téléphone, vos signalements, vos routes suivies et, si vous les activez, vos abonnements aux notifications.</div></div></div>'+
  '<p class="mute" style="margin:10px 0 0"><a href="confidentialite.html" style="color:var(--ink)">Politique de confidentialité</a></p><p class="mute" style="margin:10px 0 0">🚫 Pas de téléphone en conduisant. En danger, suivez les consignes des autorités.</p>')}
 function shareApp(){var url=location.href.split('#')[0],d={title:'Trafik',text:'La circulation et les stations-service de Port-au-Prince en direct',url:url};
@@ -1168,7 +1165,7 @@ function change(id,before,after){
 /* anti-spam : un même utilisateur ne peut signaler le même tronçon / la même station qu'une fois toutes les 20 min (mémorisé sur l'appareil, survit au rechargement) */
 var COOL=20,VCOOL=30,CKEY='trafik-cool';
 /* votes : une fois qu'on a voté sur un tronçon / une station, on ne peut plus voter (ni changer d'option) avant 30 min ; signalements : 20 min */
-function coolDur(k){return (k.indexOf('v:')===0?VCOOL:/^f?q:/.test(k)?45:COOL)*MIN}
+function coolDur(k){return (k.indexOf('v:')===0?VCOOL:/^f?q:/.test(k)?10:COOL)*MIN}
 function coolLoad(){try{var o=JSON.parse(localStorage.getItem(CKEY))||{},n=Date.now();for(var k in o)if(n-o[k]>=coolDur(k))delete o[k];return o}catch(e){return {}}}
 function coolLeft(k){var o=coolLoad();return o[k]?Math.max(1,Math.ceil((coolDur(k)-(Date.now()-o[k]))/MIN)):0}
 function coolMark(k){try{var o=coolLoad();o[k]=Date.now();localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}setTimeout(function(){render()},coolDur(k)+800)}
@@ -1224,8 +1221,7 @@ function doReport(id,lvl){S.reply=null;if(!coolCheck('seg:'+id,'ce tronçon'))re
   function loc(){LOCAL.push(r);S.reports.push(r);change(id,b,status(id));render()}
   if(DB){DB.collection('reports').add(r).then(function(){toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase());render();repBump()}).catch(function(e){if(e&&e.code==='P0001'){coolClear('seg:'+id);return toast(e.message)}if(e&&e.message==='login'){coolClear('seg:'+id);return askLogin('signaler',['report',id,lvl])}loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
   else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
-function toggle(id){if(S.watch.indexOf(id)<0)return folGate('seg',id,function(){toggleDo(id)});toggleDo(id)}
-function toggleDo(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toast('Vous recevrez les alertes pour ce tronçon')}else S.watch.splice(i,1);save();render();pushPrefs();
+function toggle(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toast('Vous recevrez les alertes pour ce tronçon')}else S.watch.splice(i,1);save();render();pushPrefs();
  if(window.sbClient&&window.LOGGED){var q=window.sbClient.from('watched_segments');(on?q.upsert({segment_id:id},{onConflict:'user_id,segment_id',ignoreDuplicates:true}):q.delete().eq('segment_id',id)).then(function(){},function(){})}}
 var WSYNC='';
 function syncWatch(){var c=window.sbClient;if(!c)return;
@@ -1352,7 +1348,7 @@ function recvCheck(docs){var n=Date.now(),fresh=[];
   if(!asked&&!w&&!fb&&!reqWanted(r.seg))return;
   var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':fb?' (signalé par '+esc(fb)+')':' (nouveau signalement)')+(status(r.seg)===3?' · en attente de confirmation':'');
   pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception',seg:Number(r.seg),by:fb||undefined});toast('Signalement · '+txt)})}
-function ask(id){if(coolLeft('q:'+id)||(lastAsk[id]&&Date.now()-lastAsk[id]<45*MIN))return noteCool('q:'+id,'Demande déjà envoyée');
+function ask(id){if(coolLeft('q:'+id)||(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN))return noteCool('q:'+id,'Demande déjà envoyée');
   needLogin(function(){lastAsk[id]=Date.now();var q={seg:id,t:Date.now(),own:1};
   function loc(){LREQ.push(q);coolMark('q:'+id);toast('Demande enregistrée sur cet appareil seulement');render()}
   if(DB){DB.collection('requests').add(q).then(function(){coolMark('q:'+id);toast('Demande envoyée : les personnes concernées sont prévenues');render()}).catch(function(e){lastAsk[id]=0;if(e&&e.code==='P0001')return toast(e.message);if(e&&e.message==='login')return askLogin('faire une demande',['ask',id]);loc()})}else loc()},'faire une demande',['ask',id])}
@@ -1860,7 +1856,7 @@ function finfo(id){var rs=frecent(id),k=fcand(id);
   return ago(last)+' · '+rs.length+' signalement'+(rs.length>1?'s':'')+' ('+c[0]+' fonctionnelle, '+c[1]+' limitée, '+c[2]+' non fonctionnelle)'+(c[0]>0&&c[2]>0?' · avis partagés':'')}
 var FREQ=[],lastFAsk={};
 function fAsk(id){
-  if(coolLeft('fq:'+id)||(lastFAsk[id]&&Date.now()-lastFAsk[id]<45*MIN))return noteCool('fq:'+id,'Demande déjà envoyée');
+  if(coolLeft('fq:'+id)||(lastFAsk[id]&&Date.now()-lastFAsk[id]<10*MIN))return noteCool('fq:'+id,'Demande déjà envoyée');
   needLogin(function(){lastFAsk[id]=Date.now();
     DB.collection('fuel_requests').add({st:id}).then(function(){coolMark('fq:'+id);toast('Demande envoyée : les personnes concernées sont prévenues');render()}).catch(function(e){lastFAsk[id]=0;if(e&&e.message==='login')return askLogin('faire une demande',['fAsk',id]);toast(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard')})},'faire une demande',['fAsk',id])}
 /* Répondre à une demande d’essence : onglet Essence, station mise en évidence ; connexion requise pour envoyer */
@@ -2001,6 +1997,25 @@ render();
 <script>
 (function(){try{var el=document.getElementById('qr');if(!el||!window.qrcode)return;var q=qrcode(0,'M');q.addData(location.origin+location.pathname);q.make();el.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true})}catch(e){}})();
 </script>
+<script>
+/* Protection des statuts et des photos de profil (limite : un navigateur ne peut pas bloquer les captures d'écran du système ; ceci décourage et masque les images dans les cas détectables) */
+(function(){var SEL='.stv,.sts,.stb,.str,.av,.avc,.cav';
+ function prot(e){var n=e.target;return !!(n&&n.closest&&n.closest(SEL))}
+ ['contextmenu','dragstart','selectstart','copy','cut'].forEach(function(ev){document.addEventListener(ev,function(e){if(prot(e)||((ev==='copy'||ev==='cut')&&document.querySelector('.stv')))e.preventDefault()},true)});
+ var tm=0;function shield(ms){document.body.classList.add('shield');clearTimeout(tm);if(ms)tm=setTimeout(function(){if(!document.hidden&&document.hasFocus())document.body.classList.remove('shield')},ms)}
+ function unshield(){clearTimeout(tm);if(!document.hidden)document.body.classList.remove('shield')}
+ document.addEventListener('visibilitychange',function(){document.hidden?shield(0):unshield()});
+ window.addEventListener('blur',function(){shield(0)});window.addEventListener('focus',unshield);
+ window.addEventListener('pagehide',function(){shield(0)});window.addEventListener('pageshow',unshield);
+ window.addEventListener('beforeprint',function(){shield(0)});window.addEventListener('afterprint',unshield);
+ function clip(){try{navigator.clipboard.writeText('')}catch(x){}}
+ document.addEventListener('keydown',function(e){var k=(e.key||'').toLowerCase();if(!document.querySelector('.stv,.sts,.av,.cav'))return;
+  if(k==='printscreen'||(e.metaKey&&e.shiftKey&&(/^[3-5]$/.test(k)||k==='s'))||(e.ctrlKey&&e.shiftKey&&k==='s')){shield(2500);clip()}
+  if((e.ctrlKey||e.metaKey)&&(k==='s'||k==='p'||k==='u')&&document.querySelector('.stv'))e.preventDefault()},true);
+ document.addEventListener('keyup',function(e){if((e.key||'')==='PrintScreen'){shield(2500);clip()}},true);
+})();
+</script>
+
 <div class="hw" aria-hidden="true"><i></i><i></i><i></i></div>
 </body>
 </html>
