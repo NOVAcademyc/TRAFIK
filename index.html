@@ -378,6 +378,7 @@ svg.ti{width:62px;height:62px}
 .stv img,.str img,.av img,.avc img,.cav img{pointer-events:none;-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 body.shield .stv img,body.shield .str img,body.shield .av img,body.shield .avc img,body.shield .cav img{visibility:hidden}
 @media print{.stv,.sts,.av,.cav{display:none!important}}
+.wxc{background:linear-gradient(135deg,#2F82C4,#256CA8);border-color:#1E5C90;color:#fff}.wxc .mute{color:rgba(255,255,255,.88)}.wxc>svg{stroke:#fff!important}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
@@ -580,7 +581,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-09-pts10';
+var BUILD='2026-11-09-meteo6';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -1739,6 +1740,36 @@ function dailyFetch(){if(DS.busy||DS.fail||Date.now()-DS.t<60000||!window.sbRpc)
  window.sbRpc('get_daily_stats').then(function(r){var d=r&&r.data;DS.busy=0;DS.t=Date.now();if(!d||typeof d.reports!=='number')return;var ch=JSON.stringify(d)!==JSON.stringify(DS.d);DS.d=d;if(ch&&S.tab==='home')render()},function(){DS.busy=0;DS.t=Date.now();if(!DS.d)DS.fail=1})}
 function dailyHtml(){dailyFetch();if(DS.fail&&!DS.d)return '';var d=DS.d||{},v=function(k){return typeof d[k]==='number'?d[k]:'–'},B=[['reports','Signalements'],['routes','Routes mises à jour'],['stations','Stations mises à jour'],['votes','Votes']];
  return '<div class="hd" style="margin-top:16px">Aujourd’hui</div><div class="sum st" style="grid-template-columns:repeat(2,1fr);margin-top:6px">'+B.map(function(b){return '<div>'+v(b[0])+'<span>'+b[1]+'</span></div>'}).join('')+'</div>'+(typeof d.people==='number'?'<div class="mute" style="text-align:center;margin-top:8px">'+d.people+' contributeur'+(d.people>1?'s':'')+' aujourd’hui</div>':'')}
+/* météo : température actuelle de Port-au-Prince (Open-Meteo, sans clé API), gardée sur l’appareil pour le mode hors ligne.
+   Aucune valeur inventée : si la mesure date de plus de 3 h ou n’existe pas, la carte est masquée. */
+var WXK='trafik-wx',WX=lsGet(WXK),WXB=0,WXN=0,WXE='';
+function wxInfo(c){
+ if(c===0)return ['Ciel dégagé','sun'];if(c===1)return ['Plutôt dégagé','sun'];if(c===2)return ['Partiellement nuageux','cloud'];if(c===3)return ['Nuageux','cloud'];
+ if(c===45||c===48)return ['Brouillard','cloud'];if(c>=51&&c<=57)return ['Bruine','rain'];if(c>=61&&c<=67)return ['Pluie','rain'];
+ if(c>=80&&c<=82)return ['Averses','rain'];if(c>=95)return ['Orage','bolt'];return ['Variable','cloud']}
+var WXI={
+ sun:'<circle cx="12" cy="12" r="4" fill="#F2B91F" stroke="#F2B91F"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.8 10 4 4 0 0 1 17 18z"/>',
+ rain:'<path d="M7 14a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.8 6 4 4 0 0 1 17 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3" stroke="#4F8DFF"/>',
+ bolt:'<path d="M7 14a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.8 6 4 4 0 0 1 17 14z"/><path d="M12 14l-2 4h3l-2 4" stroke="#F2B91F"/>'};
+function wxFetch(force){
+ if(WXB||navigator.onLine===false)return Promise.resolve();
+ if(!force&&((WX&&Date.now()-WX.t<20*60000)||Date.now()<WXN))return Promise.resolve();
+ WXB=1;
+ return fetch('https://api.open-meteo.com/v1/forecast?latitude=18.54&longitude=-72.34&current=temperature_2m,weather_code&timezone=America%2FPort-au-Prince',{cache:'no-store'})
+  .then(function(r){if(!r.ok)throw new Error('http');return r.json()})
+  .then(function(d){var c=d&&d.current;
+   if(!c||typeof c.temperature_2m!=='number'||typeof c.weather_code!=='number')throw new Error('data');
+   WX={tmp:Math.round(c.temperature_2m),code:c.weather_code,t:Date.now()};lsSet(WXK,WX);WXN=0;if(S.tab==='home')render()})
+  .catch(function(e){WXE=String((e&&e.message)||e||'erreur');WXN=Date.now()+5*60000;try{console.warn('Météo indisponible :',WXE)}catch(x){}})
+  .then(function(){WXB=0;if(S.tab==='home')render()})}
+function wxRetry(){WXN=0;WXE='';wxFetch(true);if(S.tab==='home')render()}
+function wxHtml(){wxFetch();
+ if(!WX||typeof WX.tmp!=='number'||Date.now()-WX.t>3*3600000){
+  /* pas de mesure récente : on le dit au lieu de masquer la carte, pour que la personne sache pourquoi */
+  return '<div class="card wxc" role="group" aria-label="Météo à Port-au-Prince" style="display:flex;align-items:center;gap:10px;padding:5px 12px;margin-top:8px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:28px;height:28px;flex:none;fill:none;stroke:var(--mute);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">'+WXI.cloud+'</svg><div style="flex:1;min-width:0"><b>Météo</b><div class="mute" style="font-size:12.5px" aria-live="polite">'+(isOff()?'Hors ligne : température indisponible':(WXB||!WXE?'Chargement de la température…':'Température indisponible pour le moment'))+'</div></div>'+((WXB||!WXE||isOff())?'':'<button type="button" class="alt" style="min-height:36px;padding:6px 14px;font-size:14px" onclick="wxRetry()">Réessayer</button>')+'</div>'}
+ var i=wxInfo(WX.code),rain=i[1]==='rain'||i[1]==='bolt';
+ return '<div class="card wxc" role="group" aria-label="Météo à Port-au-Prince" style="display:flex;align-items:center;gap:10px;padding:5px 12px;margin-top:8px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:28px;height:28px;flex:none;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">'+WXI[i[1]]+'</svg><div style="flex:1;min-width:0"><div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:19px;line-height:1.1">'+WX.tmp+' °C</b><span>'+i[0]+'</span></div><div class="mute" style="font-size:12px;line-height:1.2">Port-au-Prince · mesuré à '+hhmm(WX.t)+(isOff()?' · hors ligne':'')+(rain?' · ralentissements possibles':'')+'</div></div></div>'}
 function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3)c[k]++});
  var T=[['state','Trafic','Liste des routes','S.view=\'list\''],['state','Carte','Vue d’ensemble','S.view=\'map\''],['fuel','Essence','Stations ouvertes',''],['sec','Sécurité','Alertes 48 h','']];
  var r=recent();
@@ -1746,7 +1777,7 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  var ic=function(n){return IC[n==='Carte'?'map':n==='Trafic'?'state':n==='Essence'?'fuel':'sec']};
  var np=SEG.filter(function(s){return pendSeg(s[0])>=0}).length;
  var fc=[0,0,0];STN.forEach(function(s){var k=fstat(s.id);if(k<3)fc[k]++});
- return instBtn()+'<div class="hd" style="margin-top:8px">Circulation</div><div class="sum" style="margin-top:6px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.view=\'list\';S.zone=\'Tous\';S.ts=\''+i+'\';setTab(\'state\')">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
+ return instBtn()+wxHtml()+'<div class="hl"></div><div class="hd" style="margin-top:12px">Circulation</div><div class="sum" style="margin-top:6px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.view=\'list\';S.zone=\'Tous\';S.ts=\''+i+'\';setTab(\'state\')">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
  (np?'<div class="mute" style="margin-top:8px;text-align:center">+ '+np+' état'+(np>1?'s':'')+' en attente de confirmation (voir Trafic)</div>':'')+
  '<div class="hl"></div><div class="hd" style="margin-top:12px">Essence</div><div class="sum" style="margin-top:6px">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.fz=\'Tous\';S.fs=\''+i+'\';setTab(\'fuel\')">'+fc[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
  (window.LOGGED===false?ptsCta():meCard())+'<div class="hl"></div><div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
@@ -1953,6 +1984,7 @@ function ptrReset(){var el=ptrEl();if(!el)return;el.classList.remove('drag','spi
 function refreshAll(silent){
  if(REFRESHING)return Promise.resolve();REFRESHING=true;if(!silent)ptrSpin();
  var tasks=[];
+ try{tasks.push(wxFetch(true))}catch(e){}
  try{if(window.sbRefresh)tasks.push(window.sbRefresh())}catch(e){}
  try{if(S.tab==='community'){tasks.push(cmLoad(true));tasks.push(stLoad(true))}}catch(e){}
  try{if(SWR&&SWR.update)tasks.push(Promise.resolve(SWR.update()).catch(function(){}))}catch(e){}
