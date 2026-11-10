@@ -367,6 +367,17 @@ svg.ti{width:62px;height:62px}
 .str img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
 .stn{font-size:12px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stv img{width:100%;max-height:62vh;object-fit:contain;border-radius:14px;background:#000;display:block}
+.stv{position:relative}
+.stv .stl{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:6px 13px;border-radius:999px;background:rgba(0,0,0,.35);color:#fff;border:0;font-size:15px;font-weight:800;box-shadow:none}
+.stl svg{width:24px;height:24px;fill:transparent;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:fill .15s,stroke .15s}
+.stl.on svg{fill:#2F6BFF;stroke:#2F6BFF}
+.stl.on{color:#fff}
+.stl.ro{pointer-events:none}
+.stl.pop svg{animation:stpop .35s ease}
+@keyframes stpop{0%{transform:scale(1)}40%{transform:scale(1.35) rotate(-8deg)}100%{transform:scale(1)}}
+.cmn{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.cmc{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13.5px;font-weight:700}
+.cmc b{min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#C93C3C;color:#fff;font-size:12px;display:inline-grid;place-items:center}
 .stp img{width:100%;max-height:40vh;object-fit:contain;border-radius:14px;background:#000;display:block;margin-top:10px}
 .stb{position:relative}
 .stc{position:absolute;top:-2px;right:2px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--acc);color:#2b2000;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid var(--card)}
@@ -378,11 +389,28 @@ svg.ti{width:62px;height:62px}
 .stv img,.str img,.av img,.avc img,.cav img{pointer-events:none;-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 body.shield .stv img,body.shield .str img,body.shield .av img,body.shield .avc img,body.shield .cav img{visibility:hidden}
 @media print{.stv,.sts,.av,.cav{display:none!important}}
+/* Communauté : onglets principaux, cartes de niveaux, règles repliables */
+.ctabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;padding:5px;border-radius:18px;background:rgba(10,16,38,.85);border:1px solid rgba(70,130,255,.45);box-shadow:var(--sh)}
+.ctabs button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:8px 10px;border-radius:14px;background:transparent;color:#B8C6E6;font-size:16px;font-weight:800}
+.ctabs button svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ctabs button em{font-style:normal;margin-left:8px;min-width:24px;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.14);font-size:13px;display:inline-block;text-align:center}
+.ctabs button[aria-selected="true"]{background:linear-gradient(135deg,#2F6BFF,#C93C5C);color:#fff;box-shadow:0 4px 16px rgba(47,107,255,.45)}
+.ctabs button[aria-selected="true"] em{background:rgba(255,255,255,.28)}
+.lvh{margin:18px 4px 8px;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#B8C6E6}
+.lvts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lvt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px 10px;min-height:96px;border-radius:16px;background:var(--card);color:var(--ink);border:2px solid var(--line);box-shadow:var(--sh)}
+.lvt b{font-size:14.5px;line-height:1.15}
+.lvt span{font-size:12px;font-weight:600;color:var(--mute)}
+.lvt[aria-selected="true"]{border-color:var(--acc);background:linear-gradient(180deg,rgba(242,185,31,.18),var(--card));transform:translateY(-1px)}
+.lvt[aria-selected="true"] span{color:var(--ink)}
+.strl{margin-top:10px}
+.strl summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--mute);min-height:32px;display:flex;align-items:center}
+@media (max-width:360px){.lvt b{font-size:13px}.ctabs button{font-size:14px}}
 .wxc{background:linear-gradient(135deg,#2F82C4,#256CA8);border-color:#1E5C90;color:#fff}.wxc .mute{color:rgba(255,255,255,.88)}.wxc>svg{stroke:#fff!important}
 </style>
 <meta property="og:type" content="website"><meta property="og:site_name" content="Trafik"><meta property="og:title" content="Trafik · routes et essence en direct"><meta property="og:description" content="État des routes et des stations, signalé par les habitants."><meta property="og:url" content="https://novacademyc.github.io/TRAFIK/"><meta property="og:image" content="https://novacademyc.github.io/TRAFIK/logoTrafik.png"><meta property="og:image:alt" content="Logo Trafik"><meta name="twitter:card" content="summary"></head>
 <body>
-<header class="top"><div class="top-in" id="topin"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik</h1><div class="sub"><span id="lv"></span></div></div></div><div class="hr"><button id="cbtn" class="ibtn cb" type="button" hidden aria-label="Communauté" title="Communauté" onclick="setTab('community')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 4.7a3.2 3.2 0 0 1 0 6.1M18 20a6 6 0 0 0-3-5.2"/></svg><span class="cl">Communauté</span></button><button id="bell" class="ibtn" type="button" aria-label="Alertes" onclick="setTab('alerts')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg><b id="bellb" class="bdg" style="display:none"></b></button><div id="auth" class="authbar"><div id="lbtns"><a class="btn ghost xs" href="auth.html">Connexion</a><a class="btn primary xs" href="auth.html#signup">S’inscrire</a></div><button id="mbtn" class="ibtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu(event)"><span id="mav"></span></button><div id="menu" class="menu" role="menu" hidden></div></div></div></div></header>
+<header class="top"><div class="top-in" id="topin"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="1.5" width="11" height="21" rx="3.5" fill="#1B2B3A"/><circle cx="12" cy="6.5" r="2.5" fill="#EE4B4B"/><circle cx="12" cy="12" r="2.5" fill="#F2B91F"/><circle cx="12" cy="17.5" r="2.5" fill="#2FB77A"/></svg></div><div><h1>Trafik</h1><div class="sub"><span id="lv"></span></div></div></div><div class="hr"><button id="cbtn" class="ibtn cb" type="button" hidden aria-label="Communauté" title="Communauté" onclick="setTab('community')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 4.7a3.2 3.2 0 0 1 0 6.1M18 20a6 6 0 0 0-3-5.2"/></svg><span class="cl">Communauté</span><b id="cbadge" class="bdg" style="display:none"></b></button><button id="bell" class="ibtn" type="button" aria-label="Alertes" onclick="setTab('alerts')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0"/></svg><b id="bellb" class="bdg" style="display:none"></b></button><div id="auth" class="authbar"><div id="lbtns"><a class="btn ghost xs" href="auth.html">Connexion</a><a class="btn primary xs" href="auth.html#signup">S’inscrire</a></div><button id="mbtn" class="ibtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu(event)"><span id="mav"></span></button><div id="menu" class="menu" role="menu" hidden></div></div></div></div></header>
 <div id="app">
   <main id="view"></main>
 </div>
@@ -617,7 +645,14 @@ function fopenReq(id){var rs=(window.FREQ||[]).filter(function(q){return q.st===
  return (window.FREP||[]).some(function(r){return r.st===id&&r.t>t})?null:t}
 function freqList(){var out=[];(window.STN||[]).forEach(function(s){var t=fWanted(s.id)&&fopenReq(s.id);if(t&&!DIS['f'+s.id+':'+t])out.push({st:s.id,t:t})});return out.sort(function(a,b){var fa=S.fwatch.indexOf(String(a.st))>=0,fb=S.fwatch.indexOf(String(b.st))>=0;if(fa!==fb)return fa?-1:1;return b.t-a.t})}
 function alKind(k){purgeAlerts();return S.alerts.map(function(a,i){return {a:a,i:i}}).filter(function(o){return (o.a.k||'suivi')===k}).sort(function(x,y){var fx=alFol(x.a)?1:0,fy=alFol(y.a)?1:0;return fy-fx||x.i-y.i})}
-function alertN(){purgeAlerts();return S.alerts.length+reqList().length+freqList().length}
+function alertN(){purgeAlerts();return S.alerts.filter(function(a){return a.k!=='abo'&&a.k!=='statut'}).length+reqList().length+freqList().length}
+/* compteurs de l'onglet Communauté : nouveaux abonnés et nouveaux statuts publiés, non encore consultés (remis à zéro en quittant l'onglet) */
+function cmSeenKey(){return 'trafik-cm-seen-'+(window.UID||'')}
+function cmSeenGet(){try{return Number(localStorage.getItem(cmSeenKey()))||0}catch(e){return 0}}
+function cmSeenSet(){try{localStorage.setItem(cmSeenKey(),String(Date.now()))}catch(e){}}
+function cmCnt(){var t=cmSeenGet(),o={a:0,s:0};S.alerts.forEach(function(x){if(x.ban||!x.ts||x.ts<=t)return;if(x.k==='abo')o.a++;else if(x.k==='statut')o.s++});return o}
+function cmNotifHtml(){var c=cmCnt();if(!c.a&&!c.s)return '';
+ return '<div class="cmn" aria-live="polite">'+(c.a?'<span class="cmc"><b>'+c.a+'</b> nouvel'+(c.a>1?'s':'')+' abonné'+(c.a>1?'s':'')+'</span>':'')+(c.s?'<span class="cmc"><b>'+c.s+'</b> nouveau'+(c.s>1?'x':'')+' statut'+(c.s>1?'s':'')+' publié'+(c.s>1?'s':'')+'</span>':'')+'</div>'}
 function delAlert(i){S.alerts.splice(i,1);saveAlerts();render()}
 function delReq(k){DIS[k]=Date.now();saveDis();render()}
 function clearKind(k){if(k==='demande')reqList().forEach(function(q){DIS[q.seg+':'+q.t]=Date.now()});else if(k==='essence')freqList().forEach(function(q){DIS['f'+q.st+':'+q.t]=Date.now()});else S.alerts=S.alerts.filter(function(a){return (a.k||'suivi')!==k});saveAlerts();saveDis();render()}
@@ -646,6 +681,9 @@ function ringBell(){var b=document.getElementById('bell');if(b){b.classList.remo
 function bellUpdate(){var n=alertN(),b=document.getElementById('bellb'),bell=document.getElementById('bell');
  if(b){b.textContent=n>99?'99+':String(n);b.style.display=n?'grid':'none'}
  var cb2=document.getElementById('cbtn');if(cb2)cb2.classList.toggle('on',S.tab==='community');
+ var cc=cmCnt(),cn=cc.a+cc.s,cbg=document.getElementById('cbadge');
+ if(cbg){cbg.textContent=cn>99?'99+':String(cn);cbg.style.display=cn?'grid':'none'}
+ if(cb2)cb2.setAttribute('aria-label',cn?'Communauté : '+cc.a+' nouvel abonné'+(cc.a>1?'s':'')+', '+cc.s+' nouveau statut'+(cc.s>1?'s':''):'Communauté');
  if(bell){bell.classList.toggle('on',S.tab==='alerts');bell.setAttribute('aria-label',n?'Alertes : '+n+' non effacée'+(n>1?'s':''):'Alertes')}}
 
 /* menu déroulant (en haut à droite) */
@@ -859,7 +897,8 @@ function cmAv(x){var u=x.o_photo&&CM.urls[x.o_photo];return '<span class="cav" a
 function setCm(t){CM.tab=t;CM.pick=1;render()}
 function setCmMode(m){CM.mode=m;render()}
 function cmModeTog(rows){var n=(rows||[]).filter(function(x){return x.o_following}).length;
- return '<div class="tog" role="group" aria-label="Affichage"><button type="button" aria-pressed="'+(CM.mode!=='fol')+'" onclick="setCmMode(\'all\')">Membres</button><button type="button" aria-pressed="'+(CM.mode==='fol')+'" onclick="setCmMode(\'fol\')">Mes abonnements'+(rows?' ('+n+')':'')+'</button></div>'}
+ var I1='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 4.7a3.2 3.2 0 0 1 0 6.1M18 20a6 6 0 0 0-3-5.2"/></svg>',I2='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.4-9.3-9A5.3 5.3 0 0 1 12 6.2 5.3 5.3 0 0 1 21.3 12C19 16.6 12 21 12 21z"/></svg>';
+ return '<div class="ctabs" role="tablist" aria-label="Affichage"><button type="button" role="tab" aria-selected="'+(CM.mode!=='fol')+'" onclick="setCmMode(\'all\')">'+I1+'<span>Membres</span></button><button type="button" role="tab" aria-selected="'+(CM.mode==='fol')+'" onclick="setCmMode(\'fol\')">'+I2+'<span>Abonnements'+(rows?'<em>'+n+'</em>':'')+'</span></button></div>'}
 function cmRow(x,me){return '<div class="row" style="cursor:default">'+cmAv(x)+'<div class="nm"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>'+esc(x.o_pseudo)+'</span>'+(x.o_admin?admChk(18):cmChk(x.o_level,18))+(me&&x.o_pseudo===me?'<span class="pill" style="margin:0 0 0 2px">Vous</span>':'')+'</div><div class="mute" aria-live="polite">'+cmFol(x.o_followers)+'</div></div>'+(me&&x.o_pseudo===me?'':cmBtn(x))+'</div>'}
 function folFeed(){var out=[];
  (S.reports||[]).forEach(function(r){var p=r.u&&FOLM[r.u],sg=p&&seg(r.seg);if(p&&sg&&LV[r.lvl])out.push({t:r.t,p:p,txt:sg[1]+' : '+LV[r.lvl].n.toLowerCase(),c:LV[r.lvl].c})});
@@ -884,26 +923,26 @@ function cmFollow(p){var r=(CM.rows||[]).filter(function(x){return x.o_pseudo===
 function communityV(){
  var head='<h2>Communauté</h2><div class="mute" style="margin-top:4px">Les membres des niveaux Sentinelle, Gardien et Légende, par pseudonyme.</div>';
  if(window.LOGGED===false)return head+'<div class="card"><b>Connexion requise</b><div class="mute">Connectez-vous pour voir la Communauté.</div><a class="btn primary" style="margin-top:10px" href="auth.html">Se connecter</a></div>';
- head+=stStrip();var rows=CM.rows,all=rows||[],n5='Légende',n4='Gardien',n3='Sentinelle';
+ var rows=CM.rows,all=rows||[],n5='Légende',n4='Gardien',n3='Sentinelle';
  all.forEach(function(x){if(x.o_level>=5)n5=x.o_level_name||n5;else if(x.o_level===4)n4=x.o_level_name||n4;else n3=x.o_level_name||n3});
  var l5=all.filter(function(x){return x.o_level>=5}),l4=all.filter(function(x){return x.o_level===4}),l3=all.filter(function(x){return x.o_level===3});
- var tb=function(k,nm,l){return '<button type="button" aria-pressed="'+(CM.tab===k)+'" onclick="setCm(\''+k+'\')">'+esc(nm)+(rows?' ('+l.length+')':'')+'</button>'};
- var tog='<div class="tog" role="group" aria-label="Niveau">'+tb('3',n3,l3)+tb('4',n4,l4)+tb('5',n5,l5)+'</div>',mt=cmModeTog(rows);
+ var tb=function(k,nm,l){var on=CM.tab===k;return '<button type="button" role="tab" class="lvt" aria-selected="'+on+'" onclick="setCm(\''+k+'\')">'+cmChk(+k,30)+'<b>'+esc(nm)+'</b><span>'+(rows?l.length+' membre'+(l.length>1?'s':''):'…')+'</span></button>'};
+ var tog='<div class="lvh">Niveaux</div><div class="lvts" role="tablist" aria-label="Niveau">'+tb('3',n3,l3)+tb('4',n4,l4)+tb('5',n5,l5)+'</div>',mt=cmModeTog(rows);
  var lv=ME&&ME.level?ME.level.n:0,me=MYP&&MYP.pseudo,note='';
  if(lv>=3&&MYP&&!MYP.pseudo)note='<div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>Choisissez un pseudonyme</b><div class="mute">Vous avez le niveau '+esc(ME.level.name)+' : un pseudonyme vous fait apparaître ici.</div></div><button type="button" onclick="openProfile()">Ouvrir le profil</button></div>';
  else if(lv>0&&lv<3)note='<div class="card mute">'+(lv===2&&ME.level.next_min?'Il vous manque '+(ME.level.next_min-ME.points)+' point'+(ME.level.next_min-ME.points>1?'s':'')+' pour devenir '+esc(n3)+', premier niveau de la Communauté.':'Atteignez le niveau '+esc(n3)+' pour rejoindre la Communauté.')+'</div>';
- if(CM.mode==='fol')return head+mt+cmFolView(rows,me);
+ if(CM.mode==='fol')return stStrip()+head+cmNotifHtml()+mt+cmFolView(rows,me);
  var cur=CM.tab==='5'?l5:CM.tab==='4'?l4:l3,cn=CM.tab==='5'?n5:CM.tab==='4'?n4:n3,body;
  var isMe=function(x){return !!me&&x.o_pseudo===me};cur=cur.filter(isMe).concat(cur.filter(function(x){return x.o_admin&&!isMe(x)}),cur.filter(function(x){return !x.o_admin&&!isMe(x)}));
  if(!rows)body='<div class="row mute" style="cursor:default">'+(CM.err?'Impossible de charger la Communauté. Tirez vers le bas pour réessayer.':'Chargement…')+'</div>';
  else if(!cur.length)body='<div class="row mute" style="cursor:default">Aucun membre '+esc(cn)+' pour le moment.</div>';
  else body=cur.map(function(x){return cmRow(x,me)}).join('');
- return head+mt+tog+note+'<section class="panel" aria-live="polite">'+body+'</section>'}
+ return stStrip()+head+cmNotifHtml()+mt+tog+note+'<section class="panel" aria-live="polite">'+body+'</section>'}
 
 /* ===== Statuts : 1 photo + légende, réservés aux niveaux Sentinelle (3), Gardien (4) et Légende (5) =====
    Visibles seulement par le propriétaire et ses abonnés (règles de la base), effacés automatiquement au bout de 30 h.
    Les abonnés reçoivent une notification à la publication (serveur : fonction notify-status, même app fermée). */
-var STT={rows:null,urls:{},t:0,busy:false,err:false},STF=null,STPB=false,STI=0;
+var STT={rows:null,urls:{},likes:{},t:0,busy:false,err:false},STF=null,STPB=false,STI=0;
 function stCanPost(){var lv=ME&&ME.level?ME.level.n:0;return !!(ME&&(ME.admin||lv>=3))}
 function stSeenGet(){try{return JSON.parse(localStorage.getItem('trafik-st-seen-'+window.UID))||{}}catch(e){return {}}}
 function stSeenSet(o){try{var n=Date.now();for(var k in o)if(n-o[k]>3*864e5)delete o[k];localStorage.setItem('trafik-st-seen-'+window.UID,JSON.stringify(o))}catch(e){}}
@@ -913,6 +952,8 @@ function stLoad(force){if(!window.sbRpc||!window.UID||STT.busy||(!force&&STT.row
   if(!paths.length){STT.urls={};return rows}
   return window.sbClient.storage.from('statuses').createSignedUrls(paths,3600).then(function(q){var m={};((q&&q.data)||[]).forEach(function(x){if(x&&x.signedUrl&&!x.error)m[x.path]=x.signedUrl});STT.urls=m;return rows},function(){STT.urls={};return rows})})
  .then(function(rows){STT.rows=rows;STT.t=Date.now();stNotify(rows)}).catch(function(){STT.err=true})
+ .then(function(){var ps=(STT.rows||[]).map(function(x){return x.o_path}).filter(Boolean);if(!ps.length)return;
+  return window.sbRpc('get_status_likes',{p_paths:ps}).then(function(r){var m={};(Array.isArray(r.data)?r.data:[]).forEach(function(q){m[q.o_path]={n:Number(q.o_likes)||0,l:!!q.o_liked}});STT.likes=m},function(){})})
  .then(function(){return window.sbRpc('get_my_status_ban').then(function(r){STT.ban=(r&&r.data&&r.data.until&&Date.parse(r.data.until)>Date.now())?r.data:null;stBanNotify()},function(){})})
  .then(function(){STT.busy=false;if(S.tab==='community')render()})}
 /* règles : types de statuts refusés (analyse automatique de la photo et de la légende) */
@@ -920,7 +961,7 @@ var ST_RULES='<b>Non acceptés :</b> propos de haine ou discriminatoires, meurtr
 function stBanLeft(){var b=STT.ban;return b?Math.max(1,Math.ceil((Date.parse(b.until)-Date.now())/36e5)):0}
 /* alerte dans la cloche quand un statut vient d'être supprimé (une seule fois par suppression) */
 function stBanNotify(){try{var b=STT.ban;if(!b||!window.UID)return;var k='trafik-st-ban-'+window.UID;if(localStorage.getItem(k)===b.at)return;localStorage.setItem(k,b.at);
- var t='Votre statut a été supprimé : '+esc(b.reason)+'. Vous pourrez publier de nouveau dans '+stBanLeft()+' h.';pushAlert({t:hhmm(Date.now()),txt:t,l:2,k:'statut'});toast(dec(t))}catch(e){}}
+ var t='Votre statut a été supprimé : '+esc(b.reason)+'. Vous pourrez publier de nouveau dans '+stBanLeft()+' h.';pushAlert({t:hhmm(Date.now()),txt:t,l:2,k:'statut',ban:1});toast(dec(t))}catch(e){}}
 /* alerte dans la cloche quand un abonnement publie (la première lecture sert de point de départ, sans alerte) */
 function stNotify(rows){try{var k='trafik-st-notif-'+window.UID,old=null;try{old=JSON.parse(localStorage.getItem(k))}catch(e){}
  localStorage.setItem(k,JSON.stringify(rows.filter(function(x){return !x.o_mine}).map(function(x){return x.o_path})));
@@ -938,9 +979,23 @@ function stStrip(){var rows=STT.rows,seen=stSeenGet(),adm=!!(ME&&ME.admin),mine=
  if(STT.ban&&!(ME&&ME.admin))h+='<div class="offl" style="margin:10px 0 0;text-align:left;border:1px solid var(--r)"><b>Statut supprimé</b> : '+esc(STT.ban.reason)+'.<br>Vous pourrez publier de nouveau dans environ '+stBanLeft()+' h.</div>';
  if(can&&mine)h+='<div class="mute" style="margin-top:6px">Un seul statut par jour : vous pourrez en publier un nouveau 30 h après la publication, même si vous supprimez celui-ci.</div>';
  if(mine&&mine.o_pending)h+='<div class="mute" style="margin-top:6px">Votre statut est en cours de vérification : vos abonnés le verront dans quelques secondes s’il est conforme.</div>';
- h+='<div class="mute" style="margin-top:10px;font-size:12.5px">'+ST_RULES+'</div>';
+ h+='<details class="strl"><summary>Règles des statuts</summary><div class="mute" style="margin-top:6px;font-size:12.5px">'+ST_RULES+'</div></details>';
  return h+'</div>'}
 var EYE='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+/* like : pouce blanc transparent, entièrement bleu après le clic (en bas à droite du statut) ; l'auteur voit seulement le total */
+var THUMB='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>';
+function stLk(x){return STT.likes[x.o_path]||{n:0,l:false}}
+function stLikeBtn(x,i){var L=stLk(x),n=L.n;
+ if(x.o_mine)return n?'<span class="stl ro" aria-label="'+n+' j’aime">'+THUMB+'<span>'+n+'</span></span>':'';
+ return '<button type="button" id="stl" class="stl'+(L.l?' on':'')+'" aria-pressed="'+L.l+'" aria-label="'+(L.l?'Retirer mon j’aime':'J’aime')+'" onclick="stLike('+i+')">'+THUMB+'<span id="stln">'+(n||'')+'</span></button>'}
+function stLikePaint(x){var b=document.getElementById('stl');if(!b)return;var L=stLk(x);b.classList.toggle('on',L.l);b.setAttribute('aria-pressed',String(L.l));b.setAttribute('aria-label',L.l?'Retirer mon j’aime':'J’aime');var e=document.getElementById('stln');if(e)e.textContent=L.n||''}
+var STLB={};
+function stLike(i){if(!window.LOGGED)return askLogin('aimer un statut');
+ var x=(STT.rows||[])[i];if(!x||x.o_mine||STLB[x.o_path])return;var k=x.o_path;
+ var L=stLk(x),was={n:L.n,l:L.l};STLB[k]=1;STT.likes[k]={n:Math.max(0,L.n+(L.l?-1:1)),l:!L.l};stLikePaint(x);
+ var b=document.getElementById('stl');if(b&&STT.likes[k].l){b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}
+ window.sbRpc('toggle_status_like',{p_path:k}).then(function(r){var d=r&&r.data||{};delete STLB[k];STT.likes[k]={n:typeof d.likes==='number'?d.likes:STT.likes[k].n,l:typeof d.liked==='boolean'?d.liked:STT.likes[k].l};stLikePaint(x)})
+ .catch(function(e){delete STLB[k];STT.likes[k]=was;stLikePaint(x);toast(e&&e.code==='P0001'&&e.message?e.message:(e&&e.code==='42501'?'Compte suspendu':'Action impossible : réessayez plus tard'))})}
 function stOpenPath(p){var rows=STT.rows||[];for(var i=0;i<rows.length;i++)if(rows[i].o_path===p)return stOpen(i);closeSheet()}
 function stOpen(i){var rows=STT.rows||[],x=rows[i];if(!x)return;STI=i;var adm=!!(ME&&ME.admin);
  var seen=stSeenGet();seen[x.o_path]=Date.now();stSeenSet(seen);
@@ -950,7 +1005,7 @@ function stOpen(i){var rows=STT.rows||[],x=rows[i];if(!x)return;STI=i;var adm=!!
  if(g.length>1)nav='<div class="stdots" aria-hidden="true">'+g.map(function(j,k){return '<span'+(k===pos?' class="on"':'')+'></span>'}).join('')+'</div><div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1"'+(pos>0?' onclick="stOpen('+g[pos-1]+')"':' disabled')+'>‹ Précédent</button><button type="button" class="alt" style="flex:1"'+(pos<g.length-1?' onclick="stOpen('+g[pos+1]+')"':' disabled')+'>Suivant ›</button></div>';
  var eye=x.o_views!=null?'<button type="button" class="alt" style="min-height:36px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;flex:none" aria-label="Nombre de vues : '+x.o_views+'" onclick="stViews('+i+')">'+EYE+'<b>'+x.o_views+'</b></button>':'';
  openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+(x.o_admin?admChk(18):(x.o_level>=3?cmChk(x.o_level,18):''))+(g.length>1?' <span class="mute" style="font-weight:600">'+(pos+1)+'/'+g.length+'</span>':''),
-  '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" draggable="false" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+'</div>'+
+  '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" draggable="false" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+(x.o_pending?'':stLikeBtn(x,i))+'</div>'+
   (x.o_caption?'<p class="stcap">'+stCapHtml(x)+'</p>':'')+
   (x.o_pending?'<div class="offl" style="margin:10px 0 0;text-align:left">Vérification automatique en cours : seul vous le voyez pour l’instant.</div>':'')+
   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px"><div class="mute">Publié '+ago(Date.parse(x.o_created))+' · '+(forever?'ne disparaît pas':'disparaît dans environ '+left+' h')+(x.o_audience==='all'?' · pour tout le monde':'')+'</div>'+eye+'</div>'+nav+
@@ -1233,7 +1288,7 @@ function syncWatch(){var c=window.sbClient;if(!c)return;
    if(add.length)return c.from('watched_segments').upsert(add.map(function(id){return {segment_id:id}}),{onConflict:'user_id,segment_id',ignoreDuplicates:true})
   })}).catch(function(){WSYNC=''})}
 window.syncWatch=syncWatch;syncWatch();
-function setTab(t){if(t!=='state'){S.focus=null;S.ts='T';S.q=''}if(t!=='fuel'){S.fs='T';S.fq=''}if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;if(t==='report'&&!setTab.w){setTab.w=1;setTimeout(function(){toast('🚫 Pas de téléphone en conduisant')},400)}S.tab=t;if(t==='community'){cmLoad();stLoad()}window.scrollTo(0,0);render()}
+function setTab(t){if(S.tab==='community'&&t!=='community')cmSeenSet();if(t!=='state'){S.focus=null;S.ts='T';S.q=''}if(t!=='fuel'){S.fs='T';S.fq=''}if(t!=='report')S.reply=null;if(t!=='fuel')S.freply=null;if(t==='report'&&!setTab.w){setTab.w=1;setTimeout(function(){toast('🚫 Pas de téléphone en conduisant')},400)}S.tab=t;if(t==='community'){cmLoad();stLoad()}window.scrollTo(0,0);render()}
 /* ouvre l’onglet Trafic (liste) directement sur le tronçon : il est placé en tête de liste et mis en évidence */
 function goSeg(id){S.view='list';S.zone='Tous';S.q='';S.ts='T';S.focus=id;setTab('state')}
 function setZone(z){S.focus=null;S.zone=z;render()}
