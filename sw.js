@@ -1,7 +1,7 @@
 /* Service worker Trafik : mode hors ligne (cache de l'app) + notifications système, y compris app fermée (push serveur). */
-var VER='trafik-sw-41',SHELL_CACHE=VER+'-shell',LIB_CACHE=VER+'-lib',SCOPE=self.registration.scope;
+var VER='trafik-sw-42',SHELL_CACHE=VER+'-shell',LIB_CACHE=VER+'-lib',SCOPE=self.registration.scope;
 /* fichiers de l'app gardés pour le hors ligne ; chacun est ajouté séparément : s'il en manque un (ex. vendor/leaflet), l'installation continue */
-var SHELL=['index.html','manifest.json','icon-192.png','apple-touch-icon.png','vendor/leaflet/leaflet.js','vendor/leaflet/leaflet.css'];
+var SHELL=['index.html','manifest.json','icon-192.png','apple-touch-icon.png','vendor/leaflet/leaflet.js','vendor/leaflet/leaflet.css','routes.geojson'];
 /* bibliothèques externes à version fixe : gardées une fois pour toutes (économise les données mobiles) */
 var LIBS=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js','https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js','https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap'];
 var LIB_HOSTS=['cdn.jsdelivr.net','cdnjs.cloudflare.com','fonts.googleapis.com','fonts.gstatic.com'];
