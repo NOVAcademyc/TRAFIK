@@ -381,6 +381,16 @@ svg.ti{width:62px;height:62px}
 .stp img{width:100%;max-height:40vh;object-fit:contain;border-radius:14px;background:#000;display:block;margin-top:10px}
 .stb{position:relative}
 .stc{position:absolute;top:-2px;right:2px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--acc);color:#2b2000;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid var(--card)}
+.menu{overflow-y:scroll;scrollbar-width:thin;scrollbar-color:var(--mute,#888) transparent}
+.menu::-webkit-scrollbar{width:8px}
+.menu::-webkit-scrollbar-track{background:transparent;margin:10px 0}
+.menu::-webkit-scrollbar-thumb{background:var(--mute,#888);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+.stprog{display:flex;gap:4px;margin:0 0 10px}
+.stprog span{flex:1;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
+.stprog i{display:block;height:100%;width:0;background:var(--acc,#F2B91F)}
+.stprog .dn i{width:100%}
+.stprog .cur i{animation:stprog 5s linear forwards}
+@keyframes stprog{from{width:0}to{width:100%}}
 .stdots{display:flex;gap:5px;justify-content:center;margin-top:10px}
 .stdots span{flex:1;max-width:44px;height:4px;border-radius:2px;background:var(--line)}
 .stdots span.on{background:var(--acc)}
@@ -609,7 +619,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-09-meteo6';
+var BUILD='2026-11-11-pub';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -725,7 +735,10 @@ function buildMenu(){var u=window.CURU,m=document.getElementById('menu'),h='';
   mi('info','Aide et à propos','openAbout()')+
   (u?'<div class="msep"></div>'+mi('out','Se déconnecter','doLogout()','','out'):'');
  m.innerHTML=h}
-function toggleMenu(e){if(e)e.stopPropagation();var m=document.getElementById('menu');if(!m)return;if(!m.hidden)return closeMenu();buildMenu();m.hidden=false;document.getElementById('mbtn').setAttribute('aria-expanded','true')}
+function toggleMenu(e){if(e)e.stopPropagation();var m=document.getElementById('menu');if(!m)return;if(!m.hidden)return closeMenu();buildMenu();m.hidden=false;document.getElementById('mbtn').setAttribute('aria-expanded','true');fitMenu();m.scrollTop=0}
+/* le menu s’arrête au-dessus de la barre du bas : tout reste atteignable en faisant défiler */
+function fitMenu(){var m=document.getElementById('menu');if(!m||m.hidden)return;var nv=document.querySelector('nav'),top=m.getBoundingClientRect().top,bot=nv?nv.getBoundingClientRect().top:(window.innerHeight||document.documentElement.clientHeight);m.style.maxHeight=Math.max(140,Math.floor(bot-top-12))+'px'}
+window.addEventListener('resize',fitMenu);window.addEventListener('orientationchange',fitMenu);
 function closeMenu(){var m=document.getElementById('menu');if(m&&!m.hidden){m.hidden=true;var b=document.getElementById('mbtn');if(b)b.setAttribute('aria-expanded','false')}}
 document.addEventListener('click',function(e){var m=document.getElementById('menu');if(m&&!m.hidden&&!m.contains(e.target))closeMenu()});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMenu();closeSheet()}});
@@ -780,7 +793,7 @@ function openRatings(){var c=window.sbClient;if(!window.ADMIN||!c)return;openShe
   for(var j=5;j>=1;j--){var pc=Math.round(cnt[j-1]*100/n);h+='<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="width:30px">'+j+' ★</span><div style="flex:1;height:10px;border-radius:5px;background:var(--soft)"><div style="width:'+pc+'%;height:100%;border-radius:5px;background:var(--acc,#F2B91F)"></div></div><span class="mute" style="width:78px;text-align:right">'+cnt[j-1]+' ('+pc+' %)</span></div>'}
   el.className='';el.innerHTML=h},function(){var el=document.getElementById('rtc');if(el)el.textContent='Impossible de charger les notes.'})}
 function toggleTest(){if(!window.ADMIN)return;S.test=!S.test;toast(S.test?'Mode test activé : la position n’est pas vérifiée':'Mode test désactivé');render();openSettings()}
-function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){S.fwatch.push(id);toast('Vous recevrez les alertes pour cette station')}else S.fwatch.splice(i,1);save();pushPrefs();render()}
+function toggleSt(id){id=String(id);var i=S.fwatch.indexOf(id);if(i<0){if(!qCan('fol'))return;qFollow('t',id,function(){S.fwatch.push(id);save();pushPrefs();render()},'Vous recevrez les alertes pour cette station')}else{S.fwatch.splice(i,1);save();pushPrefs();render()}}
 function toggleFuel(){PR.fuel=!PR.fuel;PR.fuelSet=true;savePR();pushPrefs();render();openSettings()}
 function toggleReq(){PR.req=PR.req==='mine'?'all':'mine';PR.rqSet=true;savePR();pushPrefs();render();openSettings()}
 function togglePR(k){PR[k]=!PR[k];savePR();if(k==='vib'&&PR.vib)try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}openSettings()}
@@ -996,21 +1009,35 @@ function stLike(i){if(!window.LOGGED)return askLogin('aimer un statut');
  var b=document.getElementById('stl');if(b&&STT.likes[k].l){b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}
  window.sbRpc('toggle_status_like',{p_path:k}).then(function(r){var d=r&&r.data||{};delete STLB[k];STT.likes[k]={n:typeof d.likes==='number'?d.likes:STT.likes[k].n,l:typeof d.liked==='boolean'?d.liked:STT.likes[k].l};stLikePaint(x)})
  .catch(function(e){delete STLB[k];STT.likes[k]=was;stLikePaint(x);toast(e&&e.code==='P0001'&&e.message?e.message:(e&&e.code==='42501'?'Compte suspendu':'Action impossible : réessayez plus tard'))})}
+/* lecture automatique comme WhatsApp : 5 s par statut, puis le suivant du même compte, puis le compte suivant, puis fermeture ;
+   appui long = pause ; touche à gauche = précédent, à droite = suivant */
+var STD=5000,STR={t:null,left:0,at:0,go:null},STP=0;
+function stTimerClear(){clearTimeout(STR.t);STR.t=null;STR.go=null}
+function stTimerStart(ms,go){clearTimeout(STR.t);STR.go=go;STR.left=ms;STR.at=Date.now();STR.t=setTimeout(function(){STR.t=null;go()},ms)}
+function stPause(){if(!STR.t)return;clearTimeout(STR.t);STR.t=null;STR.left=Math.max(300,STR.left-(Date.now()-STR.at));var b=document.querySelector('.stprog .cur i');if(b)b.style.animationPlayState='paused'}
+function stResume(){if(STR.t||!STR.go)return;var go=STR.go;STR.at=Date.now();STR.t=setTimeout(function(){STR.t=null;go()},STR.left);var b=document.querySelector('.stprog .cur i');if(b)b.style.animationPlayState='running'}
+function stPos(i){var gs=stGroups(STT.rows||[]),r={gs:gs,gi:-1,pos:-1};gs.forEach(function(g,k){var p=g.indexOf(i);if(p>=0){r.gi=k;r.pos=p}});return r}
+function stAfter(i){var q=stPos(i);if(q.gi<0)return -1;var g=q.gs[q.gi];if(q.pos<g.length-1)return g[q.pos+1];if(q.gi<q.gs.length-1){var n=q.gs[q.gi+1],rows=STT.rows||[],seen=stSeenGet(),f=n.filter(function(j){return !seen[rows[j].o_path]})[0];return f!==undefined?f:n[0]}return -1}
+function stBefore(i){var q=stPos(i);if(q.gi<0||q.pos<1)return -1;return q.gs[q.gi][q.pos-1]}
+function stAuto(i){var n=stAfter(i);if(n<0)closeSheet();else stOpen(n)}
+function stDown(e){STP=Date.now();stPause()}
+function stUp(e,i){var short=Date.now()-STP<250;stResume();if(!short||(e.target.closest&&e.target.closest('.stl')))return;var r=e.currentTarget.getBoundingClientRect();if(e.clientX-r.left<r.width*0.3){var b=stBefore(i);if(b>=0)stOpen(b)}else stAuto(i)}
 function stOpenPath(p){var rows=STT.rows||[];for(var i=0;i<rows.length;i++)if(rows[i].o_path===p)return stOpen(i);closeSheet()}
 function stOpen(i){var rows=STT.rows||[],x=rows[i];if(!x)return;STI=i;var adm=!!(ME&&ME.admin);
  var seen=stSeenGet();seen[x.o_path]=Date.now();stSeenSet(seen);
  if(!x.o_mine&&!adm&&window.sbRpc)window.sbRpc('record_status_view',{p_path:x.o_path}).catch(function(){});
  var u=STT.urls[x.o_path],exp=Date.parse(x.o_expires),forever=exp>Date.UTC(2100,0,1),left=Math.max(1,Math.ceil((exp-Date.now())/36e5)),nav='';
  var g=stGroups(rows).filter(function(a){return a.indexOf(i)>=0})[0]||[i],pos=g.indexOf(i);
- if(g.length>1)nav='<div class="stdots" aria-hidden="true">'+g.map(function(j,k){return '<span'+(k===pos?' class="on"':'')+'></span>'}).join('')+'</div><div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1"'+(pos>0?' onclick="stOpen('+g[pos-1]+')"':' disabled')+'>‹ Précédent</button><button type="button" class="alt" style="flex:1"'+(pos<g.length-1?' onclick="stOpen('+g[pos+1]+')"':' disabled')+'>Suivant ›</button></div>';
+ var prog='<div class="stprog" aria-hidden="true">'+g.map(function(j,k){return '<span class="'+(k<pos?'dn':k===pos?'cur':'')+'"><i style="animation-duration:'+STD+'ms"></i></span>'}).join('')+'</div>';
+ if(g.length>1)nav='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="alt" style="flex:1"'+(pos>0?' onclick="stOpen('+g[pos-1]+')"':' disabled')+'>‹ Précédent</button><button type="button" class="alt" style="flex:1"'+(pos<g.length-1?' onclick="stOpen('+g[pos+1]+')"':' disabled')+'>Suivant ›</button></div>';
  var eye=x.o_views!=null?'<button type="button" class="alt" style="min-height:36px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;flex:none" aria-label="Nombre de vues : '+x.o_views+'" onclick="stViews('+i+')">'+EYE+'<b>'+x.o_views+'</b></button>':'';
  openSheet((x.o_mine?'Mon statut':esc(x.o_pseudo))+' '+(x.o_admin?admChk(18):(x.o_level>=3?cmChk(x.o_level,18):''))+(g.length>1?' <span class="mute" style="font-weight:600">'+(pos+1)+'/'+g.length+'</span>':''),
-  '<div class="stv">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" draggable="false" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+(x.o_pending?'':stLikeBtn(x,i))+'</div>'+
+  prog+'<div class="stv" onpointerdown="stDown(event)" onpointerup="stUp(event,'+i+')" onpointercancel="stResume()" onpointerleave="stResume()">'+(u?'<img alt="Statut de '+esc(x.o_pseudo)+'" draggable="false" src="'+esc(u)+'">':'<div class="mute" style="padding:30px 0;text-align:center">Photo indisponible : réessayez.</div>')+(x.o_pending?'':stLikeBtn(x,i))+'</div>'+
   (x.o_caption?'<p class="stcap">'+stCapHtml(x)+'</p>':'')+
   (x.o_pending?'<div class="offl" style="margin:10px 0 0;text-align:left">Vérification automatique en cours : seul vous le voyez pour l’instant.</div>':'')+
   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px"><div class="mute">Publié '+ago(Date.parse(x.o_created))+' · '+(forever?'ne disparaît pas':'disparaît dans environ '+left+' h')+(x.o_audience==='all'?' · pour tout le monde':'')+'</div>'+eye+'</div>'+nav+
   ((x.o_mine||adm)?'<button type="button" class="dng" style="width:100%;margin-top:12px" onclick="stDelete('+x.o_id+','+(x.o_mine?1:0)+')">'+(x.o_mine?'Supprimer mon statut':'Supprimer ce statut')+'</button>':''));
- render()}
+ stTimerStart(STD,function(){stAuto(i)});render()}
 /* nombre de vues seulement : le serveur ne renvoie jamais qui a vu */
 /* légende : texte simple pour tous ; seuls les liens (http, https, www) d'un administrateur sont cliquables.
    Un administrateur peut nommer un lien avec [texte affiché](adresse) : seul le texte est visible. */
@@ -1110,7 +1137,7 @@ function openBoard(tab){if(!window.CURU)return askLogin('voir vos points et le c
  bdFill();meLoad();zrLoad()}
 function bdSet(t){BD.tab=t;bdFill();if(t==='zones')zrLoad()}
 function bdFill(){var e=document.getElementById('bdc');if(!e)return;
- e.innerHTML='<div class="tog" role="group" aria-label="Affichage"><button type="button" aria-pressed="'+(BD.tab==='me')+'" onclick="bdSet(\'me\')">Mon niveau</button><button type="button" aria-pressed="'+(BD.tab==='zones')+'" onclick="bdSet(\'zones\')">Zones</button></div>'+(BD.tab==='zones'?zonesHtml():meHtml())}
+ e.innerHTML='<div style="margin-bottom:16px">'+quotaHtml(1)+'</div><div class="tog" role="group" aria-label="Affichage"><button type="button" aria-pressed="'+(BD.tab==='me')+'" onclick="bdSet(\'me\')">Mon niveau</button><button type="button" aria-pressed="'+(BD.tab==='zones')+'" onclick="bdSet(\'zones\')">Zones</button></div>'+(BD.tab==='zones'?zonesHtml():meHtml())}
 function meHtml(){if(!ME)return '<div class="mute" style="padding:20px 0;text-align:center">Chargement…</div>';
  var l=ME.level,p=ME.points,z=ME.zones||{},zk=Object.keys(z),got=ME.badges.filter(function(b){return b.earned}).length;
  return '<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span style="font-size:38px;line-height:1" aria-hidden="true">'+lvIcon(l.n)+'</span><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800">'+esc(l.name)+'</div><div class="mute">'+p+' point'+(p>1?'s':'')+' · '+lvTxt(l,p)+'</div></div></div>'+lvBar(l,p)+
@@ -1233,6 +1260,33 @@ function segBtns(id,w){
  '<button class="'+(w?'on':'alt')+'" aria-pressed="'+w+'" onclick="toggle('+id+')">'+(w?'Suivi':'Suivre')+'</button>'+
  (coolLeft('q:'+id)?'<button class="on" aria-pressed="true" onclick="noteCool(\'q:'+id+'\',\'Demande déjà envoyée\')">Demandé</button>':'<button class="alt" onclick="ask('+id+')">Demander</button>')}
 function coolCheck(k,what){var m=coolLeft(k);if(m){toast('Vous avez déjà signalé '+what+'. Réessayez dans '+m+' min.');return false}coolMark(k);return true}
+/* ===== Limites quotidiennes (jour compté à l’heure d’Haïti) : signalements, suivis et demandes, tronçons et stations réunis ; l’administrateur n’a aucune limite =====
+   Modifier les nombres permis ici (max). Les compteurs sont mémorisés sur l’appareil, par compte. */
+var QL={rep:{n:'Signalements',w:['signalement','signalements'],max:20},fol:{n:'Suivis',w:['suivi','suivis'],max:4},ask:{n:'Demandes',w:['demande','demandes'],max:4}},QKEY='trafik-quota';
+function qDay(){try{return new Date().toLocaleDateString('en-CA',{timeZone:'America/Port-au-Prince'})}catch(e){return new Date().toISOString().slice(0,10)}}
+function qLoad(){var o=null;try{o=JSON.parse(localStorage.getItem(QKEY))}catch(e){}var d=qDay();if(!o||o.d!==d||typeof o.u!=='object'||!o.u)o={d:d,u:{}};var id=String(window.UID||'anon');if(!o.u[id])o.u[id]={};['rep','fol','ask'].forEach(function(k){if(!Array.isArray(o.u[id][k]))o.u[id][k]=[]});return {o:o,r:o.u[id]}}
+function qSave(q){try{localStorage.setItem(QKEY,JSON.stringify(q.o))}catch(e){}}
+function qUnl(k){return isAdm()&&k!=='rep'}
+function qLeft(k){return qUnl(k)?Infinity:Math.max(0,QL[k].max-qLoad().r[k].length)}
+function qCan(k){if(qLeft(k)>0)return true;toast('Limite du jour atteinte : '+QL[k].max+' '+QL[k].w[1]+' par jour. Il vous en reste 0, revenez demain.');return false}
+function qUse(k,t,id){var q=qLoad();q.r[k].push(t+':'+id);qSave(q);return true}
+/* suivi : le serveur (register_follow) compte et limite à 4 par jour ; son résultat « left » met le compteur de l’appareil à jour.
+   Hors connexion ou en cas de panne réseau, le suivi reste possible sur l’appareil (limite locale seulement). */
+function qSync(left){if(typeof left!=='number')return;var q=qLoad(),used=Math.max(0,QL.fol.max-left);while(q.r.fol.length<used)q.r.fol.push('u:0');qSave(q)}
+function qFollow(t,id,go,msg){
+ function done(left){qUse('fol',t,id);qSync(left);go();toast(msg+qRest('fol'))}
+ if(window.LOGGED&&window.sbRpc)window.sbRpc('register_follow',{p_kind:t==='s'?'seg':'st',p_id:Number(id)}).then(function(r){done(r&&r.data&&typeof r.data.left==='number'?r.data.left:null)}).catch(function(e){
+  if(e&&e.code==='P0001'){if(/limite/i.test(String(e.message||'')))qSync(0);render();return toast(e.message||'Action impossible')}
+  if(e&&e.code==='42501')return toast('Compte suspendu');
+  done(null)});
+ else done(null)}
+function qRest(k){if(qUnl(k))return '';var n=qLeft(k);return ' · '+(n>0?'Il vous reste '+n+' '+QL[k].w[n>1?1:0]+' aujourd’hui':'Plus aucun '+QL[k].w[0]+' disponible aujourd’hui (0 restant)')}
+function quotaHtml(sheet){var q=qLoad().r;
+ return '<div class="hd" style="margin-top:'+(sheet?0:16)+'px">Mes limites du jour</div>'+['rep','fol','ask'].map(function(k){var adm=qUnl(k),u=q[k].length,m=QL[k].max,rest=Math.max(0,m-u),sg=q[k].filter(function(e){return e.charAt(0)==='s'}).length,st=u-sg,pc=Math.min(100,Math.round(u*100/m));
+  return '<div class="card" style="margin-top:8px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><b>'+QL[k].n+'</b><span class="mute">Tronçons : '+sg+' · Stations : '+st+'</span></div>'+
+  '<div class="sum st" style="grid-template-columns:repeat(3,1fr);margin-top:8px"><div>'+(adm?'∞':m)+'<span>Permis par jour</span></div><div>'+u+'<span>Déjà utilisé</span></div><div>'+(adm?'∞':rest)+'<span>Restant</span></div></div>'+
+  (adm?'':'<div role="progressbar" aria-label="'+QL[k].n+' utilisés" aria-valuemin="0" aria-valuemax="'+m+'" aria-valuenow="'+u+'" style="height:8px;border-radius:4px;background:var(--soft);margin-top:10px"><div style="width:'+pc+'%;height:100%;border-radius:4px;background:'+(rest?'var(--acc,#F2B91F)':'#C93C3C')+'"></div></div>')+'</div>'}).join('')+
+  '<div class="mute" style="margin-top:6px;font-size:12.5px">'+(isAdm()?'Administrateur : aucune limite sur les suivis et les demandes ; les signalements restent limités à '+QL.rep.max+' par jour. ':'')+'Les limites comptent les tronçons et les stations ensemble. Les compteurs repartent à zéro chaque jour à minuit (heure d’Haïti).</div>'}
 /* ===== Validation par géolocalisation =====
    Un signalement n'est accepté que si le GPS place la personne près de la route (≤ 1 km du tracé) ou de la station (≤ 1 km, ou le rayon indiqué
    quand les coordonnées sont approximatives). La position est envoyée avec le signalement pour être revérifiée par le serveur (fonctions submit_report / submit_fuel), puis elle n'est pas conservée. */
@@ -1273,11 +1327,12 @@ function geoGate(kind,id,go){
   if(c&&!c.ok){toast(p.coords.accuracy>GEO_ACC?'Position trop imprécise : activez le GPS et réessayez.':'Vous êtes à environ '+fmtD(c.d)+' : rapprochez-vous.');render();return}
   go()},function(e){if(e&&(e.code===1||e.code===2))return gpsHelp(function(){geoGate(kind,id,go)});toast('Position introuvable : réessayez à l’extérieur.')},{enableHighAccuracy:true,maximumAge:20000,timeout:12000})}
 function report(id,lvl){needLogin(function(){geoGate('seg',id,function(){doReport(id,lvl)})},'signaler',['report',id,lvl])}
-function doReport(id,lvl){S.reply=null;if(!coolCheck('seg:'+id,'ce tronçon'))return;var b=status(id),r={seg:id,lvl:lvl,t:Date.now()};
-  function loc(){LOCAL.push(r);S.reports.push(r);change(id,b,status(id));render()}
-  if(DB){DB.collection('reports').add(r).then(function(){toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase());render();repBump()}).catch(function(e){if(e&&e.code==='P0001'){coolClear('seg:'+id);return toast(e.message)}if(e&&e.message==='login'){coolClear('seg:'+id);return askLogin('signaler',['report',id,lvl])}loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
-  else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
-function toggle(id){var i=S.watch.indexOf(id),on=i<0;if(on){S.watch.push(id);toast('Vous recevrez les alertes pour ce tronçon')}else S.watch.splice(i,1);save();render();pushPrefs();
+function doReport(id,lvl){S.reply=null;if(!qCan('rep'))return;if(!coolCheck('seg:'+id,'ce tronçon'))return;var b=status(id),r={seg:id,lvl:lvl,t:Date.now()};
+  function loc(){LOCAL.push(r);S.reports.push(r);qUse('rep','s',id);change(id,b,status(id));render()}
+  if(DB){DB.collection('reports').add(r).then(function(){qUse('rep','s',id);toast('Merci ! Signalement partagé : '+seg(id)[1]+', '+LV[lvl].n.toLowerCase()+qRest('rep'));render();repBump()}).catch(function(e){if(e&&e.code==='P0001'){coolClear('seg:'+id);return toast(e.message)}if(e&&e.message==='login'){coolClear('seg:'+id);return askLogin('signaler',['report',id,lvl])}loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager'+qRest('rep'))})}
+  else{loc();toast('Merci ! Signalement enregistré sur cet appareil'+qRest('rep'))}}
+function toggle(id){if(S.watch.indexOf(id)<0){if(!qCan('fol'))return;qFollow('s',id,function(){doToggle(id)},'Vous recevrez les alertes pour ce tronçon')}else doToggle(id)}
+function doToggle(id){var i=S.watch.indexOf(id),on=i<0;if(on)S.watch.push(id);else S.watch.splice(i,1);save();render();pushPrefs();
  if(window.sbClient&&window.LOGGED){var q=window.sbClient.from('watched_segments');(on?q.upsert({segment_id:id},{onConflict:'user_id,segment_id',ignoreDuplicates:true}):q.delete().eq('segment_id',id)).then(function(){},function(){})}}
 var WSYNC='';
 function syncWatch(){var c=window.sbClient;if(!c)return;
@@ -1405,9 +1460,10 @@ function recvCheck(docs){var n=Date.now(),fresh=[];
   var txt=seg(r.seg)[1]+' : '+LV[r.lvl].n.toLowerCase()+(asked?' (réponse à votre demande)':fb?' (signalé par '+esc(fb)+')':' (nouveau signalement)')+(status(r.seg)===3?' · en attente de confirmation':'');
   pushAlert({t:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),txt:txt,l:r.lvl,k:'reception',seg:Number(r.seg),by:fb||undefined});toast('Signalement · '+txt)})}
 function ask(id){if(coolLeft('q:'+id)||(lastAsk[id]&&Date.now()-lastAsk[id]<10*MIN))return noteCool('q:'+id,'Demande déjà envoyée');
+  if(!qCan('ask'))return;
   needLogin(function(){lastAsk[id]=Date.now();var q={seg:id,t:Date.now(),own:1};
-  function loc(){LREQ.push(q);coolMark('q:'+id);toast('Demande enregistrée sur cet appareil seulement');render()}
-  if(DB){DB.collection('requests').add(q).then(function(){coolMark('q:'+id);toast('Demande envoyée : les personnes concernées sont prévenues');render()}).catch(function(e){lastAsk[id]=0;if(e&&e.code==='P0001')return toast(e.message);if(e&&e.message==='login')return askLogin('faire une demande',['ask',id]);loc()})}else loc()},'faire une demande',['ask',id])}
+  function loc(){LREQ.push(q);qUse('ask','s',id);coolMark('q:'+id);toast('Demande enregistrée sur cet appareil seulement'+qRest('ask'));render()}
+  if(DB){DB.collection('requests').add(q).then(function(){coolMark('q:'+id);qUse('ask','s',id);toast('Demande envoyée : les personnes concernées sont prévenues'+qRest('ask'));render()}).catch(function(e){lastAsk[id]=0;if(e&&e.code==='P0001')return toast(e.message);if(e&&e.message==='login')return askLogin('faire une demande',['ask',id]);loc()})}else loc()},'faire une demande',['ask',id])}
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;var first=true;
  db.collection('requests').where('t','>',Date.now()-45*MIN).onSnapshot(function(snap){
   if(snap.fromCache){REQ=snap.docs.map(function(d){return d.data()});render();return}
@@ -1499,7 +1555,7 @@ function mapSvg(){var sel=S.sel,u='',v='',h='';
 /* ===== Vraie carte d’Haïti : Leaflet + OpenStreetMap (la carte schématique ci-dessus reste le secours hors ligne) ===== */
 /* chaque tronçon = point de départ et d’arrivée [lat,lng] ; le tracé exact est calqué sur la vraie route par OSRM puis gardé sur l’appareil */
 var LLG={1:[[18.5497,-72.3412],[18.5268,-72.3440]],2:[[18.5452,-72.3398],[18.5408,-72.3366]],3:[[18.5400,-72.3300],[18.5360,-72.3245]],4:[[18.5530,-72.3285],[18.5605,-72.3085]],5:[[18.5605,-72.3085],[18.5655,-72.2965]],6:[[18.5690,-72.2930],[18.5790,-72.2700]],7:[[18.5690,-72.2935],[18.5720,-72.2900]],8:[[18.5760,-72.2720],[18.5860,-72.2560]],9:[[18.5330,-72.3215],[18.5150,-72.2870]],10:[[18.5128,-72.2872],[18.5105,-72.2838]],11:[[18.5105,-72.2838],[18.4960,-72.2780]],12:[[18.4960,-72.2790],[18.4520,-72.2860]],13:[[18.5495,-72.3365],[18.5435,-72.3390]],14:[[18.5550,-72.3445],[18.5345,-72.3475]],15:[[18.5455,-72.3340],[18.5410,-72.3265]],16:[[18.5390,-72.3395],[18.5270,-72.3410]],17:[[18.5380,-72.3315],[18.5320,-72.3270]],18:[[18.5435,-72.3420],[18.5425,-72.3340]],19:[[18.5470,-72.3350],[18.5520,-72.3250]],20:[[18.5415,-72.3335],[18.5360,-72.3290]],21:[[18.5440,-72.3340],[18.5380,-72.3320]],22:[[18.5445,-72.3375],[18.5395,-72.3350]],23:[[18.5655,-72.2965],[18.5710,-72.2870]],24:[[18.5600,-72.3090],[18.5620,-72.3070]],25:[[18.5860,-72.2560],[18.5900,-72.2400]],26:[[18.5870,-72.2450],[18.5900,-72.2380]],27:[[18.5840,-72.2350],[18.5775,-72.2230]],28:[[18.5775,-72.2230],[18.5520,-72.1450]],29:[[18.5100,-72.2850],[18.5160,-72.2800]],30:[[18.5120,-72.2880],[18.5135,-72.2960]],31:[[18.5100,-72.2850],[18.5050,-72.2900]],32:[[18.5100,-72.2840],[18.5080,-72.2730]],33:[[18.5080,-72.2870],[18.4880,-72.2980]],34:[[18.5130,-72.2930],[18.5050,-72.3080]],35:[[18.4800,-72.2790],[18.4850,-72.2650]],36:[[18.5100,-72.2820],[18.5030,-72.2700]],37:[[18.5262,-72.3450],[18.5230,-72.3600]],38:[[18.5300,-72.3400],[18.5185,-72.3480]],39:[[18.5230,-72.3600],[18.5180,-72.3800]],40:[[18.5180,-72.3800],[18.5250,-72.4400]],41:[[18.5250,-72.4400],[18.5420,-72.5200]],42:[[18.5420,-72.5200],[18.5110,-72.6330]],43:[[18.5870,-72.3390],[18.7000,-72.3900]],44:[[18.7000,-72.3900],[18.7340,-72.4170]],45:[[18.7340,-72.4170],[18.7700,-72.5050]],46:[[18.7700,-72.5050],[19.0750,-72.6700]]};
-var LK='trafik-geo-v1',LOK=null,LMAP=null,LEL=null,LPL={},LGEO={},LSELD=null,LTILE={ok:0,err:0},LQ=false,LRD=false,LP=null,LPAP=[18.5392,-72.335];
+var LK='trafik-geo-v1',LOK=null,LMAP=null,LEL=null,LPL={},LGEO={},LSELD=null,LTILE={ok:0,err:0},LQ=false,LP=null,LPAP=[18.5392,-72.335];
 function rc(c){var m=/var\((--[\w-]+)\)/.exec(c);if(!m)return c;var v=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();return v||'#888'}
 /* Leaflet : d’abord la copie locale (vendor/leaflet/), puis cdnjs en secours */
 var LWHY='';
@@ -1519,15 +1575,8 @@ function lInit(){if(LMAP)return;
  LMAP=L.map(LEL,{zoomControl:false,attributionControl:true,minZoom:7,maxZoom:18,maxBounds:[[17.4,-75.2],[20.6,-71.0]]}).setView(LPAP,12);
  LMAP.attributionControl.setPrefix(false);
  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).on('tileload',function(){LTILE.ok++}).on('tileerror',function(){LTILE.err++;if(LTILE.err>=6&&!LTILE.ok){LWHY='Les fonds de carte OpenStreetMap n’ont pas pu se charger : pas d’internet, ou tile.openstreetmap.org bloqué (aperçu restreint, pare-feu).';LOK=false;render()}}).addTo(LMAP);
- lRoads();
  Object.keys(LGEO).forEach(function(k){lMk(Number(k))});
  lRoutes()}
-/* routes principales d’Haïti (OSM, routes.geojson) : traits pointillés gris, sous les tronçons, chargés après l’affichage de la carte */
-function lRoads(){if(LRD||!LMAP)return;LRD=true;
- var p=LMAP.createPane('roadsPane');p.style.zIndex=380;p.style.pointerEvents='none';
- fetch('routes.geojson').then(function(r){if(!r.ok)throw new Error('routes');return r.json()}).then(function(g){
-  var W={trunk:4,primary:4,secondary:3,tertiary:2.5};
-  L.geoJSON(g,{pane:'roadsPane',interactive:false,renderer:L.canvas({pane:'roadsPane'}),style:function(f){return{color:'#7b8794',weight:W[f.properties.h]||2.5,opacity:.85,dashArray:'1 8',lineCap:'round',lineJoin:'round'}}}).addTo(LMAP)}).catch(function(){})}
 /* dessine un tronçon sur la carte (et le crée s’il vient d’arriver du serveur, comme les tronçons ajoutés par les utilisateurs) */
 function lMk(id){if(!LMAP||LPL[id]||!LGEO[id])return;var sg=seg(id),ll=LGEO[id];
  var halo=L.polyline(ll,{color:'#111',weight:13,opacity:0,interactive:false,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
@@ -1734,13 +1783,13 @@ var ADS=[
  img:'https://novacademy-six.vercel.app/NOVACC.png',
  url:'https://novacademy-six.vercel.app/#formations',
  c:'linear-gradient(135deg,#1B2B3A,#2f5273)'},
- {t:'Faites connaître votre commerce',s:'Visible sur l’Accueil de tous',c:'linear-gradient(135deg,#2A8A5B,#1d6a45)'},
- {t:'Votre offre ici',s:'Station, garage, restaurant…',c:'linear-gradient(135deg,#C93C3C,#8f2727)'}
+ {alt:'Publicité 2',img:'pub1.png',c:'linear-gradient(135deg,#2A8A5B,#1d6a45)'},
+ {alt:'Publicité 3',img:'pub2.png',c:'linear-gradient(135deg,#C93C3C,#8f2727)'}
 ],AD_I=0,AD_PAUSE=0;
 function adsHtml(){if(!ADS.length)return '';
  return '<div class="adwrap"><div class="adlab">Publicité</div><div class="ads" id="ads" aria-roledescription="carrousel">'+ADS.map(function(a,i){
-  var ok=/^https:\/\//.test(String(a.url||'')),im=/^https:\/\//.test(String(a.img||'')),tag=ok?'a':'div';
-  return '<'+tag+' class="ad"'+(ok?' href="'+esc(a.url)+'" target="_blank" rel="noopener sponsored"':'')+' style="background:'+(a.c||'var(--main)')+'">'+(im?'<img src="'+esc(a.img)+'" alt="'+esc(a.t||'')+'" loading="lazy">':'')+'<div class="adt"><b>'+esc(a.t||'')+'</b><span>'+esc(a.s||'')+'</span></div></'+tag+'>'}).join('')+'</div><div class="dots" id="dots">'+ADS.map(function(a,i){return '<i></i>'}).join('')+'</div></div>'}
+  var ok=/^https:\/\//.test(String(a.url||'')),im=/^(https:\/\/|[\w.\-\/]+\.(png|jpe?g|webp|gif)$)/i.test(String(a.img||'')),tag=ok?'a':'div';
+  return '<'+tag+' class="ad"'+(ok?' href="'+esc(a.url)+'" target="_blank" rel="noopener sponsored"':'')+' style="background:'+(a.c||'var(--main)')+'">'+(im?'<img src="'+esc(a.img)+'" alt="'+esc(a.alt||a.t||'')+'" loading="lazy">':'')+((a.t||a.s)?'<div class="adt"><b>'+esc(a.t||'')+'</b><span>'+esc(a.s||'')+'</span></div>':'')+'</'+tag+'>'}).join('')+'</div><div class="dots" id="dots">'+ADS.map(function(a,i){return '<i></i>'}).join('')+'</div></div>'}
 function adMark(){var d=document.querySelectorAll('#dots i');for(var i=0;i<d.length;i++)d[i].className=i===AD_I?'on':''}
 function adInit(){var el=document.getElementById('ads');if(!el)return;
  el.scrollLeft=AD_I*el.clientWidth;adMark();
@@ -1753,7 +1802,7 @@ var DIP=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();DIP=e;if(S.tab==='home')render()});
 window.addEventListener('appinstalled',function(){DIP=null;toast('App installée');render()});
 function isStandalone(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}
-function closeSheet(){var e=document.getElementById('sheet');if(e)e.remove()}
+function closeSheet(){if(window.stTimerClear)stTimerClear();var e=document.getElementById('sheet');if(e)e.remove()}
 function installApp(){
  if(DIP){var d=DIP;DIP=null;d.prompt();d.userChoice.then(function(){render()});return}
  var ua=navigator.userAgent,ios=/iphone|ipad|ipod/i.test(ua)||(/macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
@@ -1950,8 +1999,9 @@ function finfo(id){var rs=frecent(id),k=fcand(id);
 var FREQ=[],lastFAsk={};
 function fAsk(id){
   if(coolLeft('fq:'+id)||(lastFAsk[id]&&Date.now()-lastFAsk[id]<10*MIN))return noteCool('fq:'+id,'Demande déjà envoyée');
+  if(!qCan('ask'))return;
   needLogin(function(){lastFAsk[id]=Date.now();
-    DB.collection('fuel_requests').add({st:id}).then(function(){coolMark('fq:'+id);toast('Demande envoyée : les personnes concernées sont prévenues');render()}).catch(function(e){lastFAsk[id]=0;if(e&&e.message==='login')return askLogin('faire une demande',['fAsk',id]);toast(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard')})},'faire une demande',['fAsk',id])}
+    DB.collection('fuel_requests').add({st:id}).then(function(){coolMark('fq:'+id);qUse('ask','t',id);toast('Demande envoyée : les personnes concernées sont prévenues'+qRest('ask'));render()}).catch(function(e){lastFAsk[id]=0;if(e&&e.message==='login')return askLogin('faire une demande',['fAsk',id]);toast(e&&e.code==='P0001'?e.message:'Échec de l’envoi : réessayez plus tard')})},'faire une demande',['fAsk',id])}
 /* Répondre à une demande d’essence : onglet Essence, station mise en évidence ; connexion requise pour envoyer */
 function openFuelReply(id){id=+id;var s=(window.STN||[]).filter(function(x){return x.id===id})[0];if(!s)return;
   S.fz='Tous';S.fs='T';S.fq='';S.freply=id;setTab('fuel');
@@ -1962,11 +2012,12 @@ function openFuelReply(id){id=+id;var s=(window.STN||[]).filter(function(x){retu
     askLogin('répondre')}).catch(function(){})}
 function fReport(id,lvl){needLogin(function(){geoGate('st',id,function(){doFReport(id,lvl)})},'signaler',['fReport',id,lvl])}
 function doFReport(id,lvl){S.freply=null;
+  if(!qCan('rep'))return;
   if(!coolCheck('st:'+id,'cette station'))return;
   lastFuel[id]=Date.now();var r={st:id,lvl:lvl,t:Date.now()};
-  function loc(){FLOC.push(r);FREP.push(r);render()}
-  if(DB){DB.collection('fuel').add(r).then(function(){toast('Merci ! Signalement partagé');render();repBump()}).catch(function(e){if(e&&e.code==='P0001'){coolClear('st:'+id);return toast(e.message)}if(e&&e.message==='login'){coolClear('st:'+id);return askLogin('signaler',['fReport',id,lvl])}loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager')})}
-  else{loc();toast('Merci ! Signalement enregistré sur cet appareil')}}
+  function loc(){FLOC.push(r);FREP.push(r);qUse('rep','t',id);render()}
+  if(DB){DB.collection('fuel').add(r).then(function(){qUse('rep','t',id);toast('Merci ! Signalement partagé'+qRest('rep'));render();repBump()}).catch(function(e){if(e&&e.code==='P0001'){coolClear('st:'+id);return toast(e.message)}if(e&&e.message==='login'){coolClear('st:'+id);return askLogin('signaler',['fReport',id,lvl])}loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager'+qRest('rep'))})}
+  else{loc();toast('Merci ! Signalement enregistré sur cet appareil'+qRest('rep'))}}
 function addStation(){var n=document.getElementById('fn').value.trim().slice(0,80),z=document.getElementById('fzone').value;
   if(n.length<3)return toast('Entrez le nom ou le repère de la station');
   if(STN.some(function(s){return s.name.toLowerCase()===n.toLowerCase()&&s.zone===z}))return toast('Cette station existe déjà dans cette zone');
