@@ -946,6 +946,7 @@ function cmFol(n){n=Number(n)||0;return n.toLocaleString('fr-FR')+' abonné'+(n>
 function cmBtn(x){var on=!!x.o_following;return '<button type="button" aria-pressed="'+on+'" aria-label="'+(on?'Ne plus suivre ':'Suivre ')+esc(x.o_pseudo)+'" onclick="cmFollow(\''+esc(x.o_pseudo)+'\')" class="'+(on?'alt':'')+'" style="min-height:36px;padding:6px 16px;font-size:14px;border-radius:999px;flex:none'+(on?'':';background:var(--acc);color:#2b2000')+'">'+(on?'✓ Suivi':'Suivre')+'</button>'}
 var CMF={};
 function cmFollow(p){var rs=(CM.rows||[]).concat(window.TOP&&TOP.rows||[]).filter(function(x){return x.o_pseudo===p}),r=rs[0];if(!r||CMF[p])return;
+ if(r.o_demo){r.o_following=!r.o_following;r.o_followers=Math.max(0,(Number(r.o_followers)||0)+(r.o_following?1:-1));render();return}
  var on=!r.o_following,was=rs.map(function(x){return [x.o_following,x.o_followers]});CMF[p]=1;
  rs.forEach(function(x){x.o_following=on;x.o_followers=Math.max(0,(Number(x.o_followers)||0)+(on?1:-1))});render();
  window.sbRpc('set_follow',{p_pseudo:p,p_on:on}).then(function(q){var d=q.data||{};rs.forEach(function(x){x.o_following=!!d.following;if(typeof d.followers==='number')x.o_followers=d.followers});delete CMF[p];render();folLoad()}).catch(function(e){
@@ -965,7 +966,10 @@ function topRow(x){var rk=['1er','2e','3e'][Math.min(3,Math.max(1,Number(x.o_ran
  return '<div class="row" style="cursor:default">'+tpAv(x)+'<div class="nm"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>'+esc(x.o_pseudo)+'</span>'+cmChk(x.o_level,18)+(x.o_mine?'<span class="pill" style="margin:0 0 0 2px">Vous</span>':'')+'</div><div class="mute" aria-live="polite"><b>'+rk+'</b> · '+pts+' pt'+((Number(x.o_points)||0)>1?'s':'')+' ce mois · '+cmFol(x.o_followers)+'</div></div>'+(x.o_mine?'':cmBtn(x))+'</div>'}
 /* le podium n’apparaît qu’en fin de mois : du 29 au dernier jour (février : les deux derniers jours) ; ajouter ?top=1 à l’adresse pour le prévisualiser */
 function topWin(){try{if(/[?&]top=1\b/.test(location.search))return true;var o={};new Intl.DateTimeFormat('en-CA',{timeZone:'America/Port-au-Prince',year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date()).forEach(function(x){o[x.type]=Number(x.value)});var last=new Date(o.year,o.month,0).getDate();return o.day>=Math.min(29,last-1)}catch(e){return false}}
-function topHtml(){if(!window.LOGGED||!window.UID||!topWin())return '';if(TOP.u!==window.UID){TOP.rows=null;TOP.t=0;TOP.fail=0;TOP.u=window.UID}topFetch();if(!TOP.rows)return '';
+/* aperçu avec de faux membres, sans connexion ni base de données : ajouter ?top=demo à l’adresse */
+var TOPDEMO=[{o_rank:1,o_pseudo:'marie_pv',o_level:3,o_photo:null,o_followers:38,o_following:false,o_mine:false,o_points:1240,o_demo:1},{o_rank:2,o_pseudo:'jb_delmas',o_level:3,o_photo:null,o_followers:21,o_following:false,o_mine:false,o_points:980,o_demo:1},{o_rank:3,o_pseudo:'kenny509',o_level:4,o_photo:null,o_followers:17,o_following:false,o_mine:true,o_points:860,o_demo:1}];
+function topHtml(){var demo=/[?&]top=demo\b/.test(location.search);
+ if(demo){TOP.rows=TOPDEMO}else{if(!window.LOGGED||!window.UID||!topWin())return '';if(TOP.u!==window.UID){TOP.rows=null;TOP.t=0;TOP.fail=0;TOP.u=window.UID}topFetch();if(!TOP.rows)return ''}
  var mo=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric',timeZone:'America/Port-au-Prince'});mo=mo.charAt(0).toUpperCase()+mo.slice(1);
  var H='<div class="hl"></div><div class="hd" style="margin-top:12px">Top 3 du mois · '+esc(mo)+'</div>';
  if(!TOP.rows.length)return H+'<div class="card" style="margin-top:6px"><div class="mute">Le podium du mois apparaîtra ici : il réunit les membres de la Communauté qui gagnent le plus de points. Signalez et confirmez les états pour y entrer.</div></div>';
