@@ -409,6 +409,11 @@ svg.ti{width:62px;height:62px}
 .tp::after{animation:tptw 2.2s ease-in-out .8s infinite}}
 @keyframes tppop{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(-10deg)}}
 @keyframes tptw{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.tpw{margin:2px 0 14px;text-align:left}
+.tpt{font-weight:800;font-size:15px;text-align:left}
+.tpa{display:flex;align-items:center;justify-content:center;width:100%;min-height:32px;padding:0;background:transparent;color:var(--mute);border-top:1px solid var(--line);border-radius:0}
+.tpa svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.tpa.open svg{transform:rotate(180deg)}
 .stdots{display:flex;gap:5px;justify-content:center;margin-top:10px}
 .stdots span{flex:1;max-width:44px;height:4px;border-radius:2px;background:var(--line)}
 .stdots span.on{background:var(--acc)}
@@ -970,10 +975,12 @@ function topWin(){try{if(/[?&]top=1\b/.test(location.search))return true;var o={
 var TOPDEMO=[{o_rank:1,o_pseudo:'marie_pv',o_level:3,o_photo:null,o_followers:38,o_following:false,o_mine:false,o_points:1240,o_demo:1},{o_rank:2,o_pseudo:'jb_delmas',o_level:3,o_photo:null,o_followers:21,o_following:false,o_mine:false,o_points:980,o_demo:1},{o_rank:3,o_pseudo:'kenny509',o_level:4,o_photo:null,o_followers:17,o_following:false,o_mine:true,o_points:860,o_demo:1}];
 function topHtml(){var demo=/[?&]top=demo\b/.test(location.search);
  if(demo){TOP.rows=TOPDEMO}else{if(!window.LOGGED||!window.UID||!topWin())return '';if(TOP.u!==window.UID){TOP.rows=null;TOP.t=0;TOP.fail=0;TOP.u=window.UID}topFetch();if(!TOP.rows)return ''}
- var mo=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric',timeZone:'America/Port-au-Prince'});mo=mo.charAt(0).toUpperCase()+mo.slice(1);
- var H='<div class="hl"></div><div class="hd" style="margin-top:12px">Top 3 du mois · '+esc(mo)+'</div>';
- if(!TOP.rows.length)return H+'<div class="card" style="margin-top:6px"><div class="mute">Le podium du mois apparaîtra ici : il réunit les membres de la Communauté qui gagnent le plus de points. Signalez et confirmez les états pour y entrer.</div></div>';
- return H+'<section class="panel" style="margin-top:6px" aria-label="Top 3 des contributeurs du mois">'+TOP.rows.map(topRow).join('')+'</section>'}
+ var rs=TOP.rows,H='<div class="tpt">Trois meilleurs contributeurs du mois</div>';
+ if(!rs.length)return '<div class="tpw">'+H+'<div class="card" style="margin-top:6px"><div class="mute">Le podium du mois apparaîtra ici : il réunit les membres de la Communauté qui gagnent le plus de points. Signalez et confirmez les états pour y entrer.</div></div></div>';
+ var op=!!TOP.open&&rs.length>1,n=rs.length-1;
+ return '<div class="tpw">'+H+'<section class="panel" style="margin-top:6px" aria-label="Trois meilleurs contributeurs du mois">'+topRow(rs[0])+(op?rs.slice(1).map(topRow).join(''):'')+
+  (n?'<button type="button" class="tpa'+(op?' open':'')+'" aria-expanded="'+op+'" aria-label="'+(op?'Masquer':'Voir')+' '+(n>1?'les '+n+' autres':'l’autre')+' contributeur'+(n>1?'s':'')+'" onclick="topToggle()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>':'')+'</section></div>'}
+function topToggle(){TOP.open=!TOP.open;render()}
 function communityV(){
  var head='<h2>Communauté</h2><div class="mute" style="margin-top:4px">Les membres des niveaux Sentinelle, Gardien et Légende, par pseudonyme.</div>';
  if(window.LOGGED===false)return head+'<div class="card"><b>Connexion requise</b><div class="mute">Connectez-vous pour voir la Communauté.</div><a class="btn primary" style="margin-top:10px" href="auth.html">Se connecter</a></div>';
@@ -1929,10 +1936,10 @@ function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3
  var ic=function(n){return IC[n==='Carte'?'map':n==='Trafic'?'state':n==='Essence'?'fuel':'sec']};
  var np=SEG.filter(function(s){return pendSeg(s[0])>=0}).length;
  var fc=[0,0,0];STN.forEach(function(s){var k=fstat(s.id);if(k<3)fc[k]++});
- return instBtn()+wxHtml()+'<div class="hl"></div><div class="hd" style="margin-top:12px">Circulation</div><div class="sum" style="margin-top:6px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.view=\'list\';S.zone=\'Tous\';S.ts=\''+i+'\';setTab(\'state\')">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
+ return topHtml()+instBtn()+wxHtml()+'<div class="hl"></div><div class="hd" style="margin-top:12px">Circulation</div><div class="sum" style="margin-top:6px">'+LV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.view=\'list\';S.zone=\'Tous\';S.ts=\''+i+'\';setTab(\'state\')">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
  (np?'<div class="mute" style="margin-top:8px;text-align:center">+ '+np+' état'+(np>1?'s':'')+' en attente de confirmation (voir Trafic)</div>':'')+
  '<div class="hl"></div><div class="hd" style="margin-top:12px">Essence</div><div class="sum" style="margin-top:6px">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'" role="button" tabindex="0" style="cursor:pointer" onkeydown="if(event.key===\'Enter\')this.click()" onclick="S.fz=\'Tous\';S.fs=\''+i+'\';setTab(\'fuel\')">'+fc[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>'+
- (window.LOGGED===false?ptsCta():meCard())+topHtml()+'<div class="hl"></div><div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
+ (window.LOGGED===false?ptsCta():meCard())+'<div class="hl"></div><div class="grid2">'+T.map(function(t){return '<button class="tile" onclick="'+t[3]+(t[3]?';':'')+'setTab(\''+t[0]+'\')"><svg viewBox="0 0 24 24" aria-hidden="true">'+ic(t[1])+'</svg><b>'+t[1]+'</b><span>'+t[2]+'</span></button>'}).join('')+'</div>'+
  dailyHtml()+adsHtml()+'<div class="sep"><span>En direct</span></div>'+
  (r.length?secItem(r[0],1).replace('<div class="card" style="','<div class="card" role="button" tabindex="0" aria-label="Ouvrir Sécurité" onclick="setTab(\'sec\')" onkeydown="if(event.key===\'Enter\')this.click()" style="cursor:pointer;'):'')+
  dropPanel('bad','Routes à éviter',bad.length,bad.length?bad.map(function(s){return miniSeg(s[0],1)}).join(''):'<div class="row mute" style="cursor:default">Aucune route avec alerte de sécurité rouge</div>','<button class="lnk" onclick="S.view=\'list\';setTab(\'state\')">Tout voir</button>')+
