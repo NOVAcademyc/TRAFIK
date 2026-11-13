@@ -357,6 +357,11 @@ svg.ti{width:62px;height:62px}
 .ibtn.cb[hidden]{display:none}
 .ibtn.cb svg{width:20px;height:20px}
 @media (max-width:420px){.ibtn.cb{width:44px;padding:0;justify-content:center}.ibtn.cb .cl{display:none}}
+/* correctif : le logo se réduit au lieu de déborder sur la cloche */
+.top-in .brand{overflow:hidden;flex:1 1 0}
+.top-in .brand .wmk{flex:0 1 auto;min-width:0;max-width:100%;object-fit:contain;object-position:left center}
+.top-in .hr,.authbar{flex:none}
+@media (max-width:420px){.hr{gap:5px}.authbar{gap:5px}.top .btn.xs{padding:0 8px;font-size:12px}.ibtn{width:40px;height:40px;min-height:40px}.top-in{gap:6px}.top{padding-left:10px;padding-right:10px}}
 /* Communauté */
 .cav{width:44px;height:44px;border-radius:50%;flex:none;overflow:hidden;background:var(--acc);color:#2b2000;display:grid;place-items:center;font-weight:800;font-size:18px}
 .cav img{width:100%;height:100%;object-fit:cover;display:block}
