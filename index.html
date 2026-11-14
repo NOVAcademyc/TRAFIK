@@ -6,6 +6,7 @@
 <title>Trafik</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
@@ -73,6 +74,10 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 14p
 button:active{transform:scale(.97)}
 button.alt{background:var(--soft);color:var(--ink)}
 button.on{background:var(--main);color:var(--on)}
+button.neon{background:linear-gradient(90deg,#3B6BF0 0%,#7B55AD 50%,#C14060 100%);color:#fff;border:0;box-shadow:0 4px 14px rgba(59,107,240,.28)}
+button.neon:active{filter:brightness(.94)}
+select.msty{position:absolute;left:4px;bottom:2px;z-index:1000;width:auto;min-height:26px;padding:2px 22px 2px 9px;font-size:12px;font-weight:700;line-height:1.2;border:0;border-radius:8px;color:#fff;cursor:pointer;-webkit-appearance:none;appearance:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 7px center/10px 6px,linear-gradient(90deg,#3B6BF0 0%,#7B55AD 50%,#C14060 100%);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+select.msty option{color:#1B2024;background:#fff}
 button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 select,input,textarea{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:48px}
 textarea{min-height:92px;resize:vertical;line-height:1.35;display:block}
@@ -125,6 +130,7 @@ nav button[aria-current="page"]::before{content:"";position:absolute;top:0;left:
 .lwrap{margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;isolation:isolate;background:var(--soft);min-height:360px}
 #lmap{height:62vh;min-height:360px;width:100%}
 .leaflet-container{font-family:inherit}
+.stpin{background:none;border:0}.lwrap.fm{min-height:300px}.fm #lmap{height:46vh;min-height:300px}.leaflet-popup-content .mute{margin:2px 0}
 .dd>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;min-height:48px;cursor:pointer;font-size:17px;font-weight:800}
 .dd>summary::-webkit-details-marker{display:none}
 .dd .cnt{display:inline-block;margin-left:8px;min-width:22px;padding:1px 8px;border-radius:999px;background:var(--soft);font-size:13px;font-weight:700;text-align:center}
@@ -491,8 +497,8 @@ var T={
  segments:{table:'segments',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {id:Number(r.id),name:r.name,zone:r.zone,geo:r.geo}}},
  reports:{table:'reports',to:function(d){return {segment_id:d.seg,level:d.lvl}},from:function(r){return {seg:Number(r.segment_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}},
  requests:{table:'requests',to:function(d){return {segment_id:d.seg}},from:function(r){return {seg:Number(r.segment_id),t:Date.parse(r.created_at),u:r.user_id}}},
- stations:{table:'stations',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone}}},
- station_requests:{table:'station_requests',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,t:Date.parse(r.created_at)}}},
+ stations:{table:'stations',to:function(d){return {name:d.name,zone:d.zone}},from:function(r){return {name:r.name,zone:r.zone,addr:r.addr||null,lat:r.lat,lng:r.lng,rad:r.radius_m}}},
+ station_requests:{table:'station_requests',to:function(d){var o={name:d.name,zone:d.zone};if(d.lat!=null&&d.lng!=null){o.addr=d.addr;o.lat=d.lat;o.lng=d.lng;if(d.rad)o.radius_m=d.rad}return o},from:function(r){return {name:r.name,zone:r.zone,addr:r.addr||null,lat:r.lat,lng:r.lng,rad:r.radius_m,t:Date.parse(r.created_at)}}},
  fuel:{table:'fuel',to:function(d){return {station_id:d.st,level:d.lvl}},from:function(r){return {st:Number(r.station_id),lvl:r.level,t:Date.parse(r.created_at),u:r.user_id}}},
  votes:{table:'votes',to:function(d){return d},from:function(r){return {k:r.kind,id:Number(r.target_id),lvl:r.level,val:r.value,u:r.user_id,t:Date.parse(r.created_at)}}},
  fuel_requests:{table:'fuel_requests',to:function(d){return {station_id:d.st}},from:function(r){return {st:Number(r.station_id),t:Date.parse(r.created_at),u:r.user_id}}}
@@ -651,7 +657,7 @@ var SWR=null;
 try{if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){SWR=r}).catch(function(){})}catch(e){}
 /* MISE À JOUR AUTOMATIQUE OBLIGATOIRE : dès qu’il y a du réseau, l’app compare sa version (BUILD) à celle du serveur et se recharge toute seule si elle est plus ancienne.
    Pour publier une nouvelle version : changer BUILD ci-dessous (et le numéro de version dans sw.js). */
-var BUILD='2026-11-12-sec2';
+var BUILD='2026-11-14-addr10';
 (function(){var busy=false,RX=new RegExp('BUILD=\\x27([^\\x27]+)\\x27');
  function typing(){var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&(a.value||'').length>0)}
  function reload(v){try{if(sessionStorage.getItem('trafik-upd')===v)return;sessionStorage.setItem('trafik-upd',v)}catch(e){}
@@ -1570,12 +1576,12 @@ function render(){
   bellUpdate();
   var y=window.scrollY,v=document.getElementById('view'),kv={},ae=document.activeElement,af=ae&&ae.id?ae.id:'',ap=0;
   /* garde ce que la personne est en train de saisir quand la page se rafraîchit */
-  ['sn','sz','fn','fzone','qs','qf'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
+  ['sn','sz','fn','fzone','fadr','qs','qf'].forEach(function(i){var e=document.getElementById(i);if(e)kv[i]=e.value});
   try{ap=ae.selectionStart||0}catch(e){}
   v.innerHTML=offBanner()+({home:homeV,state:stateV,report:reportV,fuel:fuelV,sec:secV,alerts:alertsV,community:communityV})[S.tab]();
   Object.keys(kv).forEach(function(i){var e=document.getElementById(i);if(e)e.value=kv[i]});
   if(af&&kv[af]!==undefined){var f=document.getElementById(af);if(f){f.focus();try{f.setSelectionRange(ap,ap)}catch(e){}}}
-  if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='state'&&S.view==='map'){bindMap();lMount()}if(S.tab==='home')adInit();if(S.tab==='report'||S.tab==='fuel')geoAuto();secFit()}
+  if(S.tab==='state'||S.tab==='fuel')window.scrollTo(0,y);if(S.tab==='fuel'){lMount();fpvMini()}if(S.tab==='home')adInit();if(S.tab==='report'||S.tab==='fuel')geoAuto();secFit()}
 
 /* carte schématique : chaque tronçon est une ligne colorée selon son état */
 var GEO={1:[[100,215],[108,258],[100,300]],2:[[110,260],[135,268]],3:[[135,268],[170,278]],4:[[145,240],[195,215]],5:[[195,215],[235,195]],6:[[240,165],[285,145]],7:[[235,195],[240,165]],8:[[285,145],[300,120]],9:[[190,295],[245,318]],10:[[245,318],[262,328]],11:[[262,328],[295,345]],12:[[295,345],[320,405]],13:[[108,258],[128,238]],14:[[82,205],[90,250],[95,290]],15:[[128,238],[150,225]],16:[[108,258],[125,285]],17:[[125,285],[150,300]],18:[[128,238],[135,215]],19:[[170,278],[185,262]],20:[[170,278],[190,295]],21:[[150,225],[165,198]],22:[[135,215],[150,190]],23:[[235,195],[270,215]],24:[[195,215],[205,232]],25:[[300,120],[335,105]],26:[[285,145],[300,168]],27:[[285,145],[335,160]],28:[[335,160],[350,215]],29:[[245,318],[250,295]],30:[[262,328],[285,315]],31:[[262,328],[270,352]],32:[[245,318],[225,340]],33:[[295,345],[330,360]],34:[[250,295],[285,280]],35:[[320,405],[345,390]],36:[[320,405],[335,438]],37:[[88,330],[78,360]],38:[[88,330],[125,350]],39:[[100,300],[88,330]],40:[[78,360],[65,385]],41:[[65,385],[55,425]],42:[[55,425],[35,480]],43:[[100,215],[112,160],[130,115]],44:[[130,115],[118,70]],45:[[118,70],[100,40]],46:[[100,40],[92,12]]};
@@ -1639,11 +1645,12 @@ function lInit(){if(LMAP)return;
  LEL=document.createElement('div');LEL.id='lmap';
  LMAP=L.map(LEL,{zoomControl:false,attributionControl:true,minZoom:7,maxZoom:18,maxBounds:[[17.4,-75.2],[20.6,-71.0]]}).setView(LPAP,12);
  LMAP.attributionControl.setPrefix(false);
- L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).on('tileload',function(){LTILE.ok++}).on('tileerror',function(){LTILE.err++;if(LTILE.err>=6&&!LTILE.ok){LWHY='Les fonds de carte OpenStreetMap n’ont pas pu se charger : pas d’internet, ou tile.openstreetmap.org bloqué (aperçu restreint, pare-feu).';LOK=false;render()}}).addTo(LMAP);
+ lSetStyle(LSTY,true);
  Object.keys(LGEO).forEach(function(k){lMk(Number(k))});
- lRoutes()}
+ lStations();lRoutes()}
 /* dessine un tronçon sur la carte (et le crée s’il vient d’arriver du serveur, comme les tronçons ajoutés par les utilisateurs) */
-function lMk(id){if(!LMAP||LPL[id]||!LGEO[id])return;var sg=seg(id),ll=LGEO[id];
+var LSEG=false;/* false = carte sans tronçons (stations seulement) ; true pour les réafficher */
+function lMk(id){if(!LSEG||!LMAP||LPL[id]||!LGEO[id])return;var sg=seg(id),ll=LGEO[id];
  var halo=L.polyline(ll,{color:'#111',weight:13,opacity:0,interactive:false,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
  var main=L.polyline(ll,{color:'#888',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(LMAP);
  var hit=L.polyline(ll,{color:'#000',weight:26,opacity:0,lineCap:'round'}).addTo(LMAP);
@@ -1654,7 +1661,7 @@ function lApplyGeo(id){LGEO[id]=SGEO[id];if(!LMAP)return;
  if(LPL[id])['halo','main','hit'].forEach(function(n){LPL[id][n].setLatLngs(SGEO[id])});else lMk(id)}
 /* tracé exact sur la vraie route (OSRM), une seule fois par tronçon ; ensuite gardé sur l’appareil */
 function hav(a,b){var R=6371000,r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)*Math.sin(dg/2);return 2*R*Math.asin(Math.sqrt(x))}
-function lRoutes(){if(LQ)return;LQ=true;var cache={};try{cache=JSON.parse(localStorage.getItem(LK))||{}}catch(e){}
+function lRoutes(){if(!LSEG||LQ)return;LQ=true;var cache={};try{cache=JSON.parse(localStorage.getItem(LK))||{}}catch(e){}
  /* plus d’appel OSRM depuis le téléphone : le serveur a déjà calculé les tracés. Repli seulement pour un tronçon que le serveur n’a pas. */
  var todo=Object.keys(LLG).filter(function(id){return !cache[id]&&!SGEO[id]});
  (function next(){var id=todo.shift();if(!id||LOK===false)return;if(SGEO[id])return next();var a=LLG[id][0],b=LLG[id][1];
@@ -1664,11 +1671,52 @@ function lRoutes(){if(LQ)return;LQ=true;var cache={};try{cache=JSON.parse(localS
    var ll=rt.geometry.coordinates.map(function(c){return [c[1],c[0]]});
    LGEO[id]=ll;cache[id]=ll;LPL[id]&&['halo','main','hit'].forEach(function(n){LPL[id][n].setLatLngs(ll)});
    try{localStorage.setItem(LK,JSON.stringify(cache))}catch(e){}}).catch(function(){}).then(function(){setTimeout(next,450)})})()}
-function lUpdate(){var sel=S.sel;Object.keys(LPL).forEach(function(k){var id=Number(k),st=status(id),p=LPL[k];
+/* ===== Stations sur la carte : petite épingle blanche (pas d’info) qui devient verte, jaune ou rouge selon l’état ===== */
+function pinSvg(f,w,h){return '<svg viewBox="0 0 24 32" width="'+w+'" height="'+h+'" aria-hidden="true" style="display:block;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.45))"><path d="M12 1.2C6.1 1.2 1.6 5.7 1.6 11.4c0 7.6 10.4 19.4 10.4 19.4s10.4-11.8 10.4-19.4C22.4 5.7 17.9 1.2 12 1.2z" fill="'+f+'" stroke="#1b2430" stroke-width="1.7"/><circle cx="12" cy="11.4" r="3.9" fill="#1b2430" fill-opacity=".85"/></svg>'}
+/* ===== Styles de carte : Plan, Satellite, Hybride (satellite + noms de rues), Relief ===== */
+var ESRI='https://server.arcgisonline.com/ArcGIS/rest/services/',LSTY='plan',LBL=[];
+try{var _ms=localStorage.getItem('trafik-mapstyle');if(_ms)LSTY=_ms}catch(e){}
+var MAPSTY={
+ plan:{n:'Plan',l:[['World_Street_Map',19]],att:'Tiles © Esri, OpenStreetMap contributors'},
+ sat:{n:'Satellite',l:[['World_Imagery',17]],att:'Imagery © Esri, Maxar, Earthstar Geographics'},
+ hyb:{n:'Hybride',l:[['World_Imagery',17],['Reference/World_Transportation',19],['Reference/World_Boundaries_and_Places',19]],att:'Imagery © Esri, Maxar, Earthstar Geographics'},
+ topo:{n:'Relief',l:[['World_Topo_Map',19]],att:'Tiles © Esri, USGS, NOAA'}};
+if(!MAPSTY[LSTY])LSTY='plan';
+function lBase(map,k,main){var s=MAPSTY[k]||MAPSTY.plan;
+ return s.l.map(function(d,i){var o={maxZoom:19,maxNativeZoom:d[1],zIndex:i+1};if(i===0)o.attribution=s.att;
+  var ly=L.tileLayer(ESRI+d[0]+'/MapServer/tile/{z}/{y}/{x}',o);
+  if(main&&i===0)ly.on('tileload',function(){LTILE.ok++}).on('tileerror',function(){LTILE.err++;if(LTILE.err>=6&&!LTILE.ok){LWHY='Le fond de carte n’a pas pu se charger : pas d’internet, ou le serveur de cartes bloqué (aperçu restreint, pare-feu).';LOK=false;render()}});
+  return ly.addTo(map)})}
+function lSetStyle(k,first){if(!LMAP)return;LBL.forEach(function(l){LMAP.removeLayer(l)});LBL=lBase(LMAP,k,true)}
+function setMapStyle(k){if(!MAPSTY[k])return;LSTY=k;try{localStorage.setItem('trafik-mapstyle',k)}catch(e){}lSetStyle(k);render()}
+var LST={},LSTI=null;
+function lStIcons(){if(LSTI)return LSTI;var f=['var(--g)','var(--y)','var(--r)','#ffffff'];
+ LSTI=f.map(function(c){return L.divIcon({className:'stpin',html:pinSvg(rc(c),20,28),iconSize:[20,28],iconAnchor:[10,27],popupAnchor:[0,-24],tooltipAnchor:[10,-14]})});return LSTI}
+function lStPop(s){var k=fstat(s.id);return '<div style="min-width:170px"><b>'+esc(s.name)+'</b>'+(s.addr?'<div class="mute">📍 '+esc(s.addr)+'</div>':'')+'<div style="margin-top:6px"><span class="st s'+k+'">'+FLV[k].i+' '+FLV[k].n+'</span></div><button class="alt" style="margin-top:8px;width:100%" onclick="stGo('+jid(s.id)+')">Voir la fiche</button></div>'}
+function stGo(id){S.fz='Tous';S.fs='T';S.fq='';S.freply=id;setTab('fuel');setTimeout(function(){var el=document.getElementById('st'+id);if(el)el.scrollIntoView({block:'center'})},80)}
+function lStations(){if(!LMAP)return;var ic=lStIcons();
+ STN.forEach(function(s){if(!s.ll)return;var p=LST[s.id];
+  if(p){var c=p.m.getLatLng();if(Math.abs(c.lat-s.ll[0])>1e-6||Math.abs(c.lng-s.ll[1])>1e-6)p.m.setLatLng(s.ll);return}
+  var m=L.marker(s.ll,{icon:ic[3],keyboard:false,riseOnHover:true,title:s.name}).addTo(LMAP);
+  m.bindTooltip(s.name,{direction:'top',offset:[0,-4]});m.bindPopup(function(){return lStPop(s)},{maxWidth:240});
+  LST[s.id]={m:m,k:3,s:s}});
+ lPend()}
+/* propositions de stations en attente de validation : épingle jaune pâle, visible par leur auteur et par les administrateurs seulement (règles de la base) */
+var LPD={};
+function lPend(){if(!LMAP)return;var seen={};
+ (typeof PND!=='undefined'?PND:[]).forEach(function(q){if(!q.ll)return;var k=String(q.id);seen[k]=1;if(LPD[k])return;
+  var m=L.marker(q.ll,{icon:L.divIcon({className:'stpin',html:'<div style="opacity:.6">'+pinSvg(rc('var(--acc)'),20,28)+'</div>',iconSize:[20,28],iconAnchor:[10,27],popupAnchor:[0,-24],tooltipAnchor:[10,-14]}),keyboard:false,title:q.name}).addTo(LMAP);
+  m.bindTooltip(q.name+' (en attente)',{direction:'top',offset:[0,-4]});
+  m.bindPopup('<div style="min-width:170px"><b>'+esc(q.name)+'</b>'+(q.addr?'<div class="mute">📍 '+esc(q.addr)+'</div>':'')+'<div class="mute" style="margin-top:6px">⏳ En attente de validation : visible par tous une fois approuvée.</div></div>',{maxWidth:240});
+  LPD[k]=m});
+ Object.keys(LPD).forEach(function(k){if(!seen[k]){LMAP.removeLayer(LPD[k]);delete LPD[k]}})}
+function lStUpdate(){if(!LMAP)return;lStations();var ic=lStIcons();
+ Object.keys(LST).forEach(function(id){var p=LST[id],k=fstat(p.s.id);if(p.k!==k){p.k=k;p.m.setIcon(ic[k])}})}
+function lUpdate(){lStUpdate();var sel=S.sel;Object.keys(LPL).forEach(function(k){var id=Number(k),st=status(id),p=LPL[k];
  var pk=pendSeg(id);
  p.main.setStyle({color:rc(COL[pk>=0?pk:st]),opacity:pk>=0?.5:.95,dashArray:pk>=0?'3 9':st===1?'12 7':st===3?'2 9':null});
  p.halo.setStyle({opacity:sel===id?.9:0});if(sel===id){p.halo.bringToFront();p.main.bringToFront();p.hit.bringToFront()}})}
-function lFocus(){if(S.sel===LSELD)return;LSELD=S.sel;var g=S.sel&&LGEO[S.sel];if(g)LMAP.fitBounds(L.latLngBounds(g),{maxZoom:16,padding:[50,50]})}
+function lFocus(){if(!LSEG||S.sel===LSELD)return;LSELD=S.sel;var g=S.sel&&LGEO[S.sel];if(g)LMAP.fitBounds(L.latLngBounds(g),{maxZoom:16,padding:[50,50]})}
 function lAttach(){var w=document.getElementById('lwrap');if(!w||LOK===false)return;
  lInit();LOK=true;if(LEL.parentNode!==w){w.innerHTML='';w.appendChild(LEL)}
  LMAP.invalidateSize();lUpdate();lFocus()}
@@ -1676,11 +1724,12 @@ function lMount(){if(!document.getElementById('lwrap')||LOK===false)return;
  if(LMAP){lAttach();return}/* déjà chargée : rattachement immédiat, sans clignotement */
  loadLeaflet().then(lAttach).catch(function(){LOK=false;render()})}
 function mapV(){if(LOK===false)return mapSvg();var sel=S.sel;
- var lg='<div class="mute" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">'+LV.map(function(l,i){return '<span><b style="color:'+COL[i]+'">'+l.i+'</b> '+l.n+'</span>'}).join('')+'</div>';
- var cap='<div class="card mute">Touchez un tronçon.</div>';
+ var lg=(LSEG?'<div class="mute" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">'+LV.map(function(l,i){return '<span><b style="color:'+COL[i]+'">'+l.i+'</b> '+l.n+'</span>'}).join('')+'</div>':'')+
+  '<div class="mute" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;align-items:center"><b>Stations :</b>'+[['var(--g)','Fonctionnelle'],['var(--y)','Limitée'],['var(--r)','Non fonctionnelle'],['#ffffff','Pas d’info']].map(function(f){return '<span style="display:inline-flex;align-items:center;gap:4px">'+pinSvg(rc(f[0]),12,17)+f[1]+'</span>'}).join('')+'</div>';
+ var cap='<div class="card mute">'+(LSEG?'Touchez un tronçon.':'Touchez une station pour voir son état.')+'</div>';
  if(sel&&seg(sel)){var s=seg(sel),k=status(sel),w=S.watch.indexOf(sel)>=0;
   cap='<div class="card"><h3 style="margin:0;font-size:16px">'+s[1]+'</h3><div><span class="st s'+k+'">'+LV[k].i+' '+LV[k].n+'</span></div><div class="mute">'+info(sel)+'</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+segBtns(sel,w)+'</div></div>'}
- return '<div id="lwrap" class="lwrap"><div class="mute" style="padding:40px 16px;text-align:center">Chargement de la carte…</div></div><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="alt" onclick="zoomBtn(0.6)" aria-label="Zoom avant">Zoom +</button><button class="alt" onclick="zoomBtn(1.6)" aria-label="Zoom arrière">Zoom −</button><button class="alt" onclick="goPAP()">Port-au-Prince</button><button class="alt" onclick="resetMap()">Tout le pays</button></div>'+lg+cap+'<p class="mute">Fond de carte © OpenStreetMap. Les tracés des tronçons sont approximatifs.</p>'}
+ return '<div id="lwrap" class="lwrap"><div class="mute" style="padding:40px 16px;text-align:center">Chargement de la carte…</div></div><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="alt" onclick="zoomBtn(0.6)" aria-label="Zoom avant">Zoom +</button><button class="alt" onclick="zoomBtn(1.6)" aria-label="Zoom arrière">Zoom −</button><button class="alt" onclick="goPAP()">Port-au-Prince</button><button class="alt" onclick="resetMap()">Tout le pays</button></div>'+lg+cap+'<p class="mute">Fond de carte © Esri, OpenStreetMap contributors. Les tracés des tronçons sont approximatifs.</p>'}
 /* bulletin de sécurité : sources publiques, mis à jour par Claude (la page ne peut pas aller chercher les sources elle-même) */
 var BUL={u:'2026-11-03T00:00:00Z',ud:'3 nov. 2026',items:[
  {c:'n',iso:'2026-11-03',d:'3 nov. 2026',z:'Plusieurs zones prioritaires',l:1,t:'Le gouvernement annonce que les opérations de sécurité se poursuivent et pourront être étendues à d’autres zones prioritaires, en coordination entre la PNH, les Forces armées d’Haïti et la Force de répression des gangs.',s:'Juno7',url:'',segs:[]},
@@ -1744,8 +1793,9 @@ function listV(){
 function setView(v){S.view=v;render()}
 function setTs(t){S.ts=t;render()}
 function stateV(){
- var tog='<div class="tog" role="group" aria-label="Affichage"><button aria-pressed="'+(S.view==='list')+'" onclick="setView(\'list\')">Liste</button><button aria-pressed="'+(S.view==='map')+'" onclick="setView(\'map\')">Carte</button><button aria-pressed="'+(S.view==='trip')+'" onclick="setView(\'trip\')">Mon trajet</button></div>';
- return tog+(S.view==='map'?mapV():S.view==='trip'?tripV():listV())}
+ var tog='<div class="tog" role="group" aria-label="Affichage"><button aria-pressed="'+(S.view==='list')+'" onclick="setView(\'list\')">Liste</button><button aria-pressed="'+(S.view==='trip')+'" onclick="setView(\'trip\')">Mon trajet</button></div>';
+ if(S.view==='map')S.view='list';
+ return tog+(S.view==='trip'?tripV():listV())}
 /* GPS désactivé ou refusé : un site web ne peut pas ouvrir les réglages du téléphone ; on affiche donc une fenêtre avec les étapes de l’appareil, un bouton vers les réglages de localisation (Android) et « Réessayer » */
 var GPSRETRY=null,GPSINT='intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end';
 function gpsOpen(){try{var f=document.createElement('iframe');f.style.display='none';f.src=GPSINT;document.body.appendChild(f);setTimeout(function(){f.remove()},1500)}catch(e){}}
@@ -1878,7 +1928,7 @@ function installApp(){
 function instBtn(){return isStandalone()?'':'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="alt inst" onclick="installApp()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Installer l’app</button></div>'}
 function lastRep(id){var t=0;S.reports.forEach(function(r){if(r.seg===id&&r.t>t&&Date.now()-r.t<45*MIN)t=r.t});return t}
 function miniSeg(id,red){var sg=seg(id);if(!sg)return '';var k=status(id),pk=pendSeg(id),sk=pk>=0?pk:k,pc=pk>=0?' pd':'',t=lastRep(id);
- return '<div class="row" role="button" tabindex="0" onclick="S.sel='+id+';S.view=\'map\';setTab(\'state\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}"><span class="dot '+LV[sk].c+pc+'"></span><div class="nm">'+esc(sg[1])+'<div class="mute">'+(t?ago(t):'Aucun signalement récent')+'</div>'+'</div>'+(red?'<span class="chip r" role="button" tabindex="0" style="background:var(--r);color:#fff;cursor:pointer" onclick="event.stopPropagation();goSeg('+id+')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();event.preventDefault();goSeg('+id+')}">⚠ Alerte de sécurité</span>':'<span class="chip '+LV[sk].c+pc+'">'+LV[sk].n+(pk>=0?' · en attente':'')+'</span>')+'</div>'}
+ return '<div class="row" role="button" tabindex="0" onclick="goSeg('+id+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}"><span class="dot '+LV[sk].c+pc+'"></span><div class="nm">'+esc(sg[1])+'<div class="mute">'+(t?ago(t):'Aucun signalement récent')+'</div>'+'</div>'+(red?'<span class="chip r" role="button" tabindex="0" style="background:var(--r);color:#fff;cursor:pointer" onclick="event.stopPropagation();goSeg('+id+')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();event.preventDefault();goSeg('+id+')}">⚠ Alerte de sécurité</span>':'<span class="chip '+LV[sk].c+pc+'">'+LV[sk].n+(pk>=0?' · en attente':'')+'</span>')+'</div>'}
 /* liste déroulante : l’état ouvert/fermé est gardé quand la page se rafraîchit */
 S.dd={};
 function dropPanel(key,t,n,body,act,red){return '<details class="panel dd"'+(S.dd[key]?' open':'')+' ontoggle="S.dd[\''+key+'\']=this.open"><summary><span>'+t+'<span class="cnt'+(red?' rd':'')+'">'+n+'</span></span><svg class="cv" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'+body+(act?'<div class="ddf">'+act+'</div>':'')+'</details>'}
@@ -1948,7 +1998,7 @@ function wxHtml(){wxFetch();
  var i=wxInfo(WX.code),rain=i[1]==='rain'||i[1]==='bolt';
  return '<div class="card wxc" role="group" aria-label="Météo à Port-au-Prince" style="display:flex;align-items:center;gap:10px;padding:5px 12px;margin-top:8px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:28px;height:28px;flex:none;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">'+WXI[i[1]]+'</svg><div style="flex:1;min-width:0"><div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><b style="font-size:19px;line-height:1.1">'+WX.tmp+' °C</b><span>'+i[0]+'</span></div><div class="mute" style="font-size:12px;line-height:1.2">Port-au-Prince · mesuré à '+hhmm(WX.t)+(isOff()?' · hors ligne':'')+(rain?' · ralentissements possibles':'')+'</div></div></div>'}
 function homeV(){var c=[0,0,0];SEG.forEach(function(s){var k=status(s[0]);if(k<3)c[k]++});
- var T=[['state','Trafic','Liste des routes','S.view=\'list\''],['state','Carte','Vue d’ensemble','S.view=\'map\''],['fuel','Essence','Stations ouvertes',''],['sec','Sécurité','Alertes 48 h','']];
+ var T=[['state','Trafic','Liste des routes','S.view=\'list\''],['fuel','Carte','Stations sur la carte',''],['fuel','Essence','Stations ouvertes',''],['sec','Sécurité','Alertes 48 h','']];
  var r=recent();
  var sgs=secSegs(),bad=SEG.filter(function(s){return sgs.indexOf(s[0])>=0}).sort(function(a,b){return status(b[0])-status(a[0])||lastRep(b[0])-lastRep(a[0])});
  var ic=function(n){return IC[n==='Carte'?'map':n==='Trafic'?'state':n==='Essence'?'fuel':'sec']};
@@ -2046,6 +2096,16 @@ var FMIN=180,STN=[
 [49,'Garescher-Prince — Cabaret','Nord']
 ].map(function(s){return {id:s[0],name:s[1],zone:s[2]}}),FREP=[],FLOC=[],lastFuel={};
 S.fz='Tous';S.fs='T';S.ts='T';
+/* ===== Stations du fichier CSV (département de l’Ouest) =====
+   CSVAPP : stations déjà dans l’app (doublons) : on garde celle de l’app et on lui ajoute l’adresse et la position GPS du CSV.
+   CSVST  : stations uniques au CSV, ajoutées à l’app : [id, nom, zone, adresse (rue ou zone), latitude, longitude].
+   Les stations propres à l’app restent telles quelles. */
+var CSVAPP=[[1,"Ave. John Brown, Saint-Antoine",18.539225,-72.322952],[4,"Rue Oswald Durand, Portail Léogâne",18.536905,-72.343484],[7,"Delmas 33, Gérald Bataille, Delmas",18.56358,-72.290192],[9,"Delmas 41, Cité Saint-Georges, Delmas",18.546272,-72.303172],[12,"Blvd T.L, Carrefour de l'Aéroport, Delmas",18.555271,-72.314538],[15,"Rue Patrice Lumumba, Village W. Lamothe, Delmas",18.559756,-72.308925],[21,"Blvd T.L, Bo Rutha, Tabarre",18.575588,-72.270095],[22,"Santo 22M, 2e des Varreux, Croix-des-Bouquets",18.588317,-72.246515],[27,"Marassa, Marassa, Croix-des-Bouquets",18.583047,-72.239674],[31,"Rue Aubrant, Nérette",18.518401,-72.291709],[37,"Ave. Nelson Mandela, 2e aux Cadets",18.518033,-72.301565],[40,"Ave. Nelson Mandela, 2e aux Cadets",18.525948,-72.307588],[47,"Cabaret",18.736712,-72.416931]],
+CSVST=[[10136,"Capital","Est","Croix-des-Bouquets",18.582168,-72.245704],[10140,"Capital","Est","Rue de la Joie, Marassa, Croix-des-Bouquets",18.58213,-72.245741],[10009,"Capital","Nord","Rte Nat. # 1, 2e Boucassin, Cabaret",18.735497,-72.405011],[10144,"Capital","Nord","Blvd des Américains, 1re Varreux",18.600567,-72.32214],[10126,"DNC","Sud","Rte Nat. # 2, Fontamara",18.531947,-72.3799],[10131,"DNC","Sud","Rte Nat. # 2, 3e Petit-Boucan",18.53625,-72.536293],[10163,"DNC","Sud","Rte Nat. # 2, Mariani",18.54045,-72.428456],[10011,"Esso","Sud","Léogâne",18.506095,-72.627959],[10158,"Esso","Sud","Route Mapou Dampistre, 1re Dessources, Léogâne",18.5061,-72.627989],[10114,"GO","Sud","Arcachon 32, Arcachon",18.545285,-72.397295],[10059,"GO","Est","Rue Sténio Vincent, 2e des Varreux, Croix-des-Bouquets",18.581333,-72.227337],[10120,"GO","Delmas","Ruelle Faustin, Bois Caradeux, Delmas",18.548766,-72.296732],[10129,"GO","Sud","Route des Rails, Clocher",18.547358,-72.422044],[10164,"GO","Sud","Rte Nat. # 2, Mariani",18.540183,-72.427521],[10099,"Station inconnue","Centre","Rue Alerte, Bas Peu des Choses",18.53185,-72.34036],[10111,"Station inconnue","Centre","Ave. Magloire Ambroise Prolongée, Saint-Gérard",18.526699,-72.340605],[10106,"Station inconnue (Mache se radòt)","Est","Rue Ce-Radotte, 2e des Varreux, Croix-des-Bouquets",18.632344,-72.267103],[10141,"Station inconnue (Mais Gaté)","Delmas","Delmas",18.565189,-72.312456],[10142,"Station inconnue (Mais Gaté)","Delmas","Ave. Maïs Gaté, Dos Morne, Delmas",18.556418,-72.263692],[10002,"National","Sud","Route Mapou Dampistre, 1re Dessources, Léogâne",18.506246,-72.62413],[10013,"National","Delmas","Delmas",18.574975,-72.297492],[10014,"National","Tabarre","Blvd T.L, Cazeau",18.5758,-72.287044],[10019,"National","Delmas","Rue Jean Gilles, Pélé Simon, Delmas",18.567459,-72.310935],[10023,"National","Delmas","Blvd Jean-Jacques Dessalines, Chancerelles, Delmas",18.560959,-72.338257],[10025,"National","Centre","Ave. Martin Luther King, Pacot",18.533344,-72.324594],[10029,"National","Pétion-Ville","Rue Lambert, Quartier Morne Hercule",18.515689,-72.284108],[10030,"National","Delmas","Delmas 33, Gérald Bataille, Delmas",18.56221,-72.291499],[10034,"National","Montagne","Route de Kenscoff, 2e aux Cadets",18.499381,-72.318304],[10035,"National (1)","Pétion-Ville","Pétion-Ville",18.498955,-72.316909],[10036,"National","Delmas","Blvd T.L, Gérald Bataille, Delmas",18.565924,-72.31288],[10038,"National","Delmas","Ave. Martin Luther King, Carrefour de l'Aéroport, Delmas",18.546157,-72.317167],[10039,"National","Est","Rte Nat. # 1, 2e des Varreux, Croix-des-Bouquets",18.635141,-72.266759],[10041,"National","Centre","Ave. Christophe, Bas Peu des Choses",18.53374,-72.333772],[10044,"National","Pétion-Ville","Route de Frères (Delmas 105), Morne Hercule",18.522593,-72.27974],[10049,"National (2)","Pétion-Ville","Pétion-Ville",18.517925,-72.290762],[10054,"National","Nord","Rte Nat. # 1, 1re Boucassin, Arcahaie",18.799509,-72.513664],[10060,"National","Delmas","Route de Delmas, Musseau, Delmas",18.533289,-72.291313],[10062,"National","Centre","Rue Berne, Saint-Antoine",18.540209,-72.325891],[10064,"National","Centre","Ave. Lamartinière, Bois Verna",18.539986,-72.332486],[10070,"National","Delmas","Route de Delmas, Carrefour de l'Aéroport, Delmas",18.549758,-72.30887],[10071,"National","Delmas","Rue Plaza (Delmas 30), Carrefour de l'Aéroport, Delmas",18.549772,-72.312262],[10075,"National","Centre","Rue des Casernes, Portail Saint-Joseph",18.546112,-72.345365],[10076,"National","Pétion-Ville","Ave. Panaméricaine, Nérette",18.515294,-72.286575],[10100,"National","Sud","Petit-Goâve",18.428533,-72.861368],[10107,"National","Sud","Rte Nat. # 2, 11e Ravine Sèche, Petit-Goâve",18.428731,-72.860091],[10112,"National","Centre","Rue du Marron Inconnu, Champs de Mars",18.545145,-72.337463],[10117,"National","Delmas","Rue Patrice Lumumba, Pélé Simon, Delmas",18.565314,-72.31294],[10127,"National","Sud","Blvd Jean-Jacques Dessalines, Savane Salée",18.531628,-72.360047],[10134,"National (1)","Est","Croix-des-Bouquets",18.57351,-72.227323],[10137,"National","Est","Rte Nat. 8, 4e Petit Bois, Croix-des-Bouquets",18.569006,-72.204739],[10138,"National","Est","Rte Nat. 8, Marassa, Croix-des-Bouquets",18.576436,-72.230264],[10139,"National (2)","Est","Croix-des-Bouquets",18.569014,-72.204457],[10152,"National","Pétion-Ville","Route de Frères (Delmas 105), Bois Neuf",18.526259,-72.265939],[10166,"National","Sud","Carrefour",18.548693,-72.402178],[10108,"National","Delmas","Rue J, Cité Saint-Georges, Delmas",18.552799,-72.302572],[10135,"National","Est","Rte Nat. 8, Noailles, Croix-des-Bouquets",18.570906,-72.216653],[10148,"National","Pétion-Ville","Rue Derenoncourt, Nérette",18.51793,-72.290803],[10149,"National (3)","Pétion-Ville","Pétion-Ville",18.526333,-72.265893],[10132,"National (Pont Carrefour)","Sud","Route des Rails, Arcachon",18.550203,-72.416159],[10128,"National (route Soleil)","Est","Blvd des Américains, 1re des Varreux, Croix-des-Bouquets",18.622313,-72.310794],[10006,"National","Est","Blvd du 13 Octobre (Route de Tabarre), Torcelle",18.550899,-72.243071],[10058,"National","Est","Rue Saint-Dominique, 2e des Varreux, Croix-des-Bouquets",18.577875,-72.231699],[10074,"National","Est","Rte Nat. 8, 2e des Varreux, Croix-des-Bouquets",18.576423,-72.230026],[10015,"Ophélia (Flerio)","Est","Marassa 7, Marassa, Croix-des-Bouquets",18.582114,-72.241802],[10133,"Pompe Lambie","Sud","Rte Nat. # 2, 3e Taïfer",18.545127,-72.458307],[10162,"Pompe National — Station Gonaïves","Delmas","Blvd de la Saline, Village Démocratie",18.565714,-72.334038],[10018,"Sol","Est","Route de Santo, 2e des Varreux, Croix-des-Bouquets",18.593588,-72.253187],[10022,"Sol","Tabarre","Rte Nat. # 1, Damien",18.588336,-72.29399],[10026,"Sol","Sud","Blvd Jean-Jacques Dessalines, Savane Salée",18.532788,-72.364931],[10040,"Sol","Pétion-Ville","Rue Lambert, Nérette",18.516461,-72.291902],[10056,"Sol","Delmas","Ave. Martin Luther King, Carrefour de l'Aéroport, Delmas",18.551831,-72.316523],[10063,"Sol","Centre","Ave. Lamartinière, Bois Verna",18.539641,-72.332323],[10066,"Sol","Delmas","Blvd T.L, Cité Militaire, Delmas",18.560381,-72.318441],[10069,"Sol","Tabarre","Ave. Gérard Théodat, Bo Rutha",18.585075,-72.273756],[10073,"Sol","Pétion-Ville","Rue de Magny, Morne Hercule",18.515966,-72.284051],[10082,"Sol","Montagne","Rue Chancy, Belvil",18.522056,-72.253903],[10097,"Sol","Est","Rte Nat. # 1, 2e des Varreux, Croix-des-Bouquets",18.623339,-72.272091],[10119,"Sol","Delmas","Route de Delmas, Cité Saint-Georges, Delmas",18.546783,-72.30435],[10154,"Sol","Tabarre","Blvd T.L, Bo Rutha, Tabarre",18.576533,-72.27356],[10155,"Sol","Tabarre","Rue A. Pierre-Paul, Château Blond",18.577747,-72.25793],[10005,"Sol","Centre","Rue Capois, Bas Peu des Choses",18.536989,-72.336142],[10010,"Sol","Sud","Rte Nat. # 2, 3e Grande Rivière, Léogâne",18.511219,-72.61333],[10046,"Sol Babiole","Centre","7e Rue, Turgeau",18.53322,-72.328542],[10125,"Station Bizoton","Sud","Rte Nat. # 2, Fontamara",18.531791,-72.379247],[10024,"Station inconnue","Centre","Blvd Jean-Jacques Dessalines, Croix-des-Bossales",18.556529,-72.341037],[10028,"Station inconnue (1)","Nord","Rte Nat. # 1, Casale, Cabaret",18.715886,-72.364616],[10047,"Station inconnue","Sud","Rte Nat. # 2, 1re Bino (Première Plaine), Petit-Goâve",18.420143,-72.925395],[10052,"Station inconnue","Nord","Rue Papon, 1re Boucassin, Arcahaie",18.839381,-72.571861],[10113,"Station inconnue","Centre","Rue Cameau, Bas Peu des Choses",18.532933,-72.34004],[10145,"Station inconnue","Sud","Rue Dupuy, Garde Cote",18.533445,-72.386451],[10169,"Station inconnue (2)","Nord","Rte Nat. # 1, Casale, Cabaret",18.717519,-72.36517],[10161,"National","Delmas","Cité Soleil",18.562796,-72.340731],[10004,"National","Sud","Rte Nat. # 2, Mariani",18.541914,-72.43688],[10021,"National","Delmas","Rte Nat. # 1, Terre Noire",18.581266,-72.309662],[10057,"National","Sud","Rte Nat. # 4, 1re Dessources, Léogâne",18.451851,-72.635316],[10065,"National","Centre","Ave. John Brown, Saint-Antoine",18.543064,-72.331796],[10124,"National","Tabarre","Tabarre",18.602435,-72.282466],[10168,"Station Pelerin-2A","Pétion-Ville","Route de Kenscoff, Pèlerin 3",18.502552,-72.288781],[10079,"GO","Montagne","Pernier 18, Pernier",18.520138,-72.240756],[10084,"National (1)","Nord","Arcahaie",18.842703,-72.573886],[10085,"Station inconnue","Est","Route de Pernier, Platon",18.521307,-72.223083],[10121,"Station inconnue","Sud","Rte Nat. # 2, 1re Tête-à-Bœuf, Grand-Goâve",18.42023,-72.77162],[10159,"National (2)","Nord","Arcahaie",18.824857,-72.549414],[10083,"Sol","Nord","Rte Nat. # 1, 1re Boucassin, Arcahaie",18.840633,-72.571592],[10104,"Station Tap-Tap","Tabarre","Tabarre",18.666379,-72.259499],[10160,"Total — Rue Pavée","Centre","Rue du Magasin de l'État, Portail Saint-Joseph",18.54802,-72.34488],[10008,"Texaco","Nord","Rte Nat. # 1, 2e Boucassin, Cabaret",18.736474,-72.416968],[10012,"Texaco","Sud","Entree Marche Touriste, 1re Dessources, Léogâne",18.505883,-72.625926],[10061,"Texaco","Centre","Rue Fernand, Bois Patate",18.533766,-72.318616],[10077,"Texaco","Pétion-Ville","Ave. Panaméricaine, Nérette",18.516207,-72.287377],[10078,"Texaco","Sud","Rte Nat. # 2, Garde Cote",18.533037,-72.386246],[10088,"Texaco","Est","Rte Nat. 8, 1re Galette Chambon, Ganthier",18.562634,-72.145661],[10156,"Topi Gaz","Delmas","Rue Boisrond Canal, Puits Blain, Delmas",18.542319,-72.27257],[10027,"Total","Centre","Route de Delmas, Carrefour de l'Aéroport",18.559833,-72.337106],[10109,"Total","Delmas","Impasse Gérard, Gérald Bataille, Delmas",18.570563,-72.28801],[10146,"Total","Sud","Rte Nat. # 2, 3e Petit-Boucan",18.531598,-72.551335],[10165,"Total","Sud","Rue G. F. Aimé (Mariani 4), Mariani",18.541156,-72.434095],[10167,"Total","Centre","Rue des Casernes, Champs de Mars",18.54609,-72.34533],[10001,"Total","Sud","Rte Nat. # 2, 1re Dessources, Léogâne",18.454834,-72.633856],[10003,"Total","Sud","Rte Nat. # 2, 3e Grande Rivière, Léogâne",18.51666,-72.603887],[10007,"Total","Tabarre","Blvd T.L, Château Blond",18.576554,-72.262928],[10020,"Total","Delmas","Rte Nat. # 1, Carrefour Drouillard, Delmas",18.57855,-72.314728],[10032,"Total","Delmas","Route de Delmas, Bois Caradeux, Delmas",18.538281,-72.29528],[10033,"Total","Delmas","Ruelle Faustin, Musseau, Delmas",18.539442,-72.288484],[10042,"Total","Sud","Rte Nat. # 4, 12e Cormiers, Léogâne",18.386144,-72.590395],[10043,"Total","Pétion-Ville","Route de Frères (Delmas 105), Frères",18.528137,-72.273507],[10050,"Total","Nord","Rte Nat. # 1, 2e Boucassin, Cabaret",18.735769,-72.4045],[10051,"Total","Nord","Rte Nat. # 1, 4e-Montrouis, Arcahaie",18.848806,-72.58447],[10055,"Total","Sud","Gressier",18.531339,-72.551683],[10068,"Total","Delmas","Ave. Maïs Gaté, Gérald Bataille",18.571231,-72.290716],[10072,"Total","Delmas","Route de Delmas, Carrefour de l'Aéroport, Delmas",18.550906,-72.310889],[10080,"Total","Nord","Rte Nat. # 1, 1re Boucassin, Arcahaie",18.804324,-72.519504],[10081,"Total","Montagne","Route de Kenscoff, 2e Bongars",18.470148,-72.295081],[10086,"Total","Sud","Rte Nat. # 2, Fontamara",18.531792,-72.375829],[10089,"Total","Est","Rte Nat. 8, 4e Petit Bois, Croix-des-Bouquets",18.566156,-72.181924],[10090,"Total","Est","Croix-des-Bouquets",18.568437,-72.200035],[10091,"Total","Nord","Rte Nat. 8, 3e Fonds Parisien, Ganthier",18.510301,-71.978592],[10092,"Total","Tabarre","Rue du Bois Blanc, Torcelle",18.565663,-72.254732],[10093,"Total","Delmas","Route de Delmas, Morne Hercule, Delmas",18.530449,-72.288731],[10094,"Total","Delmas","Delmas 42, Cité Saint-Georges, Delmas",18.542626,-72.299629],[10095,"Total","Delmas","Blvd T.L, Carrefour de l'Aéroport, Delmas",18.558597,-72.318816],[10096,"Total","Tabarre","Rte Nat. # 1, Damien",18.591193,-72.291446],[10098,"Total","Est","Rte Nat. # 1, 1re des Varreux, Croix-des-Bouquets",18.640922,-72.27113],[10101,"Total","Delmas","Delmas 31, Village W. Lamothe, Delmas",18.555447,-72.304087],[10102,"Total","Delmas","Ave. Fragneauville, Dos Morne, Delmas",18.5412,-72.278728],[10103,"Total","Nord","Blvd des Américains, 1re Varreux",18.596689,-72.323471],[10130,"Total","Sud","Route des Rails, Arcachon",18.545011,-72.396],[10147,"Total","Est","Marassa, Marassa, Croix-des-Bouquets",18.582496,-72.24456],[10157,"Total","Sud","Rte Nat. # 2, 7e Gérard, Grand-Goâve",18.422092,-72.762331],[10170,"Total","Delmas","Route de Delmas, Cité 1, Delmas",18.558851,-72.333638],[10116,"Total Gressier 2","Sud","Rte Nat. # 2, 2e Morne-Chandelle, Gressier",18.542085,-72.523198],[10110,"Total (Mais Gaté)","Delmas","Rue Dumorney, Tabarre 14",18.570953,-72.288019],[10037,"TotalEnergies","Centre","Ave. Martin Luther King, Pacot",18.533108,-72.32488],[10115,"TotalEnergies","Delmas","Delmas",18.555242,-72.314052],[10143,"TotalEnergies","Centre","Blvd Harry Truman, Portail Léogâne",18.545988,-72.347626]];
+(function(){
+ CSVAPP.forEach(function(r){var s=STN.filter(function(x){return x.id===r[0]})[0];if(!s)return;s.addr=r[1];s.ll=[r[2],r[3]];var o=STC[r[0]];STC[r[0]]=(o&&o[2])?[r[2],r[3],o[2]]:[r[2],r[3]]});
+ CSVST.forEach(function(r){if(STN.some(function(x){return x.id===r[0]}))return;STN.push({id:r[0],name:r[1],zone:r[2],addr:r[3],ll:[r[4],r[5]]});STC[r[0]]=[r[4],r[5]]});
+})();
 function ago(t){var m=Math.max(0,Math.round((Date.now()-t)/MIN));return m<1?'à l’instant':m<60?'il y a '+m+' min':'il y a '+Math.floor(m/60)+' h'}
 /* la majorité des signalements récents l'emporte (les plus récents comptent davantage) ; égalité ouverte/fermée = Limitée */
 function frecent(id){var now=Date.now(),m={};FREP.forEach(function(r){if(r.st===id&&(now-r.t)/MIN<FMIN){var k=r.u||'local';if(!m[k]||r.t>m[k].t)m[k]=r}});return Object.keys(m).map(function(k){return m[k]})}
@@ -2084,18 +2144,78 @@ function doFReport(id,lvl){S.freply=null;
   function loc(){FLOC.push(r);FREP.push(r);qUse('rep','t',id);render()}
   if(DB){DB.collection('fuel').add(r).then(function(){qUse('rep','t',id);toast('Merci ! Signalement partagé'+qRest('rep'));render();repBump()}).catch(function(e){if(e&&e.code==='P0001'){coolClear('st:'+id);return toast(e.message)}if(e&&e.message==='login'){coolClear('st:'+id);return askLogin('signaler',['fReport',id,lvl])}loc();toast('Enregistré sur cet appareil seulement : connectez-vous pour le partager'+qRest('rep'))})}
   else{loc();toast('Merci ! Signalement enregistré sur cet appareil'+qRest('rep'))}}
-function addStation(){var n=document.getElementById('fn').value.trim().slice(0,80),z=document.getElementById('fzone').value;
+/* ===== Ajout d’une station : adresse exacte -> épingle sur la carte =====
+   1) « Vérifier l’adresse » : géocodage OpenStreetMap (Nominatim), limité à Haïti et contrôlé contre la zone choisie ;
+   2) aperçu sur une mini-carte, la personne confirme ;
+   3) administrateur : station publiée tout de suite avec sa position ; autres comptes : proposition (adresse + position) validée ensuite,
+      visible entre-temps par son auteur sur la carte (épingle « en attente »). */
+var FMM=null;
+function stLL(x){var a=Number(x.lat),b=Number(x.lng);return (x.lat!=null&&x.lng!=null&&isFinite(a)&&isFinite(b)&&a>=17.4&&a<=20.6&&b>=-75.2&&b<=-71.0)?[a,b]:null}
+function isColErr(e){return !!e&&(e.code==='42703'||e.code==='PGRST204'||/column/i.test(String(e.message||'')))}
+/* requêtes essayées dans l’ordre : adresse complète, sans le numéro, puis plus grossier (3 essais max, 1 s d’écart : règle d’usage de Nominatim) */
+function geoQueries(a){var q=[a],seg=a.split(',').map(function(s){return s.trim()}).filter(Boolean);
+ var nn=a.replace(/^\s*(?:n[°ºo]\.?\s*)?\d+\s*(?:bis)?[\s,.\-]*/i,'').trim();
+ if(nn&&nn!==a&&nn.length>=6)q.push(nn);
+ if(seg.length>=3)q.push(seg.slice(1).join(', '));
+ if(seg.length>=3)q.push(seg.slice(-2).join(', '));
+ return q.filter(function(x,i){return q.indexOf(x)===i}).slice(0,3)}
+function geocodeStation(a,zone){var zc=ZC[zone],qs=geoQueries(a),i=0,far=null;
+ function vb(){if(!zc)return '';var r=zc[2]*1.4,dl=r/111320,dg=r/(111320*Math.cos(zc[0]*Math.PI/180));return '&viewbox='+[zc[1]-dg,zc[0]+dl,zc[1]+dg,zc[0]-dl].map(function(x){return x.toFixed(5)}).join(',')}
+ function next(){if(i>=qs.length)return Promise.resolve(null);var k=i++;
+  var u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=ht&accept-language=fr'+vb()+'&q='+encodeURIComponent(qs[k]+', Haïti');
+  return (k?new Promise(function(r){setTimeout(r,1100)}):Promise.resolve())
+   .then(function(){return fetch(u,{headers:{'Accept':'application/json'}})}).catch(function(){throw {net:1}})
+   .then(function(r){if(!r.ok)throw {net:1};return r.json()})
+   .then(function(arr){var ok=null;
+    (Array.isArray(arr)?arr:[]).forEach(function(x){var la=+x.lat,ln=+x.lon;if(!isFinite(la)||!isFinite(ln))return;
+     var d=zc?hav([la,ln],[zc[0],zc[1]]):0;
+     if(!zc||d<=zc[2]*1.25){if(!ok)ok={x:x,la:la,ln:ln,k:k}}else if(!far||d<far.d)far={d:d,x:x}});
+    return ok||next()})}
+ return next().then(function(h){
+  if(!h)throw {msg:far?'Cette adresse semble hors de la zone « '+zone+' » (à '+fmtD(far.d)+' de son centre). Vérifiez la zone ou l’adresse.':'Adresse introuvable. Précisez : n° et rue, quartier, commune.'};
+  var rk=+h.x.place_rank||0,exact=h.k===0&&rk>=28;
+  return {ll:[h.la,h.ln],approx:!exact,rad:exact?0:(h.k===0&&rk>=26?1500:(rk>=26?2000:2500)),disp:String(h.x.display_name||a).slice(0,200)}},
+  function(e){throw e&&e.net?{msg:'Recherche d’adresse impossible : vérifiez votre connexion et réessayez.'}:e})}
+function fvClear(){if(!S.fpv)return;S.fpv=null;var b=document.getElementById('fpvbox');if(b)b.remove();if(FMM){try{FMM.remove()}catch(e){}FMM=null}}
+function editStationAddr(){fvClear();var e=document.getElementById('fadr');if(e)e.focus()}
+function checkStation(){if(S.fgeo)return;
+  var n=document.getElementById('fn').value.trim().slice(0,80),z=document.getElementById('fzone').value,a=document.getElementById('fadr').value.trim().replace(/\s+/g,' ').slice(0,140);
   if(n.length<3)return toast('Entrez le nom ou le repère de la station');
+  if(a.length<10||a.split(' ').length<3)return toast('Entrez une adresse exacte : n° et rue, quartier, commune');
   if(STN.some(function(s){return s.name.toLowerCase()===n.toLowerCase()&&s.zone===z}))return toast('Cette station existe déjà dans cette zone');
-  function fail(e){if(e&&e.message==='login')return askLogin('proposer une station');toast(e&&e.code==='P0001'?e.message:(e&&e.code==='42501'?(ADMIN||/suspendu/i.test(String(e.message||''))?'Compte suspendu':'Action non autorisée : proposez la station, un administrateur la validera'):(e&&e.code==='23505'?'Cette station existe déjà':'Échec de l’envoi : réessayez plus tard')))}
-  /* administrateur : ajout direct (visible tout de suite) ; autres comptes : proposition validée ensuite par un administrateur */
   needLogin(function(){
-   if(ADMIN){window.sbClient.from('stations').insert({name:n,zone:z}).select('id,name,zone').single().then(function(r){
-    if(r.error)throw r.error;var x=r.data,id=Number(x.id);
-    if(!STN.some(function(s){return s.id===id}))STN.push({id:id,name:String(x.name).slice(0,80),zone:x.zone});
-    document.getElementById('fn').value='';render();
-    toast('Station ajoutée : elle est maintenant dans Essence')}).catch(fail)}
-   else{DB.collection('station_requests').add({name:n,zone:z,t:Date.now()}).then(function(){document.getElementById('fn').value='';render();toast('Merci ! Station envoyée : visible après validation')}).catch(fail)}},ADMIN?'ajouter une station':'proposer une station')}
+   S.fgeo=1;S.fpv=null;render();
+   var go=function(){return geocodeStation(a,z)};
+   (typeof loadLeaflet==='function'?loadLeaflet().catch(function(){}):Promise.resolve()).then(go).then(function(g){
+    var near=STN.filter(function(s){return s.ll}).map(function(s){return {name:s.name,d:hav(s.ll,g.ll)}}).filter(function(x){return x.d<150}).sort(function(p,q){return p.d-q.d}).slice(0,2);
+    S.fgeo=0;S.fpv={n:n,zone:z,a:a,ll:g.ll,rad:g.rad,approx:g.approx,disp:g.disp,near:near};render();
+    setTimeout(function(){var b=document.getElementById('fpvbox');if(b)b.scrollIntoView({block:'center',behavior:'smooth'})},120)
+   }).catch(function(e){S.fgeo=0;render();toast(e&&e.msg?e.msg:'Recherche d’adresse impossible : réessayez')})},'proposer une station')}
+function fpvHtml(){var v=S.fpv;if(!v)return '';
+  var near=v.near.length?'<div class="mute" style="margin-top:6px">Stations déjà proches : '+v.near.map(function(x){return esc(x.name)+' ('+fmtD(x.d)+')'}).join(', ')+'. Vérifiez qu’il ne s’agit pas de la même.</div>':'';
+  return '<div id="fpvbox" class="card" style="border:2px solid var(--acc)"><b>Vérifiez l’emplacement</b><div class="mute" style="margin:4px 0 8px">📍 '+esc(v.disp)+'</div><div id="fpvmap" style="height:170px;border-radius:12px;overflow:hidden;background:var(--soft)"></div><div class="mute" style="margin-top:6px;font-size:12.5px">'+(v.approx?'Position approximative : l’épingle sera placée au plus près de l’adresse indiquée. ':'Adresse localisée. ')+'Fond de carte : '+MAPSTY[LSTY].att+'.</div>'+near+'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button style="flex:1"'+(S.fbusy?' disabled':'')+' onclick="confirmStation()">'+(ADMIN?'Confirmer et ajouter':'Confirmer et envoyer')+'</button><button class="alt" style="flex:1" onclick="editStationAddr()">Modifier</button></div></div>'}
+function fpvMini(){var el=document.getElementById('fpvmap');if(FMM){try{FMM.remove()}catch(e){}FMM=null}
+  if(!el||!S.fpv||!window.L||!L.map)return;
+  FMM=L.map(el,{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,touchZoom:false}).setView(S.fpv.ll,S.fpv.approx?15:17);
+  lBase(FMM,LSTY,false);
+  L.marker(S.fpv.ll,{icon:L.divIcon({className:'stpin',html:pinSvg('#2f6fd6',24,34),iconSize:[24,34],iconAnchor:[12,33]}),interactive:false,keyboard:false}).addTo(FMM)}
+function confirmStation(){var v=S.fpv;if(!v||S.fbusy)return;
+  if(!window.sbClient||!DB)return toast('Connexion indisponible : réessayez dans un instant');
+  S.fbusy=1;render();var n=v.n,z=v.zone,ll=v.ll;
+  function fail(e){S.fbusy=0;render();if(e&&e.message==='login')return askLogin('proposer une station');toast(e&&e.code==='P0001'?e.message:(e&&e.code==='42501'?(ADMIN||/suspendu/i.test(String(e.message||''))?'Compte suspendu':'Action non autorisée : proposez la station, un administrateur la validera'):(e&&e.code==='23505'?'Cette station existe déjà':'Échec de l’envoi : réessayez plus tard')))}
+  function ok(msg){S.fbusy=0;S.fpv=null;S.fmap=true;['fn','fadr'].forEach(function(i){var e=document.getElementById(i);if(e)e.value=''});render();toast(msg);
+   setTimeout(function(){try{window.sbRefresh()}catch(e){}},150);
+   setTimeout(function(){var w=document.getElementById('lwrap');if(w)w.scrollIntoView({block:'start',behavior:'smooth'});if(lActive())LMAP.setView(ll,16)},250)}
+  if(ADMIN){/* administrateur : ajout direct, visible tout de suite */
+   var ins=function(withAddr){var row={name:n,zone:z,lat:ll[0],lng:ll[1]};if(v.rad)row.radius_m=v.rad;if(withAddr)row.addr=v.a;
+    return window.sbClient.from('stations').insert(row).select('*').single().then(function(r){if(r.error)throw r.error;return r.data})};
+   ins(true).catch(function(e){if(isColErr(e))return ins(false);throw e}).then(function(x){var id=Number(x.id);
+    if(!STN.some(function(s){return s.id===id})){STN.push({id:id,name:String(x.name).slice(0,80),zone:x.zone,addr:v.a,ll:ll});STC[id]=v.rad?[ll[0],ll[1],v.rad]:[ll[0],ll[1]]}
+    ok('Station ajoutée : elle apparaît sur la carte')}).catch(fail)}
+  else{/* autres comptes : proposition validée ensuite par un administrateur */
+   var add=function(geo){return DB.collection('station_requests').add(geo?{name:n,zone:z,addr:v.a,lat:ll[0],lng:ll[1],rad:v.rad,t:Date.now()}:{name:n,zone:z,t:Date.now()})};
+   add(true).then(function(){return 'geo'},function(e){if(isColErr(e))return add(false).then(function(){return 'nogeo'});throw e}).then(function(m){
+    ok(m==='geo'?'Merci ! Station envoyée : elle apparaît sur la carte pour vous, et pour tous après validation':'Station envoyée, mais sans position : la base doit être mise à jour')}).catch(fail)}}
 function vote(kind,id,val){var k=kind==='seg'?cand(id):fcand(id);if(k<0)return toast('Aucun signalement récent à confirmer');
  if(iReported(kind,id))return toast('Vous avez signalé cet état : seuls les autres utilisateurs peuvent voter.');
  var ck='v:'+kind+':'+id,m=coolLeft(ck);if(m)return toast('Vous avez déjà voté ici. Vous pourrez voter à nouveau dans '+m+' min.');
@@ -2119,8 +2239,12 @@ function segAdmin(){return (ADMIN&&PNDS.length)?'<div class="card"><b>Tronçons 
  db.collection('segment_requests').onSnapshot(function(snap){PNDS=snap.docs.map(function(d){var x=d.data();return{id:Number(d.id),name:typeof x.name==='string'?x.name.slice(0,80):'',zone:ZONES.indexOf(x.zone)>0?x.zone:'Centre',own:1}}).filter(function(p){return p.name});if(S.tab==='report')render()},function(){})}).catch(function(){})}catch(e){}})();
 (function(){try{if(!window.claude)return;window.claude.use('db').then(function(db){if(!db)return;
  db.collection('stations').onSnapshot(function(snap){snap.docs.forEach(function(d){var x=d.data();
-  if(typeof x.name==='string'&&ZONES.indexOf(x.zone)>0&&!STN.some(function(s){return s.id===d.id}))STN.push({id:d.id,name:x.name.slice(0,80),zone:x.zone})});render()},function(){});
- db.collection('station_requests').onSnapshot(function(snap){PND=snap.docs.map(function(d){var x=d.data();return{id:d.id,name:typeof x.name==='string'?x.name.slice(0,80):'',zone:ZONES.indexOf(x.zone)>0?x.zone:'Centre'}}).filter(function(p){return p.name});render()},function(){});
+  if(typeof x.name!=='string'||ZONES.indexOf(x.zone)<1)return;
+  var ll=stLL(x),a=typeof x.addr==='string'?x.addr.slice(0,160):'',s=STN.filter(function(q){return q.id===d.id})[0];
+  if(!s){s={id:d.id,name:x.name.slice(0,80),zone:x.zone};STN.push(s)}
+  if(a&&!s.addr)s.addr=a;
+  if(ll&&!s.ll){s.ll=ll;STC[d.id]=x.rad?[ll[0],ll[1],x.rad]:[ll[0],ll[1]]}});render()},function(){});
+ db.collection('station_requests').onSnapshot(function(snap){PND=snap.docs.map(function(d){var x=d.data();return{id:d.id,name:typeof x.name==='string'?x.name.slice(0,80):'',zone:ZONES.indexOf(x.zone)>0?x.zone:'Centre',addr:typeof x.addr==='string'?x.addr.slice(0,160):'',ll:stLL(x)}}).filter(function(p){return p.name});render()},function(){});
  db.collection('fuel').where('t','>',Date.now()-FMIN*MIN).onSnapshot(function(snap){
   if(!snap.fromCache)fuelRecv(snap.docs.map(function(d){return d.data()}));
   FREP=snap.docs.map(function(d){return d.data()}).filter(function(r){return(typeof r.st==='number'||typeof r.st==='string')&&typeof r.t==='number'&&(r.lvl===0||r.lvl===1||r.lvl===2)}).concat(FLOC);FLOADED=true;render()},function(){});
@@ -2132,20 +2256,28 @@ function segAdmin(){return (ADMIN&&PNDS.length)?'<div class="card"><b>Tronçons 
    if(!mine(q)&&st&&fWanted(q.st)){notify({k:'demande',st:q.st,txt:'Quelqu’un demande si la station « '+st.name+' » est fonctionnelle. Si vous y êtes, répondez.'});ringBell();toast('Demande essence : '+st.name)}}});
   ffirst=false;FREQ=snap.docs.map(function(d){return d.data()});render()},function(){})}).catch(function(){});
  window.claude.use('user').then(function(u){if(!u)return;u.canEdit().then(function(b){ADMIN=b;render()})}).catch(function(){})}catch(e){}})();
+/* carte des stations, en haut de l’onglet Essence */
+function lFitStations(){var p=Object.keys(LST).map(function(k){return LST[k].s.ll});if(lActive()&&p.length)LMAP.fitBounds(p,{padding:[30,30]})}
+function showFuelMap(on){S.fmap=!!on;render()}
+function fuelMapV(){
+ if(!S.fmap)return '<div style="margin-top:12px"><button class="neon" style="width:100%" onclick="showFuelMap(true)">🗺️ Voir la carte des stations d’essence</button></div>';
+ if(LOK===false)return '<div class="card mute" style="margin-top:12px">La carte des stations n’a pas pu se charger (connexion Internet requise). La liste ci-dessous reste disponible.</div>';
+ var leg='<div class="mute" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;align-items:center">'+[['var(--g)','Fonctionnelle'],['var(--y)','Limitée'],['var(--r)','Non fonctionnelle'],['#ffffff','Pas d’info']].map(function(f){return '<span style="display:inline-flex;align-items:center;gap:4px">'+pinSvg(rc(f[0]),12,17)+f[1]+'</span>'}).join('')+'</div>';
+ return '<h2 style="margin:12px 0 0">Carte des stations</h2><div style="position:relative"><div id="lwrap" class="lwrap fm"><div class="mute" style="padding:40px 16px;text-align:center">Chargement de la carte…</div></div><select class="msty" aria-label="Style de carte" onchange="setMapStyle(this.value)">'+Object.keys(MAPSTY).map(function(k){return '<option value="'+k+'"'+(LSTY===k?' selected':'')+'>'+MAPSTY[k].n+'</option>'}).join('')+'</select></div><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="alt" onclick="zoomBtn(0.6)" aria-label="Zoom avant">Zoom +</button><button class="alt" onclick="zoomBtn(1.6)" aria-label="Zoom arrière">Zoom −</button><button class="alt" onclick="goPAP()">Port-au-Prince</button><button class="alt" onclick="lFitStations()">Toutes les stations</button><button class="alt" onclick="showFuelMap(false)">Masquer la carte</button></div>'+leg+'<p class="mute">Touchez une épingle pour voir la station. Fond de carte : '+MAPSTY[LSTY].att+'.</p>'}
 function fuelV(){var c=[0,0,0],all=STN.map(function(s){var k=fstat(s.id);if(k<3)c[k]++;return {s:s,k:k}});
-  var base=all.filter(function(x){return (S.fz==='Tous'||x.s.zone===S.fz)&&mq(S.fq,x.s.name,x.s.zone)}),cnt=[0,0,0,0];base.forEach(function(x){cnt[x.k]++});
+  var base=all.filter(function(x){return (S.fz==='Tous'||x.s.zone===S.fz)&&mq(S.fq,x.s.name+' '+(x.s.addr||''),x.s.zone)}),cnt=[0,0,0,0];base.forEach(function(x){cnt[x.k]++});
   var list=base.filter(function(x){return S.fs==='T'||x.k===+S.fs}).sort(function(a,b){var pa=S.fpins.indexOf(String(a.s.id)),pb=S.fpins.indexOf(String(b.s.id));if((pa>=0)!==(pb>=0))return pa>=0?-1:1;if(pa>=0)return pa-pb;return a.k-b.k||((pendSt(b.s.id)>=0)-(pendSt(a.s.id)>=0))});
   var FS=[['T','Toutes'],['0','Fonctionnelles'],['1','Limitées'],['2','Non fonctionnelles'],['3','Pas d’info']];
   var sum='<div class="sum">'+FLV.slice(0,3).map(function(l,i){return '<div class="'+l.c+'">'+c[i]+'<span>'+l.i+' '+l.n+'</span></div>'}).join('')+'</div>';
   var chips='<div class="chips" role="group" aria-label="État">'+FS.map(function(f){return '<button aria-pressed="'+(S.fs===f[0])+'" onclick="setFs(\''+f[0]+'\')">'+f[1]+' ('+(f[0]==='T'?base.length:cnt[+f[0]])+')</button>'}).join('')+'</div>'+
    '<div class="chips" role="group" aria-label="Zone">'+ZONES.map(function(z){return '<button aria-pressed="'+(S.fz===z)+'" onclick="setFz(\''+z+'\')">'+z+'</button>'}).join('')+'</div>';
   var cards=list.map(function(x){var s=x.s,k=x.k,nm=esc(s.name),ji=jid(s.id),fp=S.fpins.indexOf(String(s.id))>=0,fw=S.fwatch.indexOf(String(s.id))>=0;
-    var pk=pendSt(s.id),sk=pk>=0?pk:k,oq=fopenReq(s.id),gd='';return '<div class="seg'+(S.freply===s.id?' pin':'')+'" id="st'+s.id+'"><div class="bar '+FLV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b" style="padding-right:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><h3>'+nm+'</h3>'+pinBtn(fp,'pinSt',ji,nm)+'</div><div class="mute">'+esc(s.zone)+'</div><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+FLV[sk].i+' '+FLV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+voteRow('st',s.id)+(oq?'<div><span class="pill">Quelqu’un demande</span></div>':'')+
+    var pk=pendSt(s.id),sk=pk>=0?pk:k,oq=fopenReq(s.id),gd='';return '<div class="seg'+(S.freply===s.id?' pin':'')+'" id="st'+s.id+'"><div class="bar '+FLV[sk].c+(pk>=0?' pd':'')+'"></div><div class="b" style="padding-right:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><h3>'+nm+'</h3>'+pinBtn(fp,'pinSt',ji,nm)+'</div><div class="mute">'+(s.addr?'📍 '+esc(s.addr)+(nrm(s.addr).indexOf(nrm(s.zone))<0?' · '+esc(s.zone):''):esc(s.zone))+'</div><div><span class="st s'+sk+(pk>=0?' pd':'')+'">'+FLV[sk].i+' '+FLV[sk].n+(pk>=0?' <span class="pdn">· en attente de confirmation</span>':'')+'</span></div><div class="mute">'+finfo(s.id)+'</div>'+voteRow('st',s.id)+(oq?'<div><span class="pill">Quelqu’un demande</span></div>':'')+
     ''+(coolLeft('st:'+s.id)?'<div class="fb"><button class="on" aria-pressed="true" onclick="noteCool(\'st:'+s.id+'\',\'Déjà signalé\')">Signalé</button></div>':'<div class="fb"><button class="l0"'+gd+' aria-label="Signaler '+nm+' : fonctionnelle" onclick="fReport('+ji+',0)">● Ouverte</button><button class="l1"'+gd+' aria-label="Signaler '+nm+' : limitée" onclick="fReport('+ji+',1)">▲ Limitée</button><button class="l2"'+gd+' aria-label="Signaler '+nm+' : non fonctionnelle" onclick="fReport('+ji+',2)">■ Fermée</button></div>')+'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'+(coolLeft('fq:'+s.id)?'<button class="on" style="flex:1" aria-pressed="true" onclick="noteCool(\'fq:'+s.id+'\',\'Demande déjà envoyée\')">Demandé</button>':'<button class="alt" style="flex:1" aria-label="Demander l’état de '+nm+'" onclick="fAsk('+ji+')">Demander</button>')+'<button class="'+(fw?'on':'alt')+'" style="flex:1" aria-pressed="'+fw+'" aria-label="'+(fw?'Ne plus suivre ':'Suivre ')+nm+'" onclick="toggleSt('+ji+')">'+(fw?'Suivi':'Suivre')+'</button></div></div></div>'}).join('');
-  var admin=(ADMIN&&PND.length)?'<div class="card"><b>À valider ('+PND.length+')</b>'+PND.map(function(p){return '<div class="al" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div>'+esc(p.name)+'<div class="mute">'+esc(p.zone)+'</div></div><div style="display:flex;gap:6px"><button onclick="approveStation('+jid(p.id)+')">Approuver</button><button class="alt" onclick="rejectStation('+jid(p.id)+')">Rejeter</button></div></div>'}).join('')+'</div>':''
+  var admin=(ADMIN&&PND.length)?'<div class="card"><b>À valider ('+PND.length+')</b>'+PND.map(function(p){return '<div class="al" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div>'+esc(p.name)+'<div class="mute">'+esc(p.zone)+'</div>'+(p.addr?'<div class="mute">📍 '+esc(p.addr)+'</div>':'<div class="mute">⚠ Sans adresse ni position</div>')+'</div><div style="display:flex;gap:6px"><button onclick="approveStation('+jid(p.id)+')">Approuver</button><button class="alt" onclick="rejectStation('+jid(p.id)+')">Rejeter</button></div></div>'}).join('')+'</div>':''
   var empty=!STN.length?'<div class="card mute">Aucune station dans la liste pour le moment. Ajoutez la première avec le formulaire ci-dessous, puis chacun pourra signaler son état.</div>':(!list.length?'<div class="card mute">Aucune station ne correspond à votre recherche ou à ce filtre.</div>':'');
-  var form='<h2>Une station manque ?</h2><div class="card">'+loginNote()+'<label for="fn">Nom ou repère</label><input id="fn" maxlength="80" placeholder="Ex. Station près de Delmas 33"><label for="fzone">Zone</label><select id="fzone">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><button class="alt" style="width:100%;margin-top:12px" onclick="addStation()">Ajouter cette station</button></div>';
-  return '<div class="mute" style="margin-top:12px">Selon les signalements des 3 dernières heures</div>'+heroCta('Aidez les autres')+admin+sum+sbox('qf','setFq',S.fq,'Rechercher une station ou une zone…')+chips+empty+'<div class="list">'+cards+'</div>'+form}
+  var form='<h2>Une station manque ?</h2><div class="card">'+loginNote()+'<label for="fn">Nom ou repère</label><input id="fn" maxlength="80" placeholder="Ex. Total, Rubis, Sunoco…" oninput="fvClear()"><label for="fzone">Zone</label><select id="fzone" onchange="fvClear()">'+ZONES.slice(1).map(function(z){return '<option>'+z+'</option>'}).join('')+'</select><label for="fadr">Adresse exacte</label><input id="fadr" maxlength="140" autocomplete="street-address" placeholder="N° et rue, quartier, commune" oninput="fvClear()"><div class="mute" style="margin-top:4px;font-size:12.5px">Ex. 224 Av. John Brown, Bois-Verna, Port-au-Prince. La station sera placée sur la carte à cette adresse.</div><button class="alt" style="width:100%;margin-top:12px"'+(S.fgeo?' disabled':'')+' onclick="checkStation()">'+(S.fgeo?'Recherche de l’adresse…':'Vérifier l’adresse sur la carte')+'</button></div>'+fpvHtml();
+  return fuelMapV()+'<div class="mute" style="margin-top:12px">Selon les signalements des 3 dernières heures</div>'+heroCta('Aidez les autres')+admin+sum+sbox('qf','setFq',S.fq,'Rechercher une station ou une zone…')+chips+empty+'<div class="list">'+cards+'</div>'+form}
 /* ===== Tirer pour actualiser + retour de connexion =====
    Glisser vers le bas en haut de page relance toutes les lectures (signalements, demandes, essence, bulletin) et vérifie une nouvelle version de l’app.
    Même action dans le menu (« Actualiser ») pour le clavier et l’ordinateur. Pas actif sur la carte, dans les champs et dans les fenêtres. */
